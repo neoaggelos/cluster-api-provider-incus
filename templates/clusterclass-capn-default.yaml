@@ -1,18 +1,18 @@
 apiVersion: cluster.x-k8s.io/v1beta1
 kind: ClusterClass
 metadata:
-  name: lxc-default
+  name: capn-default
 spec:
   controlPlane:
     ref:
       apiVersion: controlplane.cluster.x-k8s.io/v1beta1
       kind: KubeadmControlPlaneTemplate
-      name: lxc-default-control-plane
+      name: capn-default-control-plane
     machineInfrastructure:
       ref:
         kind: LXCMachineTemplate
         apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
-        name: lxc-default-control-plane
+        name: capn-default-control-plane
     # machineHealthCheck:
     #   unhealthyConditions:
     #     - type: Ready
@@ -25,7 +25,7 @@ spec:
     ref:
       apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
       kind: LXCClusterTemplate
-      name: lxc-default-lxc-cluster
+      name: capn-default-lxc-cluster
   workers:
     machineDeployments:
     - class: default-worker
@@ -34,12 +34,12 @@ spec:
           ref:
             apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
             kind: KubeadmConfigTemplate
-            name: lxc-default-default-worker
+            name: capn-default-default-worker
         infrastructure:
           ref:
             apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
             kind: LXCMachineTemplate
-            name: lxc-default-default-worker
+            name: capn-default-default-worker
       # machineHealthCheck:
       #   unhealthyConditions:
       #     - type: Ready
@@ -628,7 +628,7 @@ spec:
         path: /spec/template/spec/kubeadmConfigSpec/preKubeadmCommands/-
         valueFrom:
           template: |
-            apt update && apt install curl -y && curl https://neoaggelos.github.io/cluster-api-provider-lxc/static/v0.1/install-kubeadm.sh | bash -s -- {{ .builtin.controlPlane.version }}
+            apt update && apt install curl -y && curl https://lxc.github.io/cluster-api-provider-incus/static/v0.1/install-kubeadm.sh | bash -s -- {{ .builtin.controlPlane.version }}
   - name: workerInstallKubeadm
     description: Inject install-kubeadm.sh script to MachineDeployments
     enabledIf: "{{ .instance.installKubeadm }}"
@@ -645,7 +645,7 @@ spec:
         path: /spec/template/spec/preKubeadmCommands/-
         valueFrom:
           template: |
-            apt update && apt install curl -y && curl https://neoaggelos.github.io/cluster-api-provider-lxc/static/v0.1/install-kubeadm.sh | bash -s -- {{ .builtin.machineDeployment.version }}
+            apt update && apt install curl -y && curl https://lxc.github.io/cluster-api-provider-incus/static/v0.1/install-kubeadm.sh | bash -s -- {{ .builtin.machineDeployment.version }}
   - name: controlPlaneConfigureUnprivileged
     description: Configure containerd for unprivileged mode in KubeadmControlPlane
     enabledIf: '{{ and (not .privileged) (ne .instance.type "virtual-machine") }}'
@@ -739,7 +739,7 @@ spec:
 kind: KubeadmControlPlaneTemplate
 apiVersion: controlplane.cluster.x-k8s.io/v1beta1
 metadata:
-  name: lxc-default-control-plane
+  name: capn-default-control-plane
 spec:
   template:
     spec:
@@ -786,7 +786,7 @@ spec:
 apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
 kind: LXCClusterTemplate
 metadata:
-  name: lxc-default-lxc-cluster
+  name: capn-default-lxc-cluster
 spec:
   template:
     spec:
@@ -796,7 +796,7 @@ spec:
 apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
 kind: LXCMachineTemplate
 metadata:
-  name: lxc-default-control-plane
+  name: capn-default-control-plane
 spec:
   template:
     spec:
@@ -807,7 +807,7 @@ spec:
 apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
 kind: LXCMachineTemplate
 metadata:
-  name: lxc-default-default-worker
+  name: capn-default-default-worker
 spec:
   template:
     spec:
@@ -818,7 +818,7 @@ spec:
 apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
 kind: KubeadmConfigTemplate
 metadata:
-  name: lxc-default-default-worker
+  name: capn-default-default-worker
 spec:
   template:
     spec:

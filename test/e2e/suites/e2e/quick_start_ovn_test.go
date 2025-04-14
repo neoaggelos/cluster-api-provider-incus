@@ -9,9 +9,9 @@ import (
 	"sigs.k8s.io/cluster-api/test/e2e"
 	"sigs.k8s.io/cluster-api/util"
 
-	"github.com/neoaggelos/cluster-api-provider-lxc/internal/incus"
-	"github.com/neoaggelos/cluster-api-provider-lxc/internal/ptr"
-	"github.com/neoaggelos/cluster-api-provider-lxc/test/e2e/shared"
+	"github.com/lxc/cluster-api-provider-incus/internal/incus"
+	"github.com/lxc/cluster-api-provider-incus/internal/ptr"
+	"github.com/lxc/cluster-api-provider-incus/test/e2e/shared"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -19,10 +19,6 @@ import (
 
 var _ = Describe("QuickStart", func() {
 	Context("OVN", Label("PRBlocking"), func() {
-		var (
-			lbAddress   string
-			networkName string
-		)
 		BeforeEach(func(ctx context.Context) {
 			client, err := incus.New(ctx, e2eCtx.Settings.LXCClientOptions)
 			Expect(err).ToNot(HaveOccurred())
@@ -37,17 +33,21 @@ var _ = Describe("QuickStart", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			// find network with the annotations below
-			// -- user.capl.e2e.ovn-lb-address = "<ip address>"
+			// -- user.capn.e2e.ovn-lb-address = "<ip address>"
 			for _, network := range networks {
-				if v, ok := network.Config["user.capl.e2e.ovn-lb-address"]; ok {
-					networkName = network.Name
-					lbAddress = v
-					shared.Logf("Using OVN network %q with LoadBalancer address %q", networkName, lbAddress)
+				if lbAddress, ok := network.Config["user.capn.e2e.ovn-lb-address"]; ok {
+					shared.Logf("Using OVN network %q with LoadBalancer address %q", network.Name, lbAddress)
+
+					e2eCtx.OverrideVariables(map[string]string{
+						"LOAD_BALANCER":                 fmt.Sprintf("ovn: {host: '%s', networkName: '%s'}", lbAddress, network.Name),
+						"CONTROL_PLANE_MACHINE_DEVICES": fmt.Sprintf("['eth0,type=nic,network=%s']", network.Name),
+						"WORKER_MACHINE_DEVICES":        fmt.Sprintf("['eth0,type=nic,network=%s']", network.Name),
+					})
 					return
 				}
 			}
 
-			Skip("Did not find any network with configuration 'user.capl.e2e.ovn-lb-address'")
+			Skip("Did not find any network with configuration 'user.capn.e2e.ovn-lb-address'")
 		})
 
 		e2e.QuickStartSpec(context.TODO(), func() e2e.QuickStartSpecInput {
@@ -59,18 +59,12 @@ var _ = Describe("QuickStart", func() {
 				SkipCleanup:            e2eCtx.Settings.SkipCleanup,
 				PostNamespaceCreated:   e2eCtx.DefaultPostNamespaceCreated(),
 				ControlPlaneWaiters:    e2eCtx.DefaultControlPlaneWaiters(),
-				InfrastructureProvider: ptr.To("lxc:v0.88.99"),
+				InfrastructureProvider: ptr.To("incus:v0.88.99"),
 
 				Flavor:                   ptr.To(shared.FlavorDefault),
 				ControlPlaneMachineCount: ptr.To[int64](3),
 				WorkerMachineCount:       ptr.To[int64](0),
 				ClusterName:              ptr.To(fmt.Sprintf("quick-start-ovn-%s", util.RandomString(6))),
-
-				ClusterctlVariables: map[string]string{
-					"LOAD_BALANCER":                 fmt.Sprintf("ovn: {host: '%s', networkName: '%s'}", lbAddress, networkName),
-					"CONTROL_PLANE_MACHINE_DEVICES": fmt.Sprintf("['eth0,type=nic,network=%s']", networkName),
-					"WORKER_MACHINE_DEVICES":        fmt.Sprintf("['eth0,type=nic,network=%s']", networkName),
-				},
 			}
 		})
 	})
