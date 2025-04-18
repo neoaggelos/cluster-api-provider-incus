@@ -627,8 +627,7 @@ spec:
       - op: add
         path: /spec/template/spec/kubeadmConfigSpec/preKubeadmCommands/-
         valueFrom:
-          template: |
-            apt update && apt install curl -y && curl https://lxc.github.io/cluster-api-provider-incus/static/v0.1/install-kubeadm.sh | bash -s -- {{ .builtin.controlPlane.version }}
+          template: sh -xeu /opt/cluster-api/install-kubeadm.sh {{ .builtin.controlPlane.version | quote }}
   - name: workerInstallKubeadm
     description: Inject install-kubeadm.sh script to MachineDeployments
     enabledIf: "{{ .instance.installKubeadm }}"
@@ -644,8 +643,7 @@ spec:
       - op: add
         path: /spec/template/spec/preKubeadmCommands/-
         valueFrom:
-          template: |
-            apt update && apt install curl -y && curl https://lxc.github.io/cluster-api-provider-incus/static/v0.1/install-kubeadm.sh | bash -s -- {{ .builtin.machineDeployment.version }}
+          template: sh -xeu /opt/cluster-api/install-kubeadm.sh {{ .builtin.machineDeployment.version | quote }}
   - name: controlPlaneConfigureUnprivileged
     description: Configure containerd for unprivileged mode in KubeadmControlPlane
     enabledIf: '{{ and (not .privileged) (ne .instance.type "virtual-machine") }}'
@@ -768,6 +766,10 @@ spec:
         postKubeadmCommands:
         - set -x
         files:
+        - path: /etc/kubernetes/manifests/.placeholder
+          content: placeholder file to prevent kubelet path not found errors
+          permissions: "0400"
+          owner: "root:root"
         - path: /etc/kubernetes/patches/.placeholder
           content: placeholder file to prevent kubeadm path not found errors
           permissions: "0400"
