@@ -9,6 +9,11 @@ import (
 )
 
 var (
+	kubeadmCfg struct {
+		kubernetesVersion string
+		pullExtraImages   []string
+	}
+
 	kubeadmCmd = &cobra.Command{
 		Use:          "kubeadm",
 		GroupID:      "build",
