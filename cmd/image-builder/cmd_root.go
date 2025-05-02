@@ -12,6 +12,29 @@ import (
 )
 
 var (
+	cfg struct {
+		// client configuration
+		configFile       string
+		configRemoteName string
+
+		// base image configuration
+		ubuntuVersion string
+
+		// builder configuration
+		instanceName     string
+		instanceProfiles []string
+		instanceType     string
+
+		// image alias configuration
+		imageAlias string
+
+		// output
+		outputFile string
+	}
+
+	// runtime configuration
+	client *incus.Client
+
 	rootCmd = &cobra.Command{
 		Use:          "image-builder",
 		SilenceUsage: true,
@@ -75,5 +98,4 @@ func init() {
 
 	rootCmd.PersistentFlags().StringVar(&cfg.outputFile, "output", "image.tar.gz",
 		"Output file for exported image")
-
 }
