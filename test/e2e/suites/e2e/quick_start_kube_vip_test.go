@@ -20,7 +20,7 @@ import (
 var _ = Describe("QuickStart", func() {
 	Context("KubeVIP", Label("PRBlocking"), func() {
 		BeforeEach(func(ctx context.Context) {
-			if v := e2eCtx.E2EConfig.GetVariableBestEffort(shared.KubeVIPAddress); v != "" {
+			if v := e2eCtx.E2EConfig.GetVariableOrEmpty(shared.KubeVIPAddress); v != "" {
 				shared.Logf("Using kube-vip address %q (from environment variable KUBE_VIP_ADDRESS)", v)
 				e2eCtx.OverrideVariables(map[string]string{
 					"LOAD_BALANCER": fmt.Sprintf("kube-vip: {host: %q}", v),

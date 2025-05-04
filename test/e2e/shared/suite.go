@@ -55,7 +55,7 @@ func Node1BeforeSuite(ctx context.Context, e2eCtx *E2EContext) []byte {
 	Logf("Loading the e2e test configuration from %q", e2eCtx.Settings.ConfigPath)
 	e2eCtx.E2EConfig = LoadE2EConfig(e2eCtx.Settings.ConfigPath)
 
-	Expect(e2eCtx.E2EConfig.GetVariable(LXCSecretName)).ToNot(BeEmpty(), "Invalid test suite argument. Value of environment variable LXC_SECRET_NAME should be set")
+	Expect(e2eCtx.E2EConfig.GetVariableOrEmpty(LXCSecretName)).ToNot(BeEmpty(), "Invalid test suite argument. Value of environment variable LXC_SECRET_NAME should be set")
 
 	Logf("Creating a clusterctl local repository into %q", e2eCtx.Settings.ArtifactFolder)
 	e2eCtx.Environment.ClusterctlConfigPath = createClusterctlLocalRepository(e2eCtx.E2EConfig, filepath.Join(e2eCtx.Settings.ArtifactFolder, "repository"))

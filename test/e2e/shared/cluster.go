@@ -56,7 +56,7 @@ func setupBootstrapCluster(config *clusterctl.E2EConfig, scheme *runtime.Scheme,
 	// try to use an existing cluster
 	if useExistingCluster {
 		// If the kubeContext is locked: try to use the default kubeconfig with the current context
-		kubeContext := config.GetVariable(KubeContext)
+		kubeContext := config.GetVariableOrEmpty(KubeContext)
 		if kubeContext != "" {
 			testKubeconfigPath := clientcmd.NewDefaultClientConfigLoadingRules().GetDefaultFilename()
 			kubecfg, err := clientcmd.LoadFromFile(testKubeconfigPath)
