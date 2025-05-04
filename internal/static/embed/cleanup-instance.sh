@@ -8,8 +8,7 @@ set -xeu
 apt-get purge -y \
   ubuntu-pro-client libx11-data iso-codes language-pack-en-base \
   vim openssh-client groff-base gnupg polkitd \
-  python-apt-common python3-apt python3-babel python3-pygments \
-  python3-launchpadlib python3-markdown-it python3-mdurl
+  python3-babel python3-pygments python3-launchpadlib python3-markdown-it python3-mdurl
 
 apt-get autoremove -y && apt-get clean && apt-get autoclean
 rm -rf \
