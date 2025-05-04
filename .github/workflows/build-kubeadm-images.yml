@@ -39,10 +39,10 @@ jobs:
 
       - name: Build image
         run: |
-          go run ./cmd/exp/image-builder kubeadm --v=4 --kubernetes-version=${{ inputs.version }} --instance-type=${{ matrix.type }} --output=image.tar.gz
+          go run ./cmd/exp/image-builder kubeadm --v=4 --kubernetes-version=${{ inputs.version }} --instance-type=${{ matrix.type }} --output=kubeadm-${{ inputs.version }}-${{ matrix.infrastructure }}-${{ matrix.type }}-${{ matrix.arch }}.tar.gz
 
       - name: Upload image
         uses: actions/upload-artifact@v4
         with:
           name: kubeadm-${{ inputs.version }}-${{ matrix.infrastructure }}-${{ matrix.type }}-${{ matrix.arch }}
-          path: image.tar.gz
+          path: kubeadm-${{ inputs.version }}-${{ matrix.infrastructure }}-${{ matrix.type }}-${{ matrix.arch }}.tar.gz
