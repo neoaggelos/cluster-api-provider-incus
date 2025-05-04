@@ -174,7 +174,7 @@ func importVirtualMachineImage(index simplestreams.Stream, products simplestream
 	}
 
 	log.Info("Adding metadata product version item", "ftype", metadataFType, "path", metadataTarget, "size", info.MetaSize)
-	metadataProductionVersionItem := simplestreams.ProductVersionItem{
+	metadataProductVersionItem := simplestreams.ProductVersionItem{
 		FileType:   metadataFType,
 		HashSha256: info.MetaSha256,
 		Size:       info.MetaSize,
@@ -183,12 +183,12 @@ func importVirtualMachineImage(index simplestreams.Stream, products simplestream
 
 	switch importCfg.serverType {
 	case "incus":
-		metadataProductionVersionItem.CombinedSha256DiskKvmImg = info.CombinedSha256
+		metadataProductVersionItem.CombinedSha256DiskKvmImg = info.CombinedSha256
 	case "lxd":
-		metadataProductionVersionItem.CombinedSha256DiskImg = info.CombinedSha256
+		metadataProductVersionItem.CombinedSha256DiskImg = info.CombinedSha256
 	}
 
-	newProductVersions.Items[metadataFType] = metadataProductionVersionItem
+	newProductVersions.Items[metadataFType] = metadataProductVersionItem
 	product.Versions[versionName] = newProductVersions
 	products.Products[productName] = product
 
