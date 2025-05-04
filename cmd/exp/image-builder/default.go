@@ -8,7 +8,7 @@ var (
 	defaultInstanceProfiles = []string{"default"}
 
 	defaultPullExtraImages = []string{
-		"docker.io/flannel/flannel-cni-plugin:v1.6.0-flannel1",
-		"docker.io/flannel/flannel:v0.26.3",
+		"ghcr.io/flannel-io/flannel-cni-plugin:v1.6.2-flannel1",
+		"ghcr.io/flannel-io/flannel:v0.26.7",
 	}
 )
