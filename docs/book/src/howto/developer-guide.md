@@ -20,12 +20,12 @@ chmod +x ./kind
 sudo mv ./kind /usr/local/bin/kind
 
 # clusterctl
-curl -L {{#releaselink repo:"https://github.com/kubernetes-sigs/cluster-api" gomodule:"sigs.k8s.io/cluster-api" asset:"clusterctl-linux-amd64" version:"1.9.x" }} -o clusterctl
+curl -L {{#releaselink repo:"https://github.com/kubernetes-sigs/cluster-api" gomodule:"sigs.k8s.io/cluster-api" asset:"clusterctl-linux-amd64" version:"1.10.x" }} -o clusterctl
 chmod +x ./clusterctl
 sudo mv ./clusterctl /usr/local/bin/clusterctl
 
 # kubectl
-curl -L --remote-name-all "https://dl.k8s.io/release/v1.32.0/bin/linux/amd64/kubectl" -o ./kubectl
+curl -L --remote-name-all "https://dl.k8s.io/release/v1.33.0/bin/linux/amd64/kubectl" -o ./kubectl
 chmod +x ./kubectl
 sudo mv ./kubectl /usr/local/bin/kubectl
 ```

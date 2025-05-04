@@ -48,7 +48,7 @@ LXCClusterSpec
 <td>
 <code>controlPlaneEndpoint</code><br/>
 <em>
-<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.9.2">
+<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.10.1">
 sigs.k8s.io/cluster-api/api/v1beta1.APIEndpoint
 </a>
 </em>
@@ -85,6 +85,19 @@ LXCClusterLoadBalancer
 </tr>
 <tr>
 <td>
+<code>unprivileged</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Unprivileged will launch unprivileged LXC containers for the cluster machines.</p>
+<p>Known limitations apply for unprivileged LXC containers (e.g. cannot use NFS volumes).</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>skipDefaultKubeadmProfile</code><br/>
 <em>
 bool
@@ -110,10 +123,7 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>SkipCloudProviderNodePatch will skip patching Nodes in the workload cluster
-to set <code>.spec.providerID</code>. Note that this requires deploying the external
-cloud controller manager, otherwise Machines will not be able to be tied
-to the respective Nodes in the workload cluster.</p>
+<p>SkipCloudProviderNodePatch is deprecated and does not have any effect.</p>
 </td>
 </tr>
 </table>
@@ -242,7 +252,7 @@ LXCLoadBalancerExternal
 <td>
 <code>controlPlaneEndpoint</code><br/>
 <em>
-<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.9.2">
+<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.10.1">
 sigs.k8s.io/cluster-api/api/v1beta1.APIEndpoint
 </a>
 </em>
@@ -279,6 +289,19 @@ LXCClusterLoadBalancer
 </tr>
 <tr>
 <td>
+<code>unprivileged</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Unprivileged will launch unprivileged LXC containers for the cluster machines.</p>
+<p>Known limitations apply for unprivileged LXC containers (e.g. cannot use NFS volumes).</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>skipDefaultKubeadmProfile</code><br/>
 <em>
 bool
@@ -304,10 +327,7 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>SkipCloudProviderNodePatch will skip patching Nodes in the workload cluster
-to set <code>.spec.providerID</code>. Note that this requires deploying the external
-cloud controller manager, otherwise Machines will not be able to be tied
-to the respective Nodes in the workload cluster.</p>
+<p>SkipCloudProviderNodePatch is deprecated and does not have any effect.</p>
 </td>
 </tr>
 </tbody>
@@ -345,7 +365,7 @@ bool
 <td>
 <code>conditions</code><br/>
 <em>
-<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.9.2">
+<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.10.1">
 sigs.k8s.io/cluster-api/api/v1beta1.Conditions
 </a>
 </em>
@@ -449,7 +469,7 @@ LXCClusterTemplateResource
 <td>
 <code>metadata</code><br/>
 <em>
-<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.9.2">
+<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.10.1">
 sigs.k8s.io/cluster-api/api/v1beta1.ObjectMeta
 </a>
 </em>
@@ -479,7 +499,7 @@ LXCClusterSpec
 <td>
 <code>controlPlaneEndpoint</code><br/>
 <em>
-<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.9.2">
+<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.10.1">
 sigs.k8s.io/cluster-api/api/v1beta1.APIEndpoint
 </a>
 </em>
@@ -516,6 +536,19 @@ LXCClusterLoadBalancer
 </tr>
 <tr>
 <td>
+<code>unprivileged</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Unprivileged will launch unprivileged LXC containers for the cluster machines.</p>
+<p>Known limitations apply for unprivileged LXC containers (e.g. cannot use NFS volumes).</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>skipDefaultKubeadmProfile</code><br/>
 <em>
 bool
@@ -541,10 +574,7 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>SkipCloudProviderNodePatch will skip patching Nodes in the workload cluster
-to set <code>.spec.providerID</code>. Note that this requires deploying the external
-cloud controller manager, otherwise Machines will not be able to be tied
-to the respective Nodes in the workload cluster.</p>
+<p>SkipCloudProviderNodePatch is deprecated and does not have any effect.</p>
 </td>
 </tr>
 </table>
@@ -1130,7 +1160,7 @@ bool
 <td>
 <code>addresses</code><br/>
 <em>
-<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.9.2">
+<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.10.1">
 []sigs.k8s.io/cluster-api/api/v1beta1.MachineAddress
 </a>
 </em>
@@ -1144,7 +1174,7 @@ bool
 <td>
 <code>conditions</code><br/>
 <em>
-<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.9.2">
+<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.10.1">
 sigs.k8s.io/cluster-api/api/v1beta1.Conditions
 </a>
 </em>
@@ -1248,7 +1278,7 @@ LXCMachineTemplateResource
 <td>
 <code>metadata</code><br/>
 <em>
-<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.9.2">
+<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.10.1">
 sigs.k8s.io/cluster-api/api/v1beta1.ObjectMeta
 </a>
 </em>
@@ -1431,7 +1461,7 @@ See <a href="https://github.com/kubernetes-sigs/cluster-api/blob/main/docs/propo
 <td>
 <em>(Optional)</em>
 <p>conditions represents the observations of a LXCMachine&rsquo;s current state.
-Known condition types are Ready, InstanceProvisioned, BootstrapSucceeded, Deleting, Paused.</p>
+Known condition types are Ready, InstanceProvisioned, Deleting, Paused.</p>
 </td>
 </tr>
 </tbody>

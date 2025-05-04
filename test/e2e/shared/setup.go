@@ -9,8 +9,9 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+
+	addonsv1 "sigs.k8s.io/cluster-api/api/addons/v1beta1"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
-	addonsv1 "sigs.k8s.io/cluster-api/exp/addons/api/v1beta1"
 	"sigs.k8s.io/cluster-api/test/e2e"
 	"sigs.k8s.io/cluster-api/test/framework"
 	"sigs.k8s.io/cluster-api/util"
@@ -31,7 +32,7 @@ func FixupNamespace(e2eCtx *E2EContext, namespace string, enableCredentials bool
 		{
 			enabled:     enableCredentials,
 			description: "secret/lxc-credentials",
-			object:      e2eCtx.Settings.LXCClientOptions.ToSecret(e2eCtx.E2EConfig.GetVariable(LXCSecretName), namespace),
+			object:      e2eCtx.Settings.LXCClientOptions.ToSecret(e2eCtx.E2EConfig.MustGetVariable(LXCSecretName), namespace),
 		},
 		{
 			enabled:     enableCNIResources,

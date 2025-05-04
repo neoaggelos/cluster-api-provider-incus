@@ -18,7 +18,7 @@ func ensureLXCClientOptions(e2eCtx *E2EContext) {
 	clusterClient := e2eCtx.Environment.BootstrapClusterProxy.GetClient()
 
 	secretName := types.NamespacedName{
-		Name:      e2eCtx.E2EConfig.GetVariable(LXCSecretName),
+		Name:      e2eCtx.E2EConfig.GetVariableOrEmpty(LXCSecretName),
 		Namespace: "default",
 	}
 
@@ -31,8 +31,8 @@ func ensureLXCClientOptions(e2eCtx *E2EContext) {
 		return
 	}
 
-	configFile := e2eCtx.E2EConfig.GetVariable(LXCLoadConfigFile)
-	remoteName := e2eCtx.E2EConfig.GetVariable(LXCLoadRemoteName)
+	configFile := e2eCtx.E2EConfig.GetVariableOrEmpty(LXCLoadConfigFile)
+	remoteName := e2eCtx.E2EConfig.GetVariableOrEmpty(LXCLoadRemoteName)
 	Logf("Looking for infrastructure credentials in local node (configFile: %q, remoteName: %q)", configFile, remoteName)
 	options, err := incus.NewOptionsFromConfigFile(configFile, remoteName, true)
 	Expect(err).ToNot(HaveOccurred(), "Failed to find infrastructure credentials in local node")
