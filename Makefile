@@ -243,7 +243,7 @@ GOLANGCI_LINT_VERSION ?= v1.61.0
 
 .PHONY: image-builder
 image-builder: $(LOCALBIN)
-	go build -o $(IMAGE_BUILDER) ./cmd/image-builder
+	go build -o $(IMAGE_BUILDER) ./cmd/exp/image-builder
 
 .PHONY: kustomize
 kustomize: $(KUSTOMIZE) ## Download kustomize locally if necessary.

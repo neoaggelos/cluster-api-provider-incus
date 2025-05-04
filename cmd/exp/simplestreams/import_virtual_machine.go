@@ -25,12 +25,16 @@ func importVirtualMachineImage(index simplestreams.Stream, products simplestream
 	if err != nil {
 		return fmt.Errorf("failed to open: %w", err)
 	}
-	defer f.Close()
+	defer func() {
+		_ = f.Close()
+	}()
 	gzReader, err := gzip.NewReader(f)
 	if err != nil {
 		return fmt.Errorf("failed to open tar.gz archive: %w", err)
 	}
-	defer gzReader.Close()
+	defer func() {
+		_ = gzReader.Close()
+	}()
 	tarReader := tar.NewReader(gzReader)
 
 	var outMetadataBuffer bytes.Buffer

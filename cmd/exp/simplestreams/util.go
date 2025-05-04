@@ -24,7 +24,9 @@ func getContainerImageInfo(path string) (containerImageInfo, error) {
 	if err != nil {
 		return containerImageInfo{}, fmt.Errorf("failed to open: %w", err)
 	}
-	defer f.Close()
+	defer func() {
+		_ = f.Close()
+	}()
 
 	hash := sha256.New()
 	if _, err = io.Copy(hash, f); err != nil {
@@ -77,7 +79,9 @@ func copyFile(source, destination string) error {
 	if err != nil {
 		return fmt.Errorf("failed to open source: %w", err)
 	}
-	defer f.Close()
+	defer func() {
+		_ = f.Close()
+	}()
 
 	if err := os.MkdirAll(filepath.Dir(destination), 0755); err != nil {
 		return fmt.Errorf("failed to create directory for destination: %w", err)
@@ -86,12 +90,15 @@ func copyFile(source, destination string) error {
 	if err != nil {
 		return fmt.Errorf("failed to open destination: %w", err)
 	}
-	defer of.Close()
 
 	if n, err := io.Copy(of, f); err != nil {
 		return fmt.Errorf("failed to copy file data: %w", err)
 	} else if err := of.Truncate(n); err != nil {
 		return fmt.Errorf("failed to truncate output file: %w", err)
+	}
+
+	if err := of.Close(); err != nil {
+		return fmt.Errorf("failed to flush file: %w", err)
 	}
 
 	return nil

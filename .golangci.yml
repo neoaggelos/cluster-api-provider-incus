@@ -16,6 +16,12 @@ issues:
       linters:
         - lll
         - goconst
+    - path: "cmd/exp/*"
+      linters:
+        - dupl
+        - goconst
+        - gocyclo
+        - lll
     - path: "internal/*"
       linters:
         - dupl

@@ -50,5 +50,5 @@ func init() {
 	importCmd.PersistentFlags().StringVar(&importCfg.serverType, "server-type", "incus",
 		"Server to create simplestreams index for. Must be one of [incus, lxd]")
 
-	importCmd.MarkPersistentFlagRequired("image-path")
+	_ = importCmd.MarkPersistentFlagRequired("image-path")
 }
