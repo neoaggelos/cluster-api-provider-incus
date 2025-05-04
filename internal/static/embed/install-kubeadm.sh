@@ -6,8 +6,8 @@
 set -xeu
 
 KUBERNETES_VERSION="${KUBERNETES_VERSION:-$1}"            # https://dl.k8s.io/release/stable.txt or https://dl.k8s.io/release/stable-1.32.txt
-CNI_PLUGINS_VERSION="${CNI_PLUGINS_VERSION:-v1.6.2}"      # https://github.com/containernetworking/plugins
-CRICTL_VERSION="${CRICTL_VERSION:-v1.32.0}"               # https://github.com/kubernetes-sigs/cri-tools
+CNI_PLUGINS_VERSION="${CNI_PLUGINS_VERSION:-v1.7.1}"      # https://github.com/containernetworking/plugins
+CRICTL_VERSION="${CRICTL_VERSION:-v1.33.0}"               # https://github.com/kubernetes-sigs/cri-tools
 CONTAINERD_VERSION="${CONTAINERD_VERSION:-v1.7.27}"       # https://github.com/containerd/containerd
 RUNC_VERSION="${RUNC_VERSION:-v1.2.5}"                    # https://github.com/opencontainers/runc, must match https://raw.githubusercontent.com/containerd/containerd/${CONTAINERD_VERSION}/script/setup/runc-version
 
