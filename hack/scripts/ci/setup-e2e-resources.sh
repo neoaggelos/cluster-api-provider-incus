@@ -29,11 +29,13 @@ LXC_OVN_NETWORK_IPV4_LB="10.200.1.201"
 ########################################################################
 
 # configure storage
-if ! "${CLI}" storage show "${LXC_STORAGE_POOL_NAME}" 2> /dev/null; then
-  if ! "${CLI}" storage create "${LXC_STORAGE_POOL_NAME}" zfs size="${LXC_STORAGE_POOL_SIZE}"; then
-    echo "Failed to create ZFS storage pool, will use default storage"
-  else
-    "${CLI}" profile device set "${LXC_PROFILE_NAME}" root type=disk pool="${LXC_STORAGE_POOL_NAME}"
+if [ "${LXC_CONFIGURE_ZFS:=true}" == "true" ]; then
+  if ! "${CLI}" storage show "${LXC_STORAGE_POOL_NAME}" 2> /dev/null; then
+    if ! "${CLI}" storage create "${LXC_STORAGE_POOL_NAME}" zfs size="${LXC_STORAGE_POOL_SIZE}"; then
+      echo "Failed to create ZFS storage pool, will use default storage"
+    else
+      "${CLI}" profile device set "${LXC_PROFILE_NAME}" root type=disk pool="${LXC_STORAGE_POOL_NAME}"
+    fi
   fi
 fi
 
