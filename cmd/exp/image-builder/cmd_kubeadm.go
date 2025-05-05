@@ -44,6 +44,7 @@ var (
 				&stagePostRunCommands{},
 				&stageCleanupInstance{},
 				&stageStopInstance{},
+				&stageCreateInstanceSnapshot{},
 				&stagePublishKubeadmImage{},
 				&stageExportImage{},
 				&stageRemoveInstance{},

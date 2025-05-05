@@ -21,9 +21,10 @@ var (
 		ubuntuVersion string
 
 		// builder configuration
-		instanceName     string
-		instanceProfiles []string
-		instanceType     string
+		instanceName         string
+		instanceProfiles     []string
+		instanceType         string
+		instanceSnapshotName string
 
 		// image alias configuration
 		imageAlias string
@@ -92,6 +93,8 @@ func init() {
 		"Type of image to build (one of container|virtual-machine)")
 	rootCmd.PersistentFlags().StringSliceVar(&cfg.instanceProfiles, "instance-profile", defaultInstanceProfiles,
 		"Profiles to use to launch the builder instance")
+	rootCmd.PersistentFlags().StringVar(&cfg.instanceSnapshotName, "instance-snapshot-name", defaultInstanceSnapshotName,
+		"Name for the builder instance snapshot")
 
 	rootCmd.PersistentFlags().StringVar(&cfg.imageAlias, "image-alias", "",
 		"Create image with alias. If not specified, a default is used based on config")

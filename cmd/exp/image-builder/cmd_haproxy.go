@@ -31,6 +31,7 @@ var (
 				&stagePostRunCommands{},
 				&stageCleanupInstance{},
 				&stageStopInstance{},
+				&stageCreateInstanceSnapshot{},
 				&stagePublishHaproxyImage{},
 				&stageExportImage{},
 				&stageRemoveInstance{},

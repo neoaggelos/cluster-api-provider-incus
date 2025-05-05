@@ -59,7 +59,7 @@ func (c *Client) CreateInstanceSnapshot(ctx context.Context, instanceName string
 	})
 }
 
-func (c *Client) PublishImage(ctx context.Context, instanceName string, imageAliasName string, imageProperties map[string]string) error {
+func (c *Client) PublishImage(ctx context.Context, instanceName string, instanceSnapshotName string, imageAliasName string, imageProperties map[string]string) error {
 	if _, _, err := c.Client.GetImageAlias(imageAliasName); err == nil {
 		log.FromContext(ctx).V(2).Info("Image alias already exists")
 		return nil
@@ -73,8 +73,8 @@ func (c *Client) PublishImage(ctx context.Context, instanceName string, imageAli
 				ExpiresAt:  time.Now().AddDate(10, 0, 0),
 			},
 			Source: &api.ImagesPostSource{
-				Type: "instance",
-				Name: instanceName,
+				Type: "snapshot",
+				Name: fmt.Sprintf("%s/%s", instanceName, instanceSnapshotName),
 			},
 			Aliases: []api.ImageAlias{
 				{Name: imageAliasName},
