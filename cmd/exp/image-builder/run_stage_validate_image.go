@@ -20,7 +20,7 @@ func (*stageValidateKubeadmImage) name() string { return "validate-kubeadm-image
 // cat validate-kubeadm-image.sh | incus exec t1 -- bash -s
 // incus rm t1 --force
 func (*stageValidateKubeadmImage) run(ctx context.Context) error {
-	instanceName := fmt.Sprintf("%s-validate", cfg.imageAlias)
+	instanceName := fmt.Sprintf("%s-validate", cfg.instanceName)
 	if err := client.CreateAndWaitForInstance(ctx, api.InstancesPost{
 		Name: instanceName,
 		Type: api.InstanceType(cfg.instanceType),
