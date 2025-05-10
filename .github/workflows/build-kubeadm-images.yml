@@ -39,10 +39,21 @@ jobs:
 
       - name: Build image
         run: |
-          go run ./cmd/exp/image-builder kubeadm --v=4 --kubernetes-version=${{ inputs.version }} --instance-type=${{ matrix.type }} --output=kubeadm-${{ inputs.version }}-${{ matrix.infrastructure }}-${{ matrix.type }}-${{ matrix.arch }}.tar.gz
+          go run ./cmd/exp/image-builder kubeadm --v=4 --image-alias kubeadm --kubernetes-version=${{ inputs.version }} --instance-type=${{ matrix.type }} --output=kubeadm-${{ inputs.version }}-${{ matrix.infrastructure }}-${{ matrix.type }}-${{ matrix.arch }}.tar.gz
 
       - name: Upload image
         uses: actions/upload-artifact@v4
         with:
           name: kubeadm-${{ inputs.version }}-${{ matrix.infrastructure }}-${{ matrix.type }}-${{ matrix.arch }}
           path: kubeadm-${{ inputs.version }}-${{ matrix.infrastructure }}-${{ matrix.type }}-${{ matrix.arch }}.tar.gz
+
+      - name: Test image
+        run: |
+          cli=${{ matrix.infrastrcture == 'incus' && 'incus' || 'lxc' }}
+
+          $cli launch kubeadm t1 -t c2-m4
+          while ! $cli exec t1 -- echo hi; do
+            sleep 2;
+          done
+
+          $cli exec t1 -- bash -c 'find /var/lib/containerd | grep flanneld | xargs -t sha256sum'
