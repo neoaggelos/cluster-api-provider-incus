@@ -49,7 +49,7 @@ jobs:
 
       - name: Test image
         run: |
-          cli=${{ matrix.infrastrcture == 'incus' && 'incus' || 'lxc' }}
+          cli=${{ matrix.infrastructure == 'incus' && 'incus' || 'lxc' }}
 
           $cli launch kubeadm t1 -t c2-m4
           while ! $cli exec t1 -- echo hi; do
