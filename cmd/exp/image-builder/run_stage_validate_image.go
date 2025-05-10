@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"time"
 
 	"github.com/lxc/cluster-api-provider-incus/internal/static"
 	"github.com/lxc/incus/v6/shared/api"
@@ -21,6 +22,9 @@ func (*stageValidateKubeadmImage) name() string { return "validate-kubeadm-image
 // incus rm t1 --force
 func (*stageValidateKubeadmImage) run(ctx context.Context) error {
 	instanceName := fmt.Sprintf("%s-validate", cfg.instanceName)
+
+	ctx = log.IntoContext(ctx, log.FromContext(ctx).WithValues("instance.name", instanceName))
+
 	if err := client.CreateAndWaitForInstance(ctx, api.InstancesPost{
 		Name: instanceName,
 		Type: api.InstanceType(cfg.instanceType),
@@ -33,6 +37,23 @@ func (*stageValidateKubeadmImage) run(ctx context.Context) error {
 		},
 	}); err != nil {
 		return fmt.Errorf("failed to launch validation instance: %w", err)
+	}
+
+	log.FromContext(ctx).V(1).Info("Waiting for instance agent to come up")
+	waitInstanceCh := make(chan error, 1)
+	go func() {
+		<-time.After(5 * time.Minute)
+		waitInstanceCh <- fmt.Errorf("timed out after 5 minutes")
+	}()
+	go func() {
+		for client.RunCommand(ctx, instanceName, []string{"echo", "hi"}, nil, nil, nil) != nil {
+			<-time.After(time.Second)
+		}
+		waitInstanceCh <- nil
+	}()
+
+	if err := <-waitInstanceCh; err != nil {
+		return fmt.Errorf("failed to wait for instance agent to come up: %w", err)
 	}
 
 	stdin := bytes.NewBufferString(static.ValidateKubeadmImageScript())
