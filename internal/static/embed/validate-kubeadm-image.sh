@@ -9,7 +9,6 @@ set -xeu
 containerd --version
 runc --version
 crictl --version
-crictl images
 
 # kubernetes
 kubelet --version
