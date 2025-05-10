@@ -101,7 +101,7 @@ func init() {
 
 	rootCmd.PersistentFlags().StringSliceVar(&cfg.skipStages, "skip", nil,
 		"Skip stages while building the image")
-	rootCmd.PersistentFlags().MarkHidden("skip")
+	_ = rootCmd.PersistentFlags().MarkHidden("skip")
 
 	rootCmd.PersistentFlags().StringVar(&cfg.outputFile, "output", "image.tar.gz",
 		"Output file for exported image")
