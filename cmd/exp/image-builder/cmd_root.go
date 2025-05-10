@@ -28,6 +28,9 @@ var (
 		// image alias configuration
 		imageAlias string
 
+		// skip stages
+		skipStages []string
+
 		// output
 		outputFile string
 	}
@@ -95,6 +98,10 @@ func init() {
 
 	rootCmd.PersistentFlags().StringVar(&cfg.imageAlias, "image-alias", "",
 		"Create image with alias. If not specified, a default is used based on config")
+
+	rootCmd.PersistentFlags().StringSliceVar(&cfg.skipStages, "skip", nil,
+		"Skip stages while building the image")
+	_ = rootCmd.PersistentFlags().MarkHidden("skip")
 
 	rootCmd.PersistentFlags().StringVar(&cfg.outputFile, "output", "image.tar.gz",
 		"Output file for exported image")
