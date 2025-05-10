@@ -14,10 +14,17 @@ var (
 
 	//go:embed embed/cleanup-instance.sh
 	cleanupInstanceScript string
+
+	//go:embed embed/validate-kubeadm-image.sh
+	validateKubeadmImageScript string
 )
 
 func InstallKubeadmScript() string {
 	return installKubeadmScript
+}
+
+func ValidateKubeadmImageScript() string {
+	return validateKubeadmImageScript
 }
 
 func InstallHaproxyScript() string {

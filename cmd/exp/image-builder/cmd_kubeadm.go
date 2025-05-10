@@ -47,6 +47,7 @@ var (
 				&stagePublishKubeadmImage{},
 				&stageExportImage{},
 				&stageRemoveInstance{},
+				&stageValidateKubeadmImage{},
 			)
 		},
 	}
