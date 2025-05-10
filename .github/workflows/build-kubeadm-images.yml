@@ -56,4 +56,8 @@ jobs:
             sleep 2;
           done
 
-          $cli exec t1 -- bash -c 'find /var/lib/containerd | grep flanneld | xargs -t sha256sum'
+          $cli exec t1 -- bash -c '
+            find /var/lib/containerd | grep flanneld | xargs -t sha256sum
+
+            find /var/lib/containerd | grep flanneld | xargs -t --replace={} bash -c "timeout 5s {} || true"
+          '
