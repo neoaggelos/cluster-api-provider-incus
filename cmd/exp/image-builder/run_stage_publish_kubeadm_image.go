@@ -13,6 +13,8 @@ func (*stagePublishKubeadmImage) name() string { return "publish-image" }
 
 // incus publish capn-builder capn-builder-image
 func (*stagePublishKubeadmImage) run(ctx context.Context) error {
+	<-time.After(time.Minute)
+
 	now := time.Now()
 	serial := fmt.Sprintf("%d%02d%02d%02d%02d", now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute())
 
