@@ -12,7 +12,7 @@ crictl --version
 crictl images
 
 # kubernetes
-kubelet --version1
+kubelet --version
 kubeadm version -o yaml
 kubectl version -o yaml --client
 
