@@ -114,18 +114,6 @@ LXCMachineTemplate objects.</p>
 allow privileged containers.</p>
 </td>
 </tr>
-<tr>
-<td>
-<code>skipCloudProviderNodePatch</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>SkipCloudProviderNodePatch is deprecated and does not have any effect.</p>
-</td>
-</tr>
 </table>
 </td>
 </tr>
@@ -316,18 +304,6 @@ profile manually and set the <code>.spec.template.spec.profiles</code> field of 
 LXCMachineTemplate objects.</p>
 <p>This is useful in cases where a restricted project is used, which does not
 allow privileged containers.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>skipCloudProviderNodePatch</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>SkipCloudProviderNodePatch is deprecated and does not have any effect.</p>
 </td>
 </tr>
 </tbody>
@@ -563,18 +539,6 @@ profile manually and set the <code>.spec.template.spec.profiles</code> field of 
 LXCMachineTemplate objects.</p>
 <p>This is useful in cases where a restricted project is used, which does not
 allow privileged containers.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>skipCloudProviderNodePatch</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>SkipCloudProviderNodePatch is deprecated and does not have any effect.</p>
 </td>
 </tr>
 </table>

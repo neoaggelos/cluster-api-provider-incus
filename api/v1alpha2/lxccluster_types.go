@@ -64,12 +64,6 @@ type LXCClusterSpec struct {
 	// +optional
 	SkipDefaultKubeadmProfile bool `json:"skipDefaultKubeadmProfile"`
 
-	// SkipCloudProviderNodePatch is deprecated and does not have any effect.
-	//
-	// +optional
-	// +deprecated
-	SkipCloudProviderNodePatch bool `json:"skipCloudProviderNodePatch"`
-
 	// TODO(neoaggelos): enable failure domains
 	// FailureDomains clusterv1.FailureDomains `json:"failureDomains,omitempty"`
 }

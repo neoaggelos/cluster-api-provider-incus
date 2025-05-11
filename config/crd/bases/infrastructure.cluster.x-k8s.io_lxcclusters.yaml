@@ -239,10 +239,6 @@ spec:
                 required:
                 - name
                 type: object
-              skipCloudProviderNodePatch:
-                description: SkipCloudProviderNodePatch is deprecated and does not
-                  have any effect.
-                type: boolean
               skipDefaultKubeadmProfile:
                 description: |-
                   Skip creation of the default kubeadm profile "cluster-api-$namespace-$name"
