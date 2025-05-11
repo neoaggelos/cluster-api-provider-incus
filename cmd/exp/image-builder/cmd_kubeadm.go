@@ -25,7 +25,7 @@ var (
 			}
 
 			if cfg.imageAlias == "" {
-				cfg.imageAlias = fmt.Sprintf("kubeadm-%s-u%s-%s", kubeadmCfg.kubernetesVersion, cfg.ubuntuVersion, cfg.instanceType)
+				cfg.imageAlias = fmt.Sprintf("kubeadm-%s-%s", kubeadmCfg.kubernetesVersion, cfg.instanceType)
 			}
 
 			log.FromContext(gCtx).WithValues(
@@ -47,6 +47,7 @@ var (
 				&stagePublishKubeadmImage{},
 				&stageExportImage{},
 				&stageRemoveInstance{},
+				&stageValidateKubeadmImage{},
 			)
 		},
 	}

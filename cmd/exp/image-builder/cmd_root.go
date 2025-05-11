@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"time"
 
 	"github.com/spf13/cobra"
 	cliflag "k8s.io/component-base/cli/flag"
@@ -28,8 +29,9 @@ var (
 		// image alias configuration
 		imageAlias string
 
-		// skip stages
-		skipStages []string
+		// build step configuration
+		skipStages          []string
+		instanceGracePeriod time.Duration
 
 		// output
 		outputFile string
@@ -102,6 +104,9 @@ func init() {
 	rootCmd.PersistentFlags().StringSliceVar(&cfg.skipStages, "skip", nil,
 		"Skip stages while building the image")
 	_ = rootCmd.PersistentFlags().MarkHidden("skip")
+
+	rootCmd.PersistentFlags().DurationVar(&cfg.instanceGracePeriod, "instance-grace-period", defaultInstanceGracePeriod,
+		"[advanced] Grace period before stopping instance, such that all disk writes complete")
 
 	rootCmd.PersistentFlags().StringVar(&cfg.outputFile, "output", "image.tar.gz",
 		"Output file for exported image")
