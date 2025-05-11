@@ -5,11 +5,13 @@ on:
 
 jobs:
   test-e2e:
-    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         infrastructure: [lxd, incus]
+        arch: [amd64, arm64]
+
+    runs-on: ${{ matrix.arch == 'amd64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -34,5 +36,5 @@ jobs:
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: artifacts-${{ matrix.infrastructure }}
+          name: artifacts-${{ matrix.infrastructure }}-${{ matrix.arch }}
           path: _artifacts
