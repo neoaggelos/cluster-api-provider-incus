@@ -316,26 +316,15 @@ spec:
                   volumeMounts:
                   - mountPath: /etc/kubernetes/admin.conf
                     name: kubeconfig
-                  - mountPath: /etc/hosts
-                    name: etchosts
                 hostNetwork: true
+                hostAliases:
+                - ip: 127.0.0.1
+                  hostnames: [kubernetes]
                 volumes:
                 - hostPath:
                     path: /etc/kubernetes/admin.conf
                   name: kubeconfig
-                - hostPath:
-                    path: /etc/kube-vip.hosts
-                    type: File
-                  name: etchosts
               status: {}
-      - op: add
-        path: /spec/template/spec/kubeadmConfigSpec/files/-
-        valueFrom:
-          template: |
-            content: 127.0.0.1 localhost kubernetes
-            owner: root:root
-            path: /etc/kube-vip.hosts
-            permissions: "0644"
   - name: controlPlaneInstanceSpec
     description: LXCMachineTemplate configuration for ControlPlane
     definitions:
