@@ -121,6 +121,11 @@ version = 3
   config_path = "/etc/containerd/certs.d"
 '
 
+CONTAINERD_SERVICE_UNPRIVILEGED_MODE_DROPIN_CONFIG='
+[Service]
+ExecStartPre=bash -xe -c "if stat -c %%u/%%g /proc | grep -q 0/0; then ln -sf config.default.toml /etc/containerd/config.toml; else ln -sf config.unprivileged.toml /etc/containerd/config.toml; fi"
+'
+
 CONTAINERD_SERVICE='
 [Unit]
 Description=containerd container runtime
@@ -197,8 +202,10 @@ if [ ! -f /etc/containerd/config.toml ]; then
   echo "${CONTAINERD_UNPRIVILEGED_CONFIG}" | tee /etc/containerd/config.unprivileged.toml
   ln -sf config.default.toml /etc/containerd/config.toml
 fi
+mkdir -p /usr/lib/systemd/system/containerd.service.d
 if ! systemctl list-unit-files containerd.service &>/dev/null; then
   echo "${CONTAINERD_SERVICE}" | tee /usr/lib/systemd/system/containerd.service
+  echo "${CONTAINERD_SERVICE_UNPRIVILEGED_MODE_DROPIN_CONFIG}" | tee /usr/lib/systemd/system/containerd.service.d/10-unprivileged-mode.conf
 fi
 systemctl enable containerd.service
 systemctl start containerd.service
