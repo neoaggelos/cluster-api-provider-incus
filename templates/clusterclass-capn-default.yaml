@@ -406,9 +406,6 @@ spec:
           controlPlane: true
       jsonPatches:
       - op: add
-        path: /spec/template/spec/kubeadmConfigSpec/preKubeadmCommands/-
-        value: /opt/containerd-configure-unprivileged-mode.sh
-      - op: add
         path: /spec/template/spec/kubeadmConfigSpec/files/-
         value:
           path: /etc/kubernetes/patches/kubeletconfiguration0+strategic.json
@@ -418,7 +415,6 @@ spec:
             {
               "apiVersion": "kubelet.config.k8s.io/v1beta1",
               "kind": "KubeletConfiguration",
-              "cgroupDriver": "cgroupfs",
               "featureGates": {
                 "KubeletInUserNamespace": true
               }
@@ -436,9 +432,6 @@ spec:
             - default-worker
       jsonPatches:
       - op: add
-        path: /spec/template/spec/preKubeadmCommands/-
-        value: /opt/containerd-configure-unprivileged-mode.sh
-      - op: add
         path: /spec/template/spec/files/-
         value:
           path: /etc/kubernetes/patches/kubeletconfiguration0+strategic.json
@@ -448,7 +441,6 @@ spec:
             {
               "apiVersion": "kubelet.config.k8s.io/v1beta1",
               "kind": "KubeletConfiguration",
-              "cgroupDriver": "cgroupfs",
               "featureGates": {
                 "KubeletInUserNamespace": true
               }
