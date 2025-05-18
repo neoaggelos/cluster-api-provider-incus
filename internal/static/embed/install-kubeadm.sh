@@ -122,7 +122,13 @@ version = 3
 
 CONTAINERD_SERVICE_UNPRIVILEGED_MODE_DROPIN_CONFIG='
 [Service]
-ExecStartPre=bash -xe -c "if stat -c %%u/%%g /proc | grep -q 0/0; then ln -sf config.default.toml /etc/containerd/config.toml; else ln -sf config.unprivileged.toml /etc/containerd/config.toml; fi"
+ExecStartPre=bash -xe -c "\
+ mkdir -p /etc/containerd && cd /etc/containerd && \
+ if stat -c %%u/%%g /proc | grep -q 0/0; then \
+  [ -f config.default.toml ] && ln -sf config.default.toml config.toml; \
+ else \
+  [ -f config.unprivileged.toml ] && ln -sf config.unprivileged.toml config.toml; \
+fi"
 '
 
 CONTAINERD_SERVICE='
