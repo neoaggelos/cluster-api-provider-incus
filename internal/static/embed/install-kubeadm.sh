@@ -107,8 +107,7 @@ version = 3
   runtime_type = "io.containerd.runc.v2"
 
 [plugins."io.containerd.cri.v1.runtime".containerd.runtimes.runc.options]
-  ## unprivileged
-  SystemdCgroup = false
+  SystemdCgroup = true
 
 [plugins."io.containerd.cri.v1.images"]
   snapshotter = "overlayfs"
