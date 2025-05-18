@@ -10,7 +10,7 @@ In order to address these security risks, it is possible to use unprivileged con
 
 To use unprivileged containers, use the [default cluster template](../reference/templates/default.md) and set `PRIVILEGED=false`.
 
-Unprivileged containers require extra configuration on the container runtime. This configuration is available in the kubeadm images starting from version  **v1.32.3**.
+Unprivileged containers require extra configuration on the container runtime. This configuration is available in the kubeadm images starting from version **v1.32.4**.
 
 ## Running Kubernetes in unprivileged containers
 
@@ -20,25 +20,25 @@ In particular, the following configuration adjustments are performed:
 
 ### kubelet
 
-- use `cgroupDriver: cgroupfs`
 - add feature gate `KubeletInUserNamespace: true`
 
 When using the default cluster template, these are applied on the nodes through a KubeletConfiguration patch.
+
+>**NOTE**: Kubernetes documentation also recommends using `cgroupDriver: cgroupfs`, but Incus and Canonical LXD both work correctly with the systemd cgroup driver. Further, Kubelet 1.32+ with containerd 2.0+ can query which cgroup driver is used through the CRI API, so no static configuration is required.
 
 ### containerd
 
 - set `disable_apparmor = true`
 - set `restrict_oom_score_adj = true`
 - set `disable_hugetlb_controller = true`
-- set `SystemdCgroup = false`
 
-When using the default images, the `/opt/configure-containerd-unprivileged-mode.sh` script can be used to reconfigure containerd with the options above.
+>**NOTE**: Kubernetes documentation also recommends setting `SystemdCgroup = false`, but Incus and Canonical LXD both work correctly with the systemd cgroup driver.
 
-The default cluster template will run this script as `preKubeadmCommands` as needed.
+When using the default images, the containerd service will automatically detect that the container is running in unprivileged mode, and set those options before starting. See `systemctl status containerd` for details.
 
 ## Support in pre-built kubeadm images
 
-Unprivileged containers are supported with the pre-built kubeadm images starting from version **v1.32.3**.
+Unprivileged containers are supported with the pre-built kubeadm images starting from version **v1.32.4**.
 
 ## Limitations in unprivileged containers
 
