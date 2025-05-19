@@ -107,8 +107,7 @@ version = 3
   runtime_type = "io.containerd.runc.v2"
 
 [plugins."io.containerd.cri.v1.runtime".containerd.runtimes.runc.options]
-  ## unprivileged
-  SystemdCgroup = false
+  SystemdCgroup = true
 
 [plugins."io.containerd.cri.v1.images"]
   snapshotter = "overlayfs"
@@ -119,6 +118,17 @@ version = 3
 
 [plugins."io.containerd.cri.v1.images".registry]
   config_path = "/etc/containerd/certs.d"
+'
+
+CONTAINERD_SERVICE_UNPRIVILEGED_MODE_DROPIN_CONFIG='
+[Service]
+ExecStartPre=bash -xe -c "\
+ mkdir -p /etc/containerd && cd /etc/containerd && \
+ if stat -c %%u/%%g /proc | grep -q 0/0; then \
+  [ -f config.default.toml ] && ln -sf config.default.toml config.toml; \
+ else \
+  [ -f config.unprivileged.toml ] && ln -sf config.unprivileged.toml config.toml; \
+fi"
 '
 
 CONTAINERD_SERVICE='
@@ -197,8 +207,10 @@ if [ ! -f /etc/containerd/config.toml ]; then
   echo "${CONTAINERD_UNPRIVILEGED_CONFIG}" | tee /etc/containerd/config.unprivileged.toml
   ln -sf config.default.toml /etc/containerd/config.toml
 fi
+mkdir -p /usr/lib/systemd/system/containerd.service.d
 if ! systemctl list-unit-files containerd.service &>/dev/null; then
   echo "${CONTAINERD_SERVICE}" | tee /usr/lib/systemd/system/containerd.service
+  echo "${CONTAINERD_SERVICE_UNPRIVILEGED_MODE_DROPIN_CONFIG}" | tee /usr/lib/systemd/system/containerd.service.d/10-unprivileged-mode.conf
 fi
 systemctl enable containerd.service
 systemctl start containerd.service
