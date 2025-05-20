@@ -42,6 +42,12 @@ func init() {
 	rootCmd.SetGlobalNormalizationFunc(cliflag.WordSepNormalizeFunc)
 	rootCmd.PersistentFlags().AddGoFlagSet(flag.CommandLine)
 
+	_ = rootCmd.PersistentFlags().MarkHidden("kubeconfig")
+	_ = rootCmd.PersistentFlags().MarkHidden("log-text-info-buffer-size")
+	_ = rootCmd.PersistentFlags().MarkHidden("log-flush-frequency")
+	_ = rootCmd.PersistentFlags().MarkHidden("log-text-split-stream")
+	_ = rootCmd.PersistentFlags().MarkHidden("logging-format")
+
 	rootCmd.AddGroup(&cobra.Group{ID: "operations", Title: "Available operations:"})
 	rootCmd.AddCommand(importCmd, showCmd)
 
