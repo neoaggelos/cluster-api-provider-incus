@@ -11,7 +11,7 @@ import (
 
 	"github.com/lxc/cluster-api-provider-incus/internal/lxc"
 	"github.com/lxc/cluster-api-provider-incus/internal/ptr"
-	"github.com/lxc/cluster-api-provider-incus/internal/types"
+	"github.com/lxc/cluster-api-provider-incus/internal/utils"
 	"github.com/lxc/cluster-api-provider-incus/test/e2e/shared"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -25,7 +25,7 @@ var _ = Describe("QuickStart", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			err = lxcClient.SupportsInstanceOCI(ctx)
-			Expect(err).To(Or(Succeed(), MatchError(types.IsTerminalError, "IsTerminalError")))
+			Expect(err).To(Or(Succeed(), MatchError(utils.IsTerminalError, "IsTerminalError")))
 			if err != nil {
 				Skip(fmt.Sprintf("Server does not support OCI instances: %v", err))
 			}

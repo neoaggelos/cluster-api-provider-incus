@@ -10,7 +10,7 @@ import (
 	"sigs.k8s.io/yaml"
 
 	"github.com/lxc/cluster-api-provider-incus/internal/lxc"
-	"github.com/lxc/cluster-api-provider-incus/internal/types"
+	"github.com/lxc/cluster-api-provider-incus/internal/utils"
 )
 
 // managerOVN is a Manager that spins up a network load-balancer.
@@ -30,7 +30,7 @@ func (l *managerOVN) Create(ctx context.Context) ([]string, error) {
 	ctx = log.IntoContext(ctx, log.FromContext(ctx).WithValues("networkName", l.networkName, "listenAddress", l.listenAddress))
 
 	if l.networkName == "" {
-		return nil, types.TerminalError(fmt.Errorf("network load balancer cannot be provisioned as .spec.loadBalancer.ovn.networkName is not specified"))
+		return nil, utils.TerminalError(fmt.Errorf("network load balancer cannot be provisioned as .spec.loadBalancer.ovn.networkName is not specified"))
 	}
 
 	if err := l.lxcClient.SupportsNetworkLoadBalancers(ctx); err != nil {
@@ -38,13 +38,13 @@ func (l *managerOVN) Create(ctx context.Context) ([]string, error) {
 	}
 
 	if _, _, err := l.lxcClient.GetNetwork(l.networkName); err != nil {
-		return nil, types.TerminalError(fmt.Errorf("failed to check network %q: %w", l.networkName, err))
+		return nil, utils.TerminalError(fmt.Errorf("failed to check network %q: %w", l.networkName, err))
 	}
 	if lb, _, err := l.lxcClient.GetNetworkLoadBalancer(l.networkName, l.listenAddress); err != nil && !strings.Contains(err.Error(), "Network load balancer not found") {
 		return nil, fmt.Errorf("failed to GetNetworkLoadBalancer: %w", err)
 	} else if err == nil {
 		if lb.Config["user.cluster-name"] != l.clusterName || lb.Config["user.cluster-namespace"] != l.clusterNamespace {
-			return nil, types.TerminalError(fmt.Errorf("conflict: a LoadBalancer with IP %s already exists without the required keys %s=%s and %s=%s", l.listenAddress, "user.cluster-name", l.clusterName, "user.cluster-namespace", l.clusterNamespace))
+			return nil, utils.TerminalError(fmt.Errorf("conflict: a LoadBalancer with IP %s already exists without the required keys %s=%s and %s=%s", l.listenAddress, "user.cluster-name", l.clusterName, "user.cluster-namespace", l.clusterNamespace))
 		}
 		log.FromContext(ctx).V(1).Info("Network load balancer already exists")
 		return []string{l.listenAddress}, nil

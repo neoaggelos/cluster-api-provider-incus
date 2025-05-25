@@ -16,7 +16,7 @@ import (
 	infrav1 "github.com/lxc/cluster-api-provider-incus/api/v1alpha2"
 	"github.com/lxc/cluster-api-provider-incus/internal/loadbalancer"
 	"github.com/lxc/cluster-api-provider-incus/internal/lxc"
-	"github.com/lxc/cluster-api-provider-incus/internal/util"
+	"github.com/lxc/cluster-api-provider-incus/internal/utils"
 )
 
 func (r *LXCClusterReconciler) reconcileDelete(ctx context.Context, cluster *clusterv1.Cluster, lxcCluster *infrav1.LXCCluster, lxcClient *lxc.Client) (ctrl.Result, error) {
@@ -40,7 +40,7 @@ func (r *LXCClusterReconciler) reconcileDelete(ctx context.Context, cluster *clu
 		return ctrl.Result{}, fmt.Errorf("failed to delete the load balancer instance: %w", err)
 	}
 
-	machines, err := util.GetMachinesForCluster(ctx, r.Client, client.ObjectKeyFromObject(cluster))
+	machines, err := utils.GetMachinesForCluster(ctx, r.Client, client.ObjectKeyFromObject(cluster))
 	if err != nil {
 		log.FromContext(ctx).Error(err, "Failed to get list of Machines for Cluster")
 	} else if len(machines) > 0 {

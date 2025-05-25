@@ -13,7 +13,7 @@ import (
 	"github.com/lxc/cluster-api-provider-incus/internal/loadbalancer"
 	"github.com/lxc/cluster-api-provider-incus/internal/lxc"
 	"github.com/lxc/cluster-api-provider-incus/internal/static"
-	"github.com/lxc/cluster-api-provider-incus/internal/types"
+	"github.com/lxc/cluster-api-provider-incus/internal/utils"
 )
 
 func (r *LXCClusterReconciler) reconcileNormal(ctx context.Context, cluster *clusterv1.Cluster, lxcCluster *infrav1.LXCCluster, lxcClient *lxc.Client) error {
@@ -55,7 +55,7 @@ func (r *LXCClusterReconciler) reconcileNormal(ctx context.Context, cluster *clu
 	lbIPs, err := loadbalancer.ManagerForCluster(cluster, lxcCluster, lxcClient).Create(ctx)
 	if err != nil {
 		log.FromContext(ctx).Error(err, "Failed to provision load balancer")
-		if types.IsTerminalError(err) {
+		if utils.IsTerminalError(err) {
 			conditions.MarkFalse(lxcCluster, infrav1.LoadBalancerAvailableCondition, infrav1.LoadBalancerProvisioningAbortedReason, clusterv1.ConditionSeverityError, "The cluster load balancer could not be provisioned. The error was: %s", err)
 			return nil
 		}

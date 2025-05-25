@@ -5,9 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/lxc/cluster-api-provider-incus/internal/utils"
 	"github.com/lxc/incus/v6/shared/api"
-
-	"github.com/lxc/cluster-api-provider-incus/internal/types"
 )
 
 func (c *Client) GetDefaultUbuntuImage(ctx context.Context, imageName string) (api.InstanceSource, bool, error) {
@@ -33,6 +32,6 @@ func (c *Client) GetDefaultUbuntuImage(ctx context.Context, imageName string) (a
 			Protocol: "simplestreams",
 		}, true, nil
 	default:
-		return api.InstanceSource{}, false, types.TerminalError(fmt.Errorf("image name is %q, but server is %q. Images with 'ubuntu:' prefix are only allowed for Incus and LXD", imageName, serverName))
+		return api.InstanceSource{}, false, utils.TerminalError(fmt.Errorf("image name is %q, but server is %q. Images with 'ubuntu:' prefix are only allowed for Incus and LXD", imageName, serverName))
 	}
 }

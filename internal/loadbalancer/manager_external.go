@@ -7,7 +7,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	"github.com/lxc/cluster-api-provider-incus/internal/lxc"
-	"github.com/lxc/cluster-api-provider-incus/internal/types"
+	"github.com/lxc/cluster-api-provider-incus/internal/utils"
 )
 
 // managerExternal is a no-op LoadBalancerManager when using an external LoadBalancer mechanism for the cluster (e.g. kube-vip).
@@ -31,7 +31,7 @@ func (l *managerExternal) Create(ctx context.Context) ([]string, error) {
 	_ = l.lxcClient
 
 	if l.address == "" {
-		return nil, types.TerminalError(fmt.Errorf("using external load balancer but no address is configured"))
+		return nil, utils.TerminalError(fmt.Errorf("using external load balancer but no address is configured"))
 	}
 
 	log.FromContext(ctx).V(1).Info("Using external load balancer")

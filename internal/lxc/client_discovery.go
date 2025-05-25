@@ -4,10 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/lxc/cluster-api-provider-incus/internal/utils"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-
-	"github.com/lxc/cluster-api-provider-incus/internal/types"
 )
 
 // GetServerName returns one of "incus", "lxd" or "unknown", depending on the server type.
@@ -32,7 +31,7 @@ func (c *Client) serverSupportsExtensions(extensions ...string) error {
 	if server, _, err := c.GetServer(); err != nil {
 		return fmt.Errorf("failed to retrieve server information: %w", err)
 	} else if missing := sets.New(extensions...).Difference(sets.New(server.APIExtensions...)).UnsortedList(); len(missing) > 0 {
-		return types.TerminalError(fmt.Errorf("required extensions %v are not supported", missing))
+		return utils.TerminalError(fmt.Errorf("required extensions %v are not supported", missing))
 	}
 	return nil
 }

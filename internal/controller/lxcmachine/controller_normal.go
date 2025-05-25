@@ -20,7 +20,7 @@ import (
 	"github.com/lxc/cluster-api-provider-incus/internal/lxc"
 	"github.com/lxc/cluster-api-provider-incus/internal/ptr"
 	"github.com/lxc/cluster-api-provider-incus/internal/static"
-	"github.com/lxc/cluster-api-provider-incus/internal/types"
+	"github.com/lxc/cluster-api-provider-incus/internal/utils"
 )
 
 func (r *LXCMachineReconciler) reconcileNormal(ctx context.Context, cluster *clusterv1.Cluster, lxcCluster *infrav1.LXCCluster, machine *clusterv1.Machine, lxcMachine *infrav1.LXCMachine, lxcClient *lxc.Client) (ctrl.Result, error) {
@@ -75,7 +75,7 @@ func (r *LXCMachineReconciler) reconcileNormal(ctx context.Context, cluster *clu
 	log.FromContext(ctx).Info("Launching instance")
 	addresses, err := launchInstance(ctx, cluster, lxcCluster, machine, lxcMachine, lxcClient, cloudInit)
 	if err != nil {
-		if types.IsTerminalError(err) {
+		if utils.IsTerminalError(err) {
 			log.FromContext(ctx).Error(err, "Fatal error while creating instance spec")
 			conditions.MarkFalse(lxcMachine, infrav1.InstanceProvisionedCondition, infrav1.InstanceProvisioningAbortedReason, clusterv1.ConditionSeverityError, "Failed to create instance spec: %s", err.Error())
 			return ctrl.Result{}, nil
@@ -130,7 +130,7 @@ func launchInstance(ctx context.Context, cluster *clusterv1.Cluster, lxcCluster 
 	for _, deviceSpec := range lxcMachine.Spec.Devices {
 		deviceName, deviceArgs, hasSeparator := strings.Cut(deviceSpec, ",")
 		if !hasSeparator {
-			return nil, types.TerminalError(fmt.Errorf("device spec %q is not using the expected %q format", deviceSpec, "<device>,<key>=<value>,<key2>=<value2>"))
+			return nil, utils.TerminalError(fmt.Errorf("device spec %q is not using the expected %q format", deviceSpec, "<device>,<key>=<value>,<key2>=<value2>"))
 		}
 
 		if devices == nil {
@@ -144,7 +144,7 @@ func launchInstance(ctx context.Context, cluster *clusterv1.Cluster, lxcCluster 
 		for _, deviceArg := range strings.Split(deviceArgs, ",") {
 			key, value, hasEqual := strings.Cut(deviceArg, "=")
 			if !hasEqual {
-				return nil, types.TerminalError(fmt.Errorf("device argument %q of device spec %q is not using the expected %q format", deviceArg, deviceSpec, "<key>=<value>"))
+				return nil, utils.TerminalError(fmt.Errorf("device argument %q of device spec %q is not using the expected %q format", deviceArg, deviceSpec, "<key>=<value>"))
 			}
 
 			devices[deviceName][key] = value
@@ -162,7 +162,7 @@ func launchInstance(ctx context.Context, cluster *clusterv1.Cluster, lxcCluster 
 		}
 	case lxcMachine.Spec.Image.IsZero():
 		if machine.Spec.Version == nil {
-			return nil, types.TerminalError(fmt.Errorf("no image source specified on LXCMachineTemplate and Machine %q does not have a Kubernetes version", machine.Name))
+			return nil, utils.TerminalError(fmt.Errorf("no image source specified on LXCMachineTemplate and Machine %q does not have a Kubernetes version", machine.Name))
 		}
 
 		version := *machine.Spec.Version
@@ -171,7 +171,7 @@ func launchInstance(ctx context.Context, cluster *clusterv1.Cluster, lxcCluster 
 		if ssClient, err := incus.ConnectSimpleStreams(lxc.DefaultSimplestreamsServer, &incus.ConnectionArgs{}); err != nil {
 			return nil, fmt.Errorf("no image source specified and failed to connect to simplestreams server %q: %w", lxc.DefaultSimplestreamsServer, err)
 		} else if _, _, err := ssClient.GetImageAliasType(instanceType, fmt.Sprintf("kubeadm/%s", version)); err != nil {
-			return nil, types.TerminalError(fmt.Errorf("no image source specified and simplestreams server %q does not provide images for Kubernetes version %q: %w. Please consider using a different Kubernetes version, or build your own base image and set the image source on the LXCMachineTemplate resource", lxc.DefaultSimplestreamsServer, version, err))
+			return nil, utils.TerminalError(fmt.Errorf("no image source specified and simplestreams server %q does not provide images for Kubernetes version %q: %w. Please consider using a different Kubernetes version, or build your own base image and set the image source on the LXCMachineTemplate resource", lxc.DefaultSimplestreamsServer, version, err))
 		}
 
 		image = api.InstanceSource{

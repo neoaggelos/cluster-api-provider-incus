@@ -13,7 +13,7 @@ import (
 type Manager interface {
 	// Create provisions the load balancer instance.
 	// Implementations can indicate non-retriable failures (e.g. because of Incus not having the required extensions).
-	// Callers must check these with types.IsTerminalError() and treat them as terminal failures.
+	// Callers must check these with utils.IsTerminalError() and treat them as terminal failures.
 	Create(context.Context) ([]string, error)
 	// Delete cleans up any load balancer resources.
 	Delete(context.Context) error
