@@ -6,6 +6,8 @@ import (
 
 	"github.com/lxc/incus/v6/shared/api"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+
+	"github.com/lxc/cluster-api-provider-incus/internal/lxc"
 )
 
 type stageCreateInstance struct{}
@@ -22,7 +24,7 @@ func (*stageCreateInstance) run(ctx context.Context) error {
 
 	// LXD needs security.nesting=true for containers to be able to pull images
 	var config map[string]string
-	if cfg.instanceType == "container" {
+	if cfg.instanceType == lxc.Container {
 		config = map[string]string{
 			"security.nesting": "true",
 		}
@@ -39,7 +41,7 @@ func (*stageCreateInstance) run(ctx context.Context) error {
 	}
 
 	// set size of root volume to 5GB for virtual machines
-	if cfg.instanceType == "virtual-machine" {
+	if cfg.instanceType == lxc.VirtualMachine {
 		pools, err := lxcClient.GetStoragePools()
 		if err != nil {
 			return fmt.Errorf("failed to list storage pools: %w", err)

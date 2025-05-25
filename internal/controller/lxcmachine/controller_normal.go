@@ -112,7 +112,7 @@ func launchInstance(ctx context.Context, cluster *clusterv1.Cluster, lxcCluster 
 	if !util.IsControlPlaneMachine(machine) {
 		role = "worker"
 	}
-	instanceType := "container"
+	instanceType := lxc.Container
 	if lxcMachine.Spec.InstanceType != "" {
 		instanceType = lxcMachine.Spec.InstanceType
 	}
@@ -120,7 +120,7 @@ func launchInstance(ctx context.Context, cluster *clusterv1.Cluster, lxcCluster 
 	ctx = log.IntoContext(ctx, log.FromContext(ctx).WithValues("instance", name, "role", role))
 
 	profiles := lxcMachine.Spec.Profiles
-	if lxcMachine.Spec.InstanceType == "container" && !lxcCluster.Spec.SkipDefaultKubeadmProfile && !slices.Contains(lxcMachine.Spec.Profiles, lxcCluster.GetProfileName()) {
+	if lxcMachine.Spec.InstanceType == lxc.Container && !lxcCluster.Spec.SkipDefaultKubeadmProfile && !slices.Contains(lxcMachine.Spec.Profiles, lxcCluster.GetProfileName()) {
 		// for containers, include the default kubeadm profile
 		profiles = append(lxcMachine.Spec.Profiles, lxcCluster.GetProfileName())
 	}
@@ -198,7 +198,7 @@ func launchInstance(ctx context.Context, cluster *clusterv1.Cluster, lxcCluster 
 		"cloud-init.user-data":   cloudInit,
 	}
 
-	if lxcClient.GetServerName(ctx) == "lxd" && lxcCluster.Spec.Unprivileged && instanceType == "container" {
+	if lxcClient.GetServerName(ctx) == "lxd" && lxcCluster.Spec.Unprivileged && instanceType == lxc.Container {
 		config["security.nesting"] = "true"
 		if devices == nil {
 			devices = make(map[string]map[string]string, 2)

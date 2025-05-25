@@ -49,7 +49,7 @@ var (
 			}
 
 			switch cfg.instanceType {
-			case "container", "virtual-machine":
+			case lxc.Container, lxc.VirtualMachine:
 			default:
 				return fmt.Errorf("invalid value for --instance-type argument %q, must be one of [container, virtual-machine]", cfg.instanceType)
 			}

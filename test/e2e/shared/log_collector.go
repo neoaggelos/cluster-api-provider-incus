@@ -95,7 +95,7 @@ func (o IncusLogCollector) CollectMachineLog(ctx context.Context, managementClus
 	}
 
 	// kernel logs (for virtual machines only)
-	if lxcMachine.Spec.InstanceType == "virtual-machine" {
+	if lxcMachine.Spec.InstanceType == lxc.VirtualMachine {
 		items = append(items, logitem{name: "kern.log", command: []string{"journalctl", "--no-pager", "--output=short-precise", "-k"}})
 	}
 

@@ -38,7 +38,7 @@ var _ = Describe("QuickStart", func() {
 			}
 
 			e2eCtx.OverrideVariables(map[string]string{
-				"WORKER_MACHINE_TYPE": "virtual-machine",
+				"WORKER_MACHINE_TYPE": lxc.VirtualMachine,
 			})
 		})
 		e2e.QuickStartSpec(context.TODO(), func() e2e.QuickStartSpecInput {

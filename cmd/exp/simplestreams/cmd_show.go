@@ -8,6 +8,8 @@ import (
 
 	"github.com/lxc/incus/v6/shared/simplestreams"
 	"github.com/spf13/cobra"
+
+	"github.com/lxc/cluster-api-provider-incus/internal/lxc"
 )
 
 var (
@@ -97,17 +99,17 @@ var (
 						for _, item := range version.Items {
 							switch item.FileType {
 							case "incus_combined.tar.gz":
-								if !showCfg.incus && showCfg.lxd || showCfg.itype == "virtual-machine" {
+								if !showCfg.incus && showCfg.lxd || showCfg.itype == lxc.VirtualMachine {
 									continue
 								}
 								fmt.Printf("| %-30s | %s | container       | incus | %s | %4v MB | %s\n", productName, versionName, product.Architecture, item.Size/1024/1024, item.Path)
 							case "lxd_combined.tar.gz":
-								if !showCfg.lxd && showCfg.incus || showCfg.itype == "virtual-machine" {
+								if !showCfg.lxd && showCfg.incus || showCfg.itype == lxc.VirtualMachine {
 									continue
 								}
 								fmt.Printf("| %-30s | %s | container       | lxd   | %s | %4v MB | %s\n", productName, versionName, product.Architecture, item.Size/1024/1024, item.Path)
 							case "disk-kvm.img":
-								if !showCfg.incus && showCfg.lxd || showCfg.itype == "container" {
+								if !showCfg.incus && showCfg.lxd || showCfg.itype == lxc.Container {
 									continue
 								}
 								if _, ok := version.Items["incus.tar.xz"]; !ok {
@@ -115,7 +117,7 @@ var (
 								}
 								fmt.Printf("| %-30s | %s | virtual-machine | incus | %s | %4v MB | %s\n", productName, versionName, product.Architecture, item.Size/1024/1024, item.Path)
 							case "disk1.img":
-								if !showCfg.lxd && showCfg.incus || showCfg.itype == "container" {
+								if !showCfg.lxd && showCfg.incus || showCfg.itype == lxc.Container {
 									continue
 								}
 								if _, ok := version.Items["lxd.tar.xz"]; !ok {

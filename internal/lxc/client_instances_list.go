@@ -38,14 +38,14 @@ func WithConfigKeys(keys ...string) ListInstanceFilter {
 // Containers filters for instances of type container.
 func Containers() ListInstanceFilter {
 	return func(i api.InstanceFull) bool {
-		return i.Type == "container"
+		return i.Type == Container
 	}
 }
 
 // VirtualMachines filters for instances of type virtual-machine.
 func VirtualMachines() ListInstanceFilter {
 	return func(i api.InstanceFull) bool {
-		return i.Type == "virtual-machine"
+		return i.Type == VirtualMachine
 	}
 }
 

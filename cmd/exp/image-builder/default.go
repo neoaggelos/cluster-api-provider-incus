@@ -1,12 +1,16 @@
 package main
 
-import "time"
+import (
+	"time"
+
+	"github.com/lxc/cluster-api-provider-incus/internal/lxc"
+)
 
 var (
 	defaultUbuntuVersion = "24.04"
 
 	defaultInstanceName     = "capn-builder"
-	defaultInstanceType     = "container"
+	defaultInstanceType     = lxc.Container
 	defaultInstanceProfiles = []string{"default"}
 
 	defaultInstanceGracePeriod = 2 * time.Minute
