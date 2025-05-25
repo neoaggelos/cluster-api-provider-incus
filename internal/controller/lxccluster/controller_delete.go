@@ -14,11 +14,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	infrav1 "github.com/lxc/cluster-api-provider-incus/api/v1alpha2"
-	"github.com/lxc/cluster-api-provider-incus/internal/incus"
+	"github.com/lxc/cluster-api-provider-incus/internal/loadbalancer"
+	"github.com/lxc/cluster-api-provider-incus/internal/lxc"
 	"github.com/lxc/cluster-api-provider-incus/internal/util"
 )
 
-func (r *LXCClusterReconciler) reconcileDelete(ctx context.Context, cluster *clusterv1.Cluster, lxcCluster *infrav1.LXCCluster, lxcClient *incus.Client) (ctrl.Result, error) {
+func (r *LXCClusterReconciler) reconcileDelete(ctx context.Context, cluster *clusterv1.Cluster, lxcCluster *infrav1.LXCCluster, lxcClient *lxc.Client) (ctrl.Result, error) {
 	// Set the LoadBalancerAvailableCondition reporting delete is started, and issue a patch in order to make
 	// this visible to the users.
 	// NB. The operation in LXC is fast, so there is the chance the user will not notice the status change;
@@ -35,7 +36,7 @@ func (r *LXCClusterReconciler) reconcileDelete(ctx context.Context, cluster *clu
 
 	// Delete the container hosting the load balancer
 	log.FromContext(ctx).Info("Deleting load balancer")
-	if err := lxcClient.LoadBalancerManagerForCluster(cluster, lxcCluster).Delete(ctx); err != nil {
+	if err := loadbalancer.ManagerForCluster(cluster, lxcCluster, lxcClient).Delete(ctx); err != nil {
 		return ctrl.Result{}, fmt.Errorf("failed to delete the load balancer instance: %w", err)
 	}
 
@@ -48,7 +49,7 @@ func (r *LXCClusterReconciler) reconcileDelete(ctx context.Context, cluster *clu
 	}
 
 	log.FromContext(ctx).Info("Deleting default kubeadm profile")
-	if err := lxcClient.DeleteProfile(ctx, lxcCluster.GetProfileName()); err != nil {
+	if err := lxcClient.DeleteProfile(lxcCluster.GetProfileName()); err != nil {
 		return ctrl.Result{}, fmt.Errorf("failed to delete the default kubeadm profile: %w", err)
 	}
 

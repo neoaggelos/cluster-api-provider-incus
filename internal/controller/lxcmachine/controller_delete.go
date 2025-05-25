@@ -12,10 +12,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	infrav1 "github.com/lxc/cluster-api-provider-incus/api/v1alpha2"
-	"github.com/lxc/cluster-api-provider-incus/internal/incus"
+	"github.com/lxc/cluster-api-provider-incus/internal/loadbalancer"
+	"github.com/lxc/cluster-api-provider-incus/internal/lxc"
 )
 
-func (r *LXCMachineReconciler) reconcileDelete(ctx context.Context, cluster *clusterv1.Cluster, lxcCluster *infrav1.LXCCluster, machine *clusterv1.Machine, lxcMachine *infrav1.LXCMachine, lxcClient *incus.Client) error {
+func (r *LXCMachineReconciler) reconcileDelete(ctx context.Context, cluster *clusterv1.Cluster, lxcCluster *infrav1.LXCCluster, machine *clusterv1.Machine, lxcMachine *infrav1.LXCMachine, lxcClient *lxc.Client) error {
 	// Set the InstanceProvisionedCondition reporting delete is started, and issue a patch in order to make
 	// this visible to the users.
 	// NB. The operation in LXC is fast, so there is the chance the user will not notice the status change;
@@ -31,14 +32,14 @@ func (r *LXCMachineReconciler) reconcileDelete(ctx context.Context, cluster *clu
 
 	// Delete the machine
 	log.FromContext(ctx).Info("Deleting instance")
-	if err := lxcClient.DeleteInstance(ctx, lxcMachine); err != nil {
+	if err := lxcClient.WaitForDeleteInstance(ctx, lxcMachine.Name); err != nil {
 		return fmt.Errorf("failed to delete the instance: %w", err)
 	}
 
 	// If the deleted machine is a control-plane node, remove it from the load balancer configuration (unless the cluster is getting deleted)
 	if util.IsControlPlaneMachine(machine) && cluster.ObjectMeta.DeletionTimestamp.IsZero() {
 		log.FromContext(ctx).Info("Reconfigure load balancer after removing control plane machine")
-		if err := lxcClient.LoadBalancerManagerForCluster(cluster, lxcCluster).Reconfigure(ctx); err != nil {
+		if err := loadbalancer.ManagerForCluster(cluster, lxcCluster, lxcClient).Reconfigure(ctx); err != nil {
 			return fmt.Errorf("failed to reconfigure load balancer after removing control plane node: %w", err)
 		}
 	}

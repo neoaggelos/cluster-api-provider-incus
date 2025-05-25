@@ -36,7 +36,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 
 	infrav1 "github.com/lxc/cluster-api-provider-incus/api/v1alpha2"
-	"github.com/lxc/cluster-api-provider-incus/internal/incus"
+	"github.com/lxc/cluster-api-provider-incus/internal/lxc"
 )
 
 // LXCClusterReconciler reconciles a LXCCluster object
@@ -53,13 +53,6 @@ type LXCClusterReconciler struct {
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
-// TODO(user): Modify the Reconcile function to compare the state specified by
-// the LXCCluster object against the actual cluster state, and then
-// perform operations to make the cluster state reflect the state specified by
-// the user.
-//
-// For more details, check Reconcile and its Result here:
-// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.19.1/pkg/reconcile
 func (r *LXCClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (_ ctrl.Result, rerr error) {
 	log := ctrl.LoggerFrom(ctx)
 
@@ -88,7 +81,7 @@ func (r *LXCClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		log.WithValues("secret", lxcCluster.GetLXCSecretNamespacedName()).Error(err, "Failed to fetch LXC credentials secret")
 		return ctrl.Result{}, fmt.Errorf("failed to fetch LXC credentials: %w", err)
 	}
-	lxcClient, err := incus.New(ctx, incus.NewOptionsFromSecret(lxcSecret))
+	lxcClient, err := lxc.New(ctx, lxc.ConfigurationFromKubernetesSecret(lxcSecret))
 	if err != nil {
 		return ctrl.Result{}, fmt.Errorf("failed to create incus client: %w", err)
 	}
