@@ -29,7 +29,7 @@ import (
 	"sigs.k8s.io/cluster-api/test/framework/clusterctl"
 	"sigs.k8s.io/yaml"
 
-	"github.com/lxc/cluster-api-provider-incus/internal/incus"
+	"github.com/lxc/cluster-api-provider-incus/internal/lxc"
 
 	. "github.com/onsi/gomega"
 )
@@ -41,8 +41,8 @@ type synchronizedBeforeTestSuiteConfig struct {
 	KubeconfigPath       string               `json:"kubeconfigPath,omitempty"`
 	E2EConfig            clusterctl.E2EConfig `json:"e2eConfig,omitempty"`
 
-	LXCClientOptions incus.Options `json:"lxcClientOptions,omitempty"`
-	CNIManifest      string        `json:"cni,omitempty"`
+	LXCClientOptions lxc.Configuration `json:"lxcClientOptions,omitempty"`
+	CNIManifest      string            `json:"cni,omitempty"`
 }
 
 // Node1BeforeSuite is the common setup down on the first ginkgo node before the test suite runs.
