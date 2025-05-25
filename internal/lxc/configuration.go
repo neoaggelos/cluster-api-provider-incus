@@ -1,4 +1,4 @@
-package incus
+package lxc
 
 import (
 	"errors"
@@ -12,7 +12,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-type Options struct {
+type Configuration struct {
 	// Server URL and certificate.
 	ServerURL          string `yaml:"server"`
 	ServerCrt          string `yaml:"server-crt"`
@@ -26,7 +26,7 @@ type Options struct {
 	Project string `yaml:"project"`
 }
 
-// NewOptionsFromSecret parses a Kubernetes secret and derives Options for connecting to Incus.
+// ConfigurationFromKubernetesSecret parses a Kubernetes secret and derives Configuration for connecting to Incus.
 //
 // The secret can be created like this:
 //
@@ -53,9 +53,9 @@ type Options struct {
 //		--from-literal=project="default"
 //
 // ```
-func NewOptionsFromSecret(secret *corev1.Secret) Options {
+func ConfigurationFromKubernetesSecret(secret *corev1.Secret) Configuration {
 	insecureSkipVerify, _ := strconv.ParseBool(string(secret.Data["insecure-skip-verify"]))
-	return Options{
+	return Configuration{
 		ServerURL:          string(secret.Data["server"]),
 		Project:            string(secret.Data["project"]),
 		ClientCrt:          string(secret.Data["client-crt"]),
@@ -65,8 +65,8 @@ func NewOptionsFromSecret(secret *corev1.Secret) Options {
 	}
 }
 
-// ToSecretData generates secret data from an Options struct.
-func (o Options) ToSecret(name string, namespace string) *corev1.Secret {
+// ToSecret generates secret data from a Configuration struct.
+func (o Configuration) ToSecret(name string, namespace string) *corev1.Secret {
 	return &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -86,8 +86,8 @@ func (o Options) ToSecret(name string, namespace string) *corev1.Secret {
 	}
 }
 
-// NewOptionsFromConfigFile attempts to load client options from the local node configuration.
-func NewOptionsFromConfigFile(configFile string, forceRemoteName string, requireHTTPS bool) (Options, error) {
+// ConfigurationFromLocal attempts to load client options from the local node configuration.
+func ConfigurationFromLocal(configFile string, forceRemoteName string, requireHTTPS bool) (Configuration, error) {
 	var tryConfigFiles []string
 	if configFile == "" {
 		tryConfigFiles = []string{"", os.ExpandEnv("${HOME}/.config/incus/config.yml"), os.ExpandEnv("${HOME}/snap/lxd/common/config/config.yml")}
@@ -142,7 +142,7 @@ func NewOptionsFromConfigFile(configFile string, forceRemoteName string, require
 			continue
 		}
 
-		return Options{
+		return Configuration{
 			ServerURL: remote.Addr,
 			ServerCrt: string(serverCrt),
 			ClientCrt: string(clientCrt),
@@ -151,5 +151,5 @@ func NewOptionsFromConfigFile(configFile string, forceRemoteName string, require
 		}, nil
 	}
 
-	return Options{}, errors.Join(errs...)
+	return Configuration{}, errors.Join(errs...)
 }
