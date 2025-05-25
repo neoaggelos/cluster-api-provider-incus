@@ -27,7 +27,7 @@ func (*stageCleanupInstance) run(ctx context.Context) error {
 	}
 
 	stdin := bytes.NewBufferString(static.CleanupInstanceScript())
-	if err := client.RunCommand(ctx, cfg.instanceName, []string{"bash", "-s"}, stdin, stdout, stderr); err != nil {
+	if err := lxcClient.RunCommand(ctx, cfg.instanceName, []string{"bash", "-s"}, stdin, stdout, stderr); err != nil {
 		return fmt.Errorf("failed to run cleanup-instance.sh script: %w", err)
 	}
 

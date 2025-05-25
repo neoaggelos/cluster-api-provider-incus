@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"runtime"
 
 	"github.com/blang/semver/v4"
 	"github.com/spf13/cobra"
@@ -44,7 +45,14 @@ var (
 				&stagePostRunCommands{},
 				&stageCleanupInstance{},
 				&stageStopInstance{},
-				&stagePublishKubeadmImage{},
+				&stagePublishImage{
+					info: publishImageInfo{
+						name:    fmt.Sprintf("kubeadm %s ubuntu %s %s", kubeadmCfg.kubernetesVersion, getUbuntuReleaseName(cfg.ubuntuVersion), runtime.GOARCH),
+						os:      "kubeadm",
+						release: kubeadmCfg.kubernetesVersion,
+						variant: "ubuntu",
+					},
+				},
 				&stageExportImage{},
 				&stageRemoveInstance{},
 				&stageValidateKubeadmImage{},

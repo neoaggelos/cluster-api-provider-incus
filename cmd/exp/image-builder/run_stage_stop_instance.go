@@ -20,7 +20,9 @@ func (*stageStopInstance) run(ctx context.Context) error {
 		return ctx.Err()
 	case <-time.After(cfg.instanceGracePeriod):
 	}
-	if err := client.StopInstance(ctx, cfg.instanceName); err != nil {
+
+	log.FromContext(ctx).V(1).Info("Stopping instance")
+	if err := lxcClient.WaitForStopInstance(ctx, cfg.instanceName); err != nil {
 		return fmt.Errorf("failed to stop instance: %w", err)
 	}
 

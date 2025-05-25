@@ -16,7 +16,7 @@ func (*stageExportImage) name() string { return "export-image" }
 
 // incus image export capn-builder-image
 func (s *stageExportImage) run(ctx context.Context) (rerr error) {
-	image, _, err := client.Client.GetImageAlias(cfg.imageAlias)
+	image, _, err := lxcClient.GetImageAlias(cfg.imageAlias)
 	if err != nil {
 		return fmt.Errorf("failed to find image for alias %q: %w", cfg.imageAlias, err)
 	}
@@ -32,7 +32,8 @@ func (s *stageExportImage) run(ctx context.Context) (rerr error) {
 		}
 	}()
 
-	resp, err := client.Client.GetImageFile(image.Target, incus.ImageFileRequest{
+	log.FromContext(ctx).V(1).Info("Downloading image")
+	resp, err := lxcClient.GetImageFile(image.Target, incus.ImageFileRequest{
 		MetaFile: output,
 		ProgressHandler: func(progress ioprogress.ProgressData) {
 			log.FromContext(ctx).V(2).WithValues("progress", progress.Text).Info("Downloading image")
