@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/lxc/cluster-api-provider-incus/internal/lxc"
-	"github.com/lxc/cluster-api-provider-incus/internal/types"
 	"github.com/lxc/incus/v6/shared/api"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/yaml"
+
+	"github.com/lxc/cluster-api-provider-incus/internal/lxc"
+	"github.com/lxc/cluster-api-provider-incus/internal/types"
 )
 
 // managerOVN is a Manager that spins up a network load-balancer.

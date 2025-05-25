@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/lxc/cluster-api-provider-incus/internal/types"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+
+	"github.com/lxc/cluster-api-provider-incus/internal/types"
 )
 
 // GetServerName returns one of "incus", "lxd" or "unknown", depending on the server type.

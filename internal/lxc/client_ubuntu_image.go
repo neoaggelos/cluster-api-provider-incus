@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/lxc/cluster-api-provider-incus/internal/types"
 	"github.com/lxc/incus/v6/shared/api"
+
+	"github.com/lxc/cluster-api-provider-incus/internal/types"
 )
 
 func (c *Client) GetDefaultUbuntuImage(ctx context.Context, imageName string) (api.InstanceSource, bool, error) {

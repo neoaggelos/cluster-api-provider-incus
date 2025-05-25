@@ -5,7 +5,10 @@ import (
 	"testing"
 
 	"github.com/lxc/cluster-api-provider-incus/internal/types"
+
 	. "github.com/onsi/gomega"
+
+	"github.com/lxc/cluster-api-provider-incus/internal/types"
 )
 
 func TestTerminalError(t *testing.T) {
