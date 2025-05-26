@@ -18,7 +18,8 @@ import (
 	"sigs.k8s.io/yaml"
 
 	infrav1 "github.com/lxc/cluster-api-provider-incus/api/v1alpha2"
-	"github.com/lxc/cluster-api-provider-incus/internal/incus"
+	"github.com/lxc/cluster-api-provider-incus/internal/loadbalancer"
+	"github.com/lxc/cluster-api-provider-incus/internal/lxc"
 )
 
 type IncusLogCollector struct {
@@ -40,14 +41,14 @@ func (o IncusLogCollector) CollectMachineLog(ctx context.Context, managementClus
 	}
 
 	instanceName := lxcMachine.GetInstanceName()
-	client, err := incus.New(ctx, o.E2EContext.Settings.LXCClientOptions)
+	lxcClient, err := lxc.New(ctx, o.E2EContext.Settings.LXCClientOptions)
 	if err != nil {
 		return fmt.Errorf("failed to create infrastructure client: %w", err)
 	}
 
 	// instance state and config
 	{
-		state, _, err := client.Client.GetInstanceFull(instanceName)
+		state, _, err := lxcClient.GetInstanceFull(instanceName)
 		if err != nil {
 			return fmt.Errorf("failed to GetInstanceFull: %w", err)
 		}
@@ -94,7 +95,7 @@ func (o IncusLogCollector) CollectMachineLog(ctx context.Context, managementClus
 	}
 
 	// kernel logs (for virtual machines only)
-	if lxcMachine.Spec.InstanceType == "virtual-machine" {
+	if lxcMachine.Spec.InstanceType == lxc.VirtualMachine {
 		items = append(items, logitem{name: "kern.log", command: []string{"journalctl", "--no-pager", "--output=short-precise", "-k"}})
 	}
 
@@ -104,7 +105,7 @@ func (o IncusLogCollector) CollectMachineLog(ctx context.Context, managementClus
 		defer cancel()
 
 		var stdout, stderr bytes.Buffer
-		if err := client.RunCommand(commandCtx, instanceName, item.command, nil, &stdout, &stderr); err != nil {
+		if err := lxcClient.RunCommand(commandCtx, instanceName, item.command, nil, &stdout, &stderr); err != nil {
 			errs = append(errs, fmt.Errorf("failed to run command %v: %w", item.command, err))
 		}
 		if v := stdout.Bytes(); len(v) > 0 {
@@ -145,13 +146,13 @@ func (o IncusLogCollector) CollectInfrastructureLogs(ctx context.Context, manage
 		return fmt.Errorf("failed to get LXCCluster %q for Cluster %q: %w", lxcClusterName, clusterName, err)
 	}
 
-	client, err := incus.New(ctx, o.E2EContext.Settings.LXCClientOptions)
+	lxcClient, err := lxc.New(ctx, o.E2EContext.Settings.LXCClientOptions)
 	if err != nil {
 		return fmt.Errorf("failed to create infrastructure client: %w", err)
 	}
 
 	var errs []error
-	for k, v := range client.LoadBalancerManagerForCluster(cluster, lxcCluster).Inspect(ctx) {
+	for k, v := range loadbalancer.ManagerForCluster(cluster, lxcCluster, lxcClient).Inspect(ctx) {
 		if err := os.WriteFile(filepath.Join(outputPath, k), []byte(v), 0o600); err != nil {
 			errs = append(errs, fmt.Errorf("failed to write inspection file %v: %w", k, err))
 		}

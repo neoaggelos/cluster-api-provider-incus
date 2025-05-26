@@ -9,7 +9,7 @@ import (
 	cliflag "k8s.io/component-base/cli/flag"
 	logsv1 "k8s.io/component-base/logs/api/v1"
 
-	"github.com/lxc/cluster-api-provider-incus/internal/incus"
+	"github.com/lxc/cluster-api-provider-incus/internal/lxc"
 )
 
 var (
@@ -38,7 +38,7 @@ var (
 	}
 
 	// runtime configuration
-	client *incus.Client
+	lxcClient *lxc.Client
 
 	rootCmd = &cobra.Command{
 		Use:          "image-builder",
@@ -49,7 +49,7 @@ var (
 			}
 
 			switch cfg.instanceType {
-			case "container", "virtual-machine":
+			case lxc.Container, lxc.VirtualMachine:
 			default:
 				return fmt.Errorf("invalid value for --instance-type argument %q, must be one of [container, virtual-machine]", cfg.instanceType)
 			}
@@ -60,12 +60,12 @@ var (
 				return fmt.Errorf("invalid value for --ubuntu-version argument %q, must be one of [22.04, 24.04]", cfg.ubuntuVersion)
 			}
 
-			opts, err := incus.NewOptionsFromConfigFile(cfg.configFile, cfg.configRemoteName, false)
+			opts, err := lxc.ConfigurationFromLocal(cfg.configFile, cfg.configRemoteName, false)
 			if err != nil {
 				return fmt.Errorf("failed to read client credentials: %w", err)
 			}
 
-			client, err = incus.New(gCtx, opts)
+			lxcClient, err = lxc.New(gCtx, opts)
 			if err != nil {
 				return fmt.Errorf("failed to create incus client: %w", err)
 			}

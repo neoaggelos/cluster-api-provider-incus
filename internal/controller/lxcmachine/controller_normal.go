@@ -3,9 +3,12 @@ package lxcmachine
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strings"
 	"time"
 
+	incus "github.com/lxc/incus/v6/client"
+	"github.com/lxc/incus/v6/shared/api"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/cluster-api/util"
 	"sigs.k8s.io/cluster-api/util/conditions"
@@ -13,11 +16,14 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	infrav1 "github.com/lxc/cluster-api-provider-incus/api/v1alpha2"
-	"github.com/lxc/cluster-api-provider-incus/internal/incus"
+	"github.com/lxc/cluster-api-provider-incus/internal/loadbalancer"
+	"github.com/lxc/cluster-api-provider-incus/internal/lxc"
 	"github.com/lxc/cluster-api-provider-incus/internal/ptr"
+	"github.com/lxc/cluster-api-provider-incus/internal/static"
+	"github.com/lxc/cluster-api-provider-incus/internal/utils"
 )
 
-func (r *LXCMachineReconciler) reconcileNormal(ctx context.Context, cluster *clusterv1.Cluster, lxcCluster *infrav1.LXCCluster, machine *clusterv1.Machine, lxcMachine *infrav1.LXCMachine, lxcClient *incus.Client) (ctrl.Result, error) {
+func (r *LXCMachineReconciler) reconcileNormal(ctx context.Context, cluster *clusterv1.Cluster, lxcCluster *infrav1.LXCCluster, machine *clusterv1.Machine, lxcMachine *infrav1.LXCMachine, lxcClient *lxc.Client) (ctrl.Result, error) {
 	// Check if the infrastructure is ready, otherwise return and wait for the cluster object to be updated
 	if !cluster.Status.InfrastructureReady {
 		log.FromContext(ctx).Info("Waiting for LXCCluster Controller to create cluster infrastructure")
@@ -27,7 +33,7 @@ func (r *LXCMachineReconciler) reconcileNormal(ctx context.Context, cluster *clu
 
 	// if the machine is already provisioned, return
 	if lxcMachine.Spec.ProviderID != nil {
-		state, _, err := lxcClient.Client.GetInstanceState(lxcMachine.GetInstanceName())
+		state, _, err := lxcClient.GetInstanceState(lxcMachine.GetInstanceName())
 		if err != nil {
 			if strings.Contains(err.Error(), "Instance not found") {
 				lxcMachine.Status.Ready = false
@@ -40,7 +46,7 @@ func (r *LXCMachineReconciler) reconcileNormal(ctx context.Context, cluster *clu
 		} else {
 			lxcMachine.Status.Ready = true
 			conditions.MarkTrue(lxcMachine, infrav1.InstanceProvisionedCondition)
-			r.setLXCMachineAddresses(lxcMachine, lxcClient.ParseActiveMachineAddresses(state))
+			r.setLXCMachineAddresses(lxcMachine, lxc.ParseHostAddresses(state))
 			return ctrl.Result{}, nil
 		}
 	}
@@ -61,17 +67,17 @@ func (r *LXCMachineReconciler) reconcileNormal(ctx context.Context, cluster *clu
 	}
 
 	// Create the lxc instance hosting the machine
-	log.FromContext(ctx).Info("Creating instance")
 	cloudInit, err := r.getBootstrapData(ctx, lxcMachine.Namespace, *dataSecretName)
 	if err != nil {
 		return ctrl.Result{}, fmt.Errorf("failed to retrieve bootstrap data: %w", err)
 	}
 
-	addresses, err := lxcClient.CreateInstance(ctx, machine, lxcMachine, cluster, lxcCluster, cloudInit)
+	log.FromContext(ctx).Info("Launching instance")
+	addresses, err := launchInstance(ctx, cluster, lxcCluster, machine, lxcMachine, lxcClient, cloudInit)
 	if err != nil {
-		if incus.IsTerminalError(err) {
-			log.FromContext(ctx).Error(err, "Fatal error while creating instance")
-			conditions.MarkFalse(lxcMachine, infrav1.InstanceProvisionedCondition, infrav1.InstanceProvisioningAbortedReason, clusterv1.ConditionSeverityError, "Failed to create instance: %s", err.Error())
+		if utils.IsTerminalError(err) {
+			log.FromContext(ctx).Error(err, "Fatal error while creating instance spec")
+			conditions.MarkFalse(lxcMachine, infrav1.InstanceProvisionedCondition, infrav1.InstanceProvisioningAbortedReason, clusterv1.ConditionSeverityError, "Failed to create instance spec: %s", err.Error())
 			return ctrl.Result{}, nil
 		}
 		if strings.HasSuffix(err.Error(), "context deadline exceeded") {
@@ -87,7 +93,7 @@ func (r *LXCMachineReconciler) reconcileNormal(ctx context.Context, cluster *clu
 
 	// update load balancer
 	if util.IsControlPlaneMachine(machine) && !lxcMachine.Status.LoadBalancerConfigured {
-		if err := lxcClient.LoadBalancerManagerForCluster(cluster, lxcCluster).Reconfigure(ctx); err != nil {
+		if err := loadbalancer.ManagerForCluster(cluster, lxcCluster, lxcClient).Reconfigure(ctx); err != nil {
 			return ctrl.Result{}, fmt.Errorf("failed to update loadbalancer configuration: %w", err)
 		}
 		lxcMachine.Status.LoadBalancerConfigured = true
@@ -97,4 +103,132 @@ func (r *LXCMachineReconciler) reconcileNormal(ctx context.Context, cluster *clu
 	lxcMachine.Status.Ready = true
 
 	return ctrl.Result{}, nil
+}
+
+func launchInstance(ctx context.Context, cluster *clusterv1.Cluster, lxcCluster *infrav1.LXCCluster, machine *clusterv1.Machine, lxcMachine *infrav1.LXCMachine, lxcClient *lxc.Client, cloudInit string) ([]string, error) {
+	name := lxcMachine.GetInstanceName()
+
+	role := "control-plane"
+	if !util.IsControlPlaneMachine(machine) {
+		role = "worker"
+	}
+	instanceType := lxc.Container
+	if lxcMachine.Spec.InstanceType != "" {
+		instanceType = lxcMachine.Spec.InstanceType
+	}
+
+	ctx = log.IntoContext(ctx, log.FromContext(ctx).WithValues("instance", name, "role", role))
+
+	profiles := lxcMachine.Spec.Profiles
+	if lxcMachine.Spec.InstanceType == lxc.Container && !lxcCluster.Spec.SkipDefaultKubeadmProfile && !slices.Contains(lxcMachine.Spec.Profiles, lxcCluster.GetProfileName()) {
+		// for containers, include the default kubeadm profile
+		profiles = append(lxcMachine.Spec.Profiles, lxcCluster.GetProfileName())
+	}
+
+	// Parse device configurations
+	var devices map[string]map[string]string
+	for _, deviceSpec := range lxcMachine.Spec.Devices {
+		deviceName, deviceArgs, hasSeparator := strings.Cut(deviceSpec, ",")
+		if !hasSeparator {
+			return nil, utils.TerminalError(fmt.Errorf("device spec %q is not using the expected %q format", deviceSpec, "<device>,<key>=<value>,<key2>=<value2>"))
+		}
+
+		if devices == nil {
+			devices = map[string]map[string]string{}
+		}
+
+		if _, ok := devices[deviceName]; !ok {
+			devices[deviceName] = map[string]string{}
+		}
+
+		for _, deviceArg := range strings.Split(deviceArgs, ",") {
+			key, value, hasEqual := strings.Cut(deviceArg, "=")
+			if !hasEqual {
+				return nil, utils.TerminalError(fmt.Errorf("device argument %q of device spec %q is not using the expected %q format", deviceArg, deviceSpec, "<key>=<value>"))
+			}
+
+			devices[deviceName][key] = value
+		}
+	}
+
+	var image api.InstanceSource
+	switch {
+	case strings.HasPrefix(lxcMachine.Spec.Image.Name, "ubuntu:"):
+		ubuntuImage, isUbuntuImage, err := lxcClient.GetDefaultUbuntuImage(ctx, lxcMachine.Spec.Image.Name)
+		if err != nil {
+			return nil, err
+		} else if isUbuntuImage {
+			image = ubuntuImage
+		}
+	case lxcMachine.Spec.Image.IsZero():
+		if machine.Spec.Version == nil {
+			return nil, utils.TerminalError(fmt.Errorf("no image source specified on LXCMachineTemplate and Machine %q does not have a Kubernetes version", machine.Name))
+		}
+
+		version := *machine.Spec.Version
+
+		// test if image for version exists on the default simplestreams server, fail otherwise.
+		if ssClient, err := incus.ConnectSimpleStreams(lxc.DefaultSimplestreamsServer, &incus.ConnectionArgs{}); err != nil {
+			return nil, fmt.Errorf("no image source specified and failed to connect to simplestreams server %q: %w", lxc.DefaultSimplestreamsServer, err)
+		} else if _, _, err := ssClient.GetImageAliasType(instanceType, fmt.Sprintf("kubeadm/%s", version)); err != nil {
+			return nil, utils.TerminalError(fmt.Errorf("no image source specified and simplestreams server %q does not provide images for Kubernetes version %q: %w. Please consider using a different Kubernetes version, or build your own base image and set the image source on the LXCMachineTemplate resource", lxc.DefaultSimplestreamsServer, version, err))
+		}
+
+		image = api.InstanceSource{
+			Type:     "image",
+			Protocol: "simplestreams",
+			Server:   lxc.DefaultSimplestreamsServer,
+			Alias:    fmt.Sprintf("kubeadm/%s", version),
+		}
+	default:
+		image = api.InstanceSource{
+			Type:        "image",
+			Protocol:    lxcMachine.Spec.Image.Protocol,
+			Server:      lxcMachine.Spec.Image.Server,
+			Alias:       lxcMachine.Spec.Image.Name,
+			Fingerprint: lxcMachine.Spec.Image.Fingerprint,
+		}
+	}
+
+	config := map[string]string{
+		"user.cluster-name":      cluster.Name,
+		"user.cluster-namespace": cluster.Namespace,
+		"user.machine-name":      machine.Name,
+		"user.cluster-role":      role,
+		"cloud-init.user-data":   cloudInit,
+	}
+
+	if lxcClient.GetServerName(ctx) == "lxd" && lxcCluster.Spec.Unprivileged && instanceType == lxc.Container {
+		config["security.nesting"] = "true"
+		if devices == nil {
+			devices = make(map[string]map[string]string, 2)
+		}
+		devices["00-disable-snapd"] = map[string]string{
+			"type":   "disk",
+			"source": "/dev/null",
+			"path":   "/usr/lib/systemd/system/snapd.service",
+		}
+		devices["00-disable-apparmor"] = map[string]string{
+			"type":   "disk",
+			"source": "/dev/null",
+			"path":   "/usr/lib/systemd/system/apparmor.service",
+		}
+	}
+
+	return lxcClient.WaitForLaunchInstance(ctx, api.InstancesPost{
+		Name:         name,
+		Type:         api.InstanceType(instanceType),
+		Source:       image,
+		InstanceType: lxcMachine.Spec.Flavor,
+		InstancePut: api.InstancePut{
+			Profiles: profiles,
+			Devices:  devices,
+			Config:   util.MergeMap(config, lxcMachine.Spec.Config),
+		},
+	}, defaultTemplateFiles)
+}
+
+// defaultTemplateFiles that are injected to LXCMachine instances.
+var defaultTemplateFiles = map[string]string{
+	"/opt/cluster-api/install-kubeadm.sh": static.InstallKubeadmScript(),
 }

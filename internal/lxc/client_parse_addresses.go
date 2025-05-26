@@ -1,4 +1,4 @@
-package incus
+package lxc
 
 import (
 	"slices"
@@ -6,10 +6,10 @@ import (
 	"github.com/lxc/incus/v6/shared/api"
 )
 
-// ParseActiveMachineAddresses returns the main IP addresses of the instance.
+// ParseHostAddresses returns the main IP addresses of the instance.
 // It filters for networks that have a host interface name (e.g. vethbbcd39c7), so that CNI addresses are ignored.
 // It filters for addresses with global scope, so that IPv6 link-local addresses are ignored.
-func (c *Client) ParseActiveMachineAddresses(state *api.InstanceState) []string {
+func ParseHostAddresses(state *api.InstanceState) []string {
 	if state == nil {
 		return nil
 	}

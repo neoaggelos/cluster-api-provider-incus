@@ -9,8 +9,9 @@ import (
 	"sigs.k8s.io/cluster-api/test/e2e"
 	"sigs.k8s.io/cluster-api/util"
 
-	"github.com/lxc/cluster-api-provider-incus/internal/incus"
+	"github.com/lxc/cluster-api-provider-incus/internal/lxc"
 	"github.com/lxc/cluster-api-provider-incus/internal/ptr"
+	"github.com/lxc/cluster-api-provider-incus/internal/utils"
 	"github.com/lxc/cluster-api-provider-incus/test/e2e/shared"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -20,16 +21,16 @@ import (
 var _ = Describe("QuickStart", func() {
 	Context("OVN", Label("PRBlocking"), func() {
 		BeforeEach(func(ctx context.Context) {
-			client, err := incus.New(ctx, e2eCtx.Settings.LXCClientOptions)
+			lxcClient, err := lxc.New(ctx, e2eCtx.Settings.LXCClientOptions)
 			Expect(err).ToNot(HaveOccurred())
 
-			err = client.SupportsNetworkLoadBalancer()
-			Expect(err).To(Or(Succeed(), MatchError(incus.IsTerminalError, "IsTerminalError")))
+			err = lxcClient.SupportsNetworkLoadBalancers(ctx)
+			Expect(err).To(Or(Succeed(), MatchError(utils.IsTerminalError, "IsTerminalError")))
 			if err != nil {
 				Skip(fmt.Sprintf("Server does not support network load balancer: %v", err))
 			}
 
-			networks, err := client.Client.GetNetworks()
+			networks, err := lxcClient.GetNetworks()
 			Expect(err).ToNot(HaveOccurred())
 
 			// find network with the annotations below

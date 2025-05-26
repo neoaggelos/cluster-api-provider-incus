@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"runtime"
 
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -31,7 +32,14 @@ var (
 				&stagePostRunCommands{},
 				&stageCleanupInstance{},
 				&stageStopInstance{},
-				&stagePublishHaproxyImage{},
+				&stagePublishImage{
+					info: publishImageInfo{
+						name:    fmt.Sprintf("haproxy %s %s", getUbuntuReleaseName(cfg.ubuntuVersion), runtime.GOARCH),
+						os:      "haproxy",
+						release: getUbuntuReleaseName(cfg.ubuntuVersion),
+						variant: "ubuntu",
+					},
+				},
 				&stageExportImage{},
 				&stageRemoveInstance{},
 			)

@@ -19,7 +19,7 @@ func (*stageInstallHaproxy) name() string { return "install-haproxy" }
 // cat embed/50-install-haproxy.sh | incus exec capn-builder -- bash -s
 // incus config set capn-builder user.capn.stage.install-haproxy=true
 func (*stageInstallHaproxy) run(ctx context.Context) error {
-	instance, etag, err := client.Client.GetInstance(cfg.instanceName)
+	instance, etag, err := lxcClient.GetInstance(cfg.instanceName)
 	if err != nil {
 		return fmt.Errorf("failed to retrieve instance info: %w", err)
 	}
@@ -38,13 +38,13 @@ func (*stageInstallHaproxy) run(ctx context.Context) error {
 	}
 
 	log.FromContext(ctx).V(1).Info("Running install-haproxy.sh script")
-	if err := client.RunCommand(ctx, cfg.instanceName, []string{"bash", "-s"}, stdin, stdout, stderr); err != nil {
+	if err := lxcClient.RunCommand(ctx, cfg.instanceName, []string{"bash", "-s"}, stdin, stdout, stderr); err != nil {
 		return fmt.Errorf("failed to run install-haproxy.sh script: %w", err)
 	}
 
 	log.FromContext(ctx).V(1).Info("Set user.capn.stage.install-haproxy=true on instance")
 	instance.InstancePut.Config["user.capn.stage.install-haproxy"] = "true"
-	if _, err := client.Client.UpdateInstance(cfg.instanceName, instance.InstancePut, etag); err != nil {
+	if _, err := lxcClient.UpdateInstance(cfg.instanceName, instance.InstancePut, etag); err != nil {
 		return fmt.Errorf("failed to mark install-haproxy stage on instance: %w", err)
 	}
 

@@ -16,7 +16,7 @@ func (*stagePullExtraImages) name() string { return "pull-extra-images" }
 func (*stagePullExtraImages) run(ctx context.Context) error {
 	for _, image := range kubeadmCfg.pullExtraImages {
 		log.FromContext(ctx).V(1).WithValues("image", image).Info("Pulling image")
-		if err := client.RunCommand(ctx, cfg.instanceName, []string{"crictl", "pull", image}, nil, os.Stdout, os.Stderr); err != nil {
+		if err := lxcClient.RunCommand(ctx, cfg.instanceName, []string{"crictl", "pull", image}, nil, os.Stdout, os.Stderr); err != nil {
 			return fmt.Errorf("failed to pull image %q: %w", image, err)
 		}
 	}

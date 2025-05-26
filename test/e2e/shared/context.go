@@ -24,7 +24,7 @@ import (
 	"sigs.k8s.io/cluster-api/test/framework/bootstrap"
 	"sigs.k8s.io/cluster-api/test/framework/clusterctl"
 
-	"github.com/lxc/cluster-api-provider-incus/internal/incus"
+	"github.com/lxc/cluster-api-provider-incus/internal/lxc"
 )
 
 // Option represents an option to use when creating a e2e context.
@@ -64,7 +64,7 @@ type Settings struct {
 	// SkipCleanup prevents cleanup of test resources e.g. for debug purposes.
 	SkipCleanup bool
 	// LXCClientOptions is infrastructure credentials
-	LXCClientOptions incus.Options
+	LXCClientOptions lxc.Configuration
 	// CNIManifest is the raw CNI manifest that will be deployed in workload clusters
 	CNIManifest string
 }

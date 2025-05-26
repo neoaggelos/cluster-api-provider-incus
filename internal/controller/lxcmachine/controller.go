@@ -38,7 +38,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	infrav1 "github.com/lxc/cluster-api-provider-incus/api/v1alpha2"
-	"github.com/lxc/cluster-api-provider-incus/internal/incus"
+	"github.com/lxc/cluster-api-provider-incus/internal/lxc"
 )
 
 // LXCMachineReconciler reconciles a LXCMachine object
@@ -132,7 +132,7 @@ func (r *LXCMachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		log.WithValues("secret", lxcCluster.GetLXCSecretNamespacedName()).Error(err, "Failed to fetch LXC credentials secret")
 		return ctrl.Result{}, fmt.Errorf("failed to fetch LXC credentials: %w", err)
 	}
-	lxcClient, err := incus.New(ctx, incus.NewOptionsFromSecret(lxcSecret))
+	lxcClient, err := lxc.New(ctx, lxc.ConfigurationFromKubernetesSecret(lxcSecret))
 	if err != nil {
 		return ctrl.Result{}, fmt.Errorf("failed to create incus client: %w", err)
 	}

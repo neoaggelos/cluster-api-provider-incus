@@ -2,7 +2,7 @@ package lxccluster
 
 import (
 	"context"
-	"fmt"
+	"strings"
 
 	"github.com/lxc/incus/v6/shared/api"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
@@ -10,29 +10,41 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	infrav1 "github.com/lxc/cluster-api-provider-incus/api/v1alpha2"
-	"github.com/lxc/cluster-api-provider-incus/internal/incus"
+	"github.com/lxc/cluster-api-provider-incus/internal/loadbalancer"
+	"github.com/lxc/cluster-api-provider-incus/internal/lxc"
 	"github.com/lxc/cluster-api-provider-incus/internal/static"
+	"github.com/lxc/cluster-api-provider-incus/internal/utils"
 )
 
-func (r *LXCClusterReconciler) reconcileNormal(ctx context.Context, cluster *clusterv1.Cluster, lxcCluster *infrav1.LXCCluster, lxcClient *incus.Client) error {
+func (r *LXCClusterReconciler) reconcileNormal(ctx context.Context, cluster *clusterv1.Cluster, lxcCluster *infrav1.LXCCluster, lxcClient *lxc.Client) error {
 	// Create the default kubeadm profile for LXC containers
 	profileName := lxcCluster.GetProfileName()
 	if lxcCluster.Spec.SkipDefaultKubeadmProfile {
-		conditions.MarkFalse(lxcCluster, infrav1.KubeadmProfileAvailableCondition, infrav1.KubeadmProfileDisabledReason, clusterv1.ConditionSeverityInfo, "Will not create default kubeadm profile %s", profileName)
+		// only log the message once, before the condition is set.
+		if !conditions.Has(lxcCluster, infrav1.KubeadmProfileAvailableCondition) {
+			log.FromContext(ctx).Info("Skipping kubeadm profile creation")
+		}
+		conditions.MarkTrue(lxcCluster, infrav1.KubeadmProfileAvailableCondition)
 	} else {
-		ctx = log.IntoContext(ctx, log.FromContext(ctx).WithValues("profileName", profileName, "privileged", !lxcCluster.Spec.Unprivileged))
-		log.FromContext(ctx).Info("Creating default kubeadm profile")
-		if err := lxcClient.InitProfile(ctx, api.ProfilesPost{Name: profileName, ProfilePut: static.DefaultKubeadmProfile(!lxcCluster.Spec.Unprivileged)}); err != nil {
-			err = fmt.Errorf("failed to create default kubeadm profile %q: %w", profileName, err)
-			log.FromContext(ctx).Error(err, "Failed to create default kubeadm profile")
+		log := log.FromContext(ctx).WithValues("profileName", profileName)
 
-			if incus.IsTerminalError(err) {
-				conditions.MarkFalse(lxcCluster, infrav1.KubeadmProfileAvailableCondition, infrav1.KubeadmProfileCreationAbortedReason, clusterv1.ConditionSeverityError, "The default kubeadm LXC profile could not be created, most likely because of a permissions issue. Either enable privileged containers on the project, or specify .spec.skipDefaultKubeadmProfile=true on the LXCCluster object. The error was: %s", err)
-				return nil
+		if _, _, err := lxcClient.GetProfile(profileName); err != nil {
+			if !strings.Contains(err.Error(), "Profile not found") {
+				conditions.MarkFalse(lxcCluster, infrav1.KubeadmProfileAvailableCondition, infrav1.KubeadmProfileCreationFailedReason, clusterv1.ConditionSeverityWarning, "failed to check profile %q status: %s", profileName, err)
+				return err
 			}
 
-			conditions.MarkFalse(lxcCluster, infrav1.KubeadmProfileAvailableCondition, infrav1.KubeadmProfileCreationFailedReason, clusterv1.ConditionSeverityWarning, "%s", err)
-			return err
+			log.Info("Creating default kubeadm profile for cluster")
+			if err := lxcClient.CreateProfile(api.ProfilesPost{Name: profileName, ProfilePut: static.DefaultKubeadmProfile(!lxcCluster.Spec.Unprivileged)}); err != nil {
+				log.Error(err, "Failed to create default kubeadm profile")
+
+				if strings.Contains(err.Error(), "Privileged containers are forbidden") {
+					conditions.MarkFalse(lxcCluster, infrav1.KubeadmProfileAvailableCondition, infrav1.KubeadmProfileCreationAbortedReason, clusterv1.ConditionSeverityError, "The default kubeadm LXC profile could not be created, most likely because of a permissions issue. Either enable privileged containers on the project, or specify .spec.skipDefaultKubeadmProfile=true on the LXCCluster object. The error was: %s", err)
+					return nil
+				}
+				conditions.MarkFalse(lxcCluster, infrav1.KubeadmProfileAvailableCondition, infrav1.KubeadmProfileCreationFailedReason, clusterv1.ConditionSeverityWarning, "%s", err)
+				return err
+			}
 		}
 
 		conditions.MarkTrue(lxcCluster, infrav1.KubeadmProfileAvailableCondition)
@@ -40,10 +52,10 @@ func (r *LXCClusterReconciler) reconcileNormal(ctx context.Context, cluster *clu
 
 	// Create the container hosting the load balancer.
 	log.FromContext(ctx).Info("Creating load balancer")
-	lbIPs, err := lxcClient.LoadBalancerManagerForCluster(cluster, lxcCluster).Create(ctx)
+	lbIPs, err := loadbalancer.ManagerForCluster(cluster, lxcCluster, lxcClient).Create(ctx)
 	if err != nil {
 		log.FromContext(ctx).Error(err, "Failed to provision load balancer")
-		if incus.IsTerminalError(err) {
+		if utils.IsTerminalError(err) {
 			conditions.MarkFalse(lxcCluster, infrav1.LoadBalancerAvailableCondition, infrav1.LoadBalancerProvisioningAbortedReason, clusterv1.ConditionSeverityError, "The cluster load balancer could not be provisioned. The error was: %s", err)
 			return nil
 		}

@@ -1,4 +1,4 @@
-package incus
+package lxc
 
 import (
 	"context"
@@ -12,8 +12,8 @@ import (
 // RunCommand on a specified instance, and allow retrieving the stdout and stderr. It returns an error if execution failed.
 func (c *Client) RunCommand(ctx context.Context, instanceName string, command []string, stdin io.Reader, stdout io.Writer, stderr io.Writer) error {
 	var status int
-	if err := c.wait(ctx, "ExecInstance", func() (incus.Operation, error) {
-		op, err := c.Client.ExecInstance(instanceName, api.InstanceExecPost{
+	if err := c.WaitForOperation(ctx, "ExecInstance", func() (incus.Operation, error) {
+		op, err := c.ExecInstance(instanceName, api.InstanceExecPost{
 			Command:   command,
 			WaitForWS: true,
 		}, &incus.InstanceExecArgs{

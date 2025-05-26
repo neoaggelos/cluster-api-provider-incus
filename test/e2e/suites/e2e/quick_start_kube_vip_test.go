@@ -9,7 +9,7 @@ import (
 	"sigs.k8s.io/cluster-api/test/e2e"
 	"sigs.k8s.io/cluster-api/util"
 
-	"github.com/lxc/cluster-api-provider-incus/internal/incus"
+	"github.com/lxc/cluster-api-provider-incus/internal/lxc"
 	"github.com/lxc/cluster-api-provider-incus/internal/ptr"
 	"github.com/lxc/cluster-api-provider-incus/test/e2e/shared"
 
@@ -29,9 +29,9 @@ var _ = Describe("QuickStart", func() {
 			}
 
 			// KUBE_VIP_ADDRESS is not set, look for a network
-			client, err := incus.New(ctx, e2eCtx.Settings.LXCClientOptions)
+			lxcClient, err := lxc.New(ctx, e2eCtx.Settings.LXCClientOptions)
 			Expect(err).ToNot(HaveOccurred())
-			networks, err := client.Client.GetNetworks()
+			networks, err := lxcClient.GetNetworks()
 			Expect(err).ToNot(HaveOccurred())
 
 			// find network with the annotations below

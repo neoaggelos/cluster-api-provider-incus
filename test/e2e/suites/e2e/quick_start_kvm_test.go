@@ -11,7 +11,7 @@ import (
 	"sigs.k8s.io/cluster-api/test/e2e"
 	"sigs.k8s.io/cluster-api/util"
 
-	"github.com/lxc/cluster-api-provider-incus/internal/incus"
+	"github.com/lxc/cluster-api-provider-incus/internal/lxc"
 	"github.com/lxc/cluster-api-provider-incus/internal/ptr"
 	"github.com/lxc/cluster-api-provider-incus/test/e2e/shared"
 
@@ -22,9 +22,9 @@ import (
 var _ = Describe("QuickStart", func() {
 	Context("KVM", Label("PRBlocking"), Label("Flaky"), func() {
 		BeforeEach(func(ctx context.Context) {
-			client, err := incus.New(ctx, e2eCtx.Settings.LXCClientOptions)
+			lxcClient, err := lxc.New(ctx, e2eCtx.Settings.LXCClientOptions)
 			Expect(err).ToNot(HaveOccurred())
-			info, _, err := client.Client.GetServer()
+			info, _, err := lxcClient.GetServer()
 			Expect(err).ToNot(HaveOccurred())
 
 			// skip if server cannot launch kvm instances
@@ -38,7 +38,7 @@ var _ = Describe("QuickStart", func() {
 			}
 
 			e2eCtx.OverrideVariables(map[string]string{
-				"WORKER_MACHINE_TYPE": "virtual-machine",
+				"WORKER_MACHINE_TYPE": lxc.VirtualMachine,
 			})
 		})
 		e2e.QuickStartSpec(context.TODO(), func() e2e.QuickStartSpecInput {

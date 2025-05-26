@@ -26,7 +26,8 @@ func (*stageValidateKubeadmImage) run(ctx context.Context) error {
 
 	ctx = log.IntoContext(ctx, log.FromContext(ctx).WithValues("instance.name", instanceName))
 
-	if err := client.CreateAndWaitForInstance(ctx, api.InstancesPost{
+	log.FromContext(ctx).V(1).Info("Launching test instance")
+	if _, err := lxcClient.WaitForLaunchInstance(ctx, api.InstancesPost{
 		Name: instanceName,
 		Type: api.InstanceType(cfg.instanceType),
 		Source: api.InstanceSource{
@@ -36,7 +37,7 @@ func (*stageValidateKubeadmImage) run(ctx context.Context) error {
 		InstancePut: api.InstancePut{
 			Profiles: cfg.instanceProfiles,
 		},
-	}); err != nil {
+	}, nil); err != nil {
 		return fmt.Errorf("failed to launch validation instance: %w", err)
 	}
 
@@ -47,7 +48,7 @@ func (*stageValidateKubeadmImage) run(ctx context.Context) error {
 		waitInstanceCh <- fmt.Errorf("timed out after 5 minutes")
 	}()
 	go func() {
-		for client.RunCommand(ctx, instanceName, []string{"echo", "hi"}, nil, nil, nil) != nil {
+		for lxcClient.RunCommand(ctx, instanceName, []string{"echo", "hi"}, nil, nil, nil) != nil {
 			<-time.After(time.Second)
 		}
 		waitInstanceCh <- nil
@@ -66,11 +67,12 @@ func (*stageValidateKubeadmImage) run(ctx context.Context) error {
 	}
 
 	log.FromContext(ctx).V(1).Info("Running validate-kubeadm-image.sh script")
-	if err := client.RunCommand(ctx, instanceName, []string{"bash", "-s"}, stdin, stdout, stderr); err != nil {
+	if err := lxcClient.RunCommand(ctx, instanceName, []string{"bash", "-s"}, stdin, stdout, stderr); err != nil {
 		return fmt.Errorf("failed to run validate-kubeadm-image.sh script: %w", err)
 	}
 
-	if err := client.ForceRemoveInstance(ctx, instanceName); err != nil {
+	log.FromContext(ctx).V(1).Info("Deleting test instance")
+	if err := lxcClient.WaitForDeleteInstance(ctx, instanceName); err != nil {
 		return fmt.Errorf("failed to delete instance: %w", err)
 	}
 	return nil

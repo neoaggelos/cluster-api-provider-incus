@@ -1,4 +1,4 @@
-package incus
+package loadbalancer
 
 import (
 	"context"
@@ -8,12 +8,15 @@ import (
 	"github.com/lxc/incus/v6/shared/api"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/yaml"
+
+	"github.com/lxc/cluster-api-provider-incus/internal/lxc"
+	"github.com/lxc/cluster-api-provider-incus/internal/utils"
 )
 
-// loadBalancerNetwork is a LoadBalancerManager that spins up a network load-balancer.
-// loadBalancerNetwork requires an OVN network.
-type loadBalancerNetwork struct {
-	lxcClient *Client
+// managerOVN is a Manager that spins up a network load-balancer.
+// managerOVN requires an OVN network.
+type managerOVN struct {
+	lxcClient *lxc.Client
 
 	clusterName      string
 	clusterNamespace string
@@ -22,41 +25,38 @@ type loadBalancerNetwork struct {
 	listenAddress string
 }
 
-// Create implements loadBalancerManager.
-func (l *loadBalancerNetwork) Create(ctx context.Context) ([]string, error) {
-	ctx, cancel := context.WithTimeout(ctx, loadBalancerCreateTimeout)
-	defer cancel()
-
+// Create implements Manager.
+func (l *managerOVN) Create(ctx context.Context) ([]string, error) {
 	ctx = log.IntoContext(ctx, log.FromContext(ctx).WithValues("networkName", l.networkName, "listenAddress", l.listenAddress))
 
 	if l.networkName == "" {
-		return nil, terminalError{fmt.Errorf("network load balancer cannot be provisioned as .spec.loadBalancer.ovnNetworkName is not specified")}
+		return nil, utils.TerminalError(fmt.Errorf("network load balancer cannot be provisioned as .spec.loadBalancer.ovn.networkName is not specified"))
 	}
 
-	if err := l.lxcClient.SupportsNetworkLoadBalancer(); err != nil {
-		return nil, err
+	if err := l.lxcClient.SupportsNetworkLoadBalancers(ctx); err != nil {
+		return nil, fmt.Errorf("server does not support network load balancers: %w", err)
 	}
 
-	if _, _, err := l.lxcClient.Client.GetNetwork(l.networkName); err != nil {
-		return nil, terminalError{fmt.Errorf("failed to check network %q: %w", l.networkName, err)}
+	if _, _, err := l.lxcClient.GetNetwork(l.networkName); err != nil {
+		return nil, utils.TerminalError(fmt.Errorf("failed to check network %q: %w", l.networkName, err))
 	}
-	if lb, _, err := l.lxcClient.Client.GetNetworkLoadBalancer(l.networkName, l.listenAddress); err != nil && !strings.Contains(err.Error(), "Network load balancer not found") {
+	if lb, _, err := l.lxcClient.GetNetworkLoadBalancer(l.networkName, l.listenAddress); err != nil && !strings.Contains(err.Error(), "Network load balancer not found") {
 		return nil, fmt.Errorf("failed to GetNetworkLoadBalancer: %w", err)
 	} else if err == nil {
-		if lb.Config[configClusterNameKey] != l.clusterName || lb.Config[configClusterNamespaceKey] != l.clusterNamespace {
-			return nil, terminalError{fmt.Errorf("conflict: a LoadBalancer with IP %s already exists without the required keys %s=%s and %s=%s", l.listenAddress, configClusterNameKey, l.clusterName, configClusterNamespaceKey, l.clusterNamespace)}
+		if lb.Config["user.cluster-name"] != l.clusterName || lb.Config["user.cluster-namespace"] != l.clusterNamespace {
+			return nil, utils.TerminalError(fmt.Errorf("conflict: a LoadBalancer with IP %s already exists without the required keys %s=%s and %s=%s", l.listenAddress, "user.cluster-name", l.clusterName, "user.cluster-namespace", l.clusterNamespace))
 		}
+		log.FromContext(ctx).V(1).Info("Network load balancer already exists")
 		return []string{l.listenAddress}, nil
 	}
 
-	log.FromContext(ctx).V(2).Info("Creating network load balancer")
-	if err := l.lxcClient.Client.CreateNetworkLoadBalancer(l.networkName, api.NetworkLoadBalancersPost{
+	log.FromContext(ctx).V(1).Info("Creating network load balancer")
+	if err := l.lxcClient.CreateNetworkLoadBalancer(l.networkName, api.NetworkLoadBalancersPost{
 		ListenAddress: l.listenAddress,
 		NetworkLoadBalancerPut: api.NetworkLoadBalancerPut{
 			Config: map[string]string{
-				configClusterNameKey:      l.clusterName,
-				configClusterNamespaceKey: l.clusterNamespace,
-				configInstanceRoleKey:     "loadbalancer",
+				"user.cluster-name":      l.clusterName,
+				"user.cluster-namespace": l.clusterNamespace,
 			},
 		},
 	}); err != nil {
@@ -66,39 +66,35 @@ func (l *loadBalancerNetwork) Create(ctx context.Context) ([]string, error) {
 	return []string{l.listenAddress}, nil
 }
 
-// Delete implements loadBalancerManager.
-func (l *loadBalancerNetwork) Delete(ctx context.Context) error {
-	ctx, cancel := context.WithTimeout(ctx, loadBalancerDeleteTimeout)
-	defer cancel()
-
+// Delete implements Manager.
+func (l *managerOVN) Delete(ctx context.Context) error {
 	ctx = log.IntoContext(ctx, log.FromContext(ctx).WithValues("networkName", l.networkName, "listenAddress", l.listenAddress))
 
-	log.FromContext(ctx).V(2).Info("Deleting network load balancer")
-	if err := l.lxcClient.Client.DeleteNetworkLoadBalancer(l.networkName, l.listenAddress); err != nil && !strings.Contains(err.Error(), "not found") {
+	log.FromContext(ctx).V(1).Info("Deleting network load balancer")
+	if err := l.lxcClient.DeleteNetworkLoadBalancer(l.networkName, l.listenAddress); err != nil && !strings.Contains(err.Error(), "not found") {
 		return fmt.Errorf("failed to DeleteNetworkLoadBalancer: %w", err)
 	}
 	return nil
 }
 
-// Reconfigure implements loadBalancerManager.
-func (l *loadBalancerNetwork) Reconfigure(ctx context.Context) error {
+// Reconfigure implements Manager.
+func (l *managerOVN) Reconfigure(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, loadBalancerReconfigureTimeout)
 	defer cancel()
 
 	ctx = log.IntoContext(ctx, log.FromContext(ctx).WithValues("networkName", l.networkName, "listenAddress", l.listenAddress))
 
-	config, err := l.lxcClient.getLoadBalancerConfiguration(ctx, l.clusterName, l.clusterNamespace)
+	config, err := getLoadBalancerConfiguration(ctx, l.lxcClient, l.clusterName, l.clusterNamespace)
 	if err != nil {
 		return fmt.Errorf("failed to build load balancer configuration: %w", err)
 	}
 
-	log.FromContext(ctx).WithValues("servers", config.BackendServers).Info("Updating network load balancers")
+	log.FromContext(ctx).V(1).WithValues("servers", config.BackendServers).Info("Updating network load balancer")
 
 	lbConfig := api.NetworkLoadBalancerPut{
 		Config: map[string]string{
-			configClusterNameKey:      l.clusterName,
-			configClusterNamespaceKey: l.clusterNamespace,
-			configInstanceRoleKey:     "loadbalancer",
+			"user.cluster-name":      l.clusterName,
+			"user.cluster-namespace": l.clusterNamespace,
 
 			"healthcheck":               "true",
 			"healthcheck.interval":      "5",
@@ -123,15 +119,15 @@ func (l *loadBalancerNetwork) Reconfigure(ctx context.Context) error {
 		lbConfig.Ports[0].TargetBackend = append(lbConfig.Ports[0].TargetBackend, name)
 	}
 
-	if err := l.lxcClient.Client.UpdateNetworkLoadBalancer(l.networkName, l.listenAddress, lbConfig, ""); err != nil {
+	if err := l.lxcClient.UpdateNetworkLoadBalancer(l.networkName, l.listenAddress, lbConfig, ""); err != nil {
 		return fmt.Errorf("failed to UpdateNetworkLoadBalancer: %w", err)
 	}
 
 	return nil
 }
 
-// Inspect implements loadBalancerManager.
-func (l *loadBalancerNetwork) Inspect(ctx context.Context) map[string]string {
+// Inspect implements Manager.
+func (l *managerOVN) Inspect(ctx context.Context) map[string]string {
 	result := map[string]string{}
 
 	addInfoFor := func(name string, getter func() (any, error)) {
@@ -150,23 +146,23 @@ func (l *loadBalancerNetwork) Inspect(ctx context.Context) map[string]string {
 
 	var uplinkNetwork string
 	addInfoFor("Network", func() (any, error) {
-		network, _, err := l.lxcClient.Client.GetNetwork(l.networkName)
+		network, _, err := l.lxcClient.GetNetwork(l.networkName)
 		uplinkNetwork = network.Config["network"]
 		return network, err
 	})
 	addInfoFor("UplinkNetwork", func() (any, error) {
-		network, _, err := l.lxcClient.Client.GetNetwork(uplinkNetwork)
+		network, _, err := l.lxcClient.GetNetwork(uplinkNetwork)
 		return network, err
 	})
 	addInfoFor("NetworkLoadBalancer", func() (any, error) {
-		lb, _, err := l.lxcClient.Client.GetNetworkLoadBalancer(l.networkName, l.listenAddress)
+		lb, _, err := l.lxcClient.GetNetworkLoadBalancer(l.networkName, l.listenAddress)
 		return lb, err
 	})
 	addInfoFor("NetworkLoadBalancerState", func() (any, error) {
-		return l.lxcClient.Client.GetNetworkLoadBalancerState(l.networkName, l.listenAddress)
+		return l.lxcClient.GetNetworkLoadBalancerState(l.networkName, l.listenAddress)
 	})
 
 	return result
 }
 
-var _ LoadBalancerManager = &loadBalancerNetwork{}
+var _ Manager = &managerOVN{}
