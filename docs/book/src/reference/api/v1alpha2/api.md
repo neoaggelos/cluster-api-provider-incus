@@ -48,7 +48,7 @@ LXCClusterSpec
 <td>
 <code>controlPlaneEndpoint</code><br/>
 <em>
-<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.10.1">
+<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.10.2">
 sigs.k8s.io/cluster-api/api/v1beta1.APIEndpoint
 </a>
 </em>
@@ -252,7 +252,7 @@ LXCLoadBalancerExternal
 <td>
 <code>controlPlaneEndpoint</code><br/>
 <em>
-<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.10.1">
+<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.10.2">
 sigs.k8s.io/cluster-api/api/v1beta1.APIEndpoint
 </a>
 </em>
@@ -365,7 +365,7 @@ bool
 <td>
 <code>conditions</code><br/>
 <em>
-<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.10.1">
+<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.10.2">
 sigs.k8s.io/cluster-api/api/v1beta1.Conditions
 </a>
 </em>
@@ -469,7 +469,7 @@ LXCClusterTemplateResource
 <td>
 <code>metadata</code><br/>
 <em>
-<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.10.1">
+<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.10.2">
 sigs.k8s.io/cluster-api/api/v1beta1.ObjectMeta
 </a>
 </em>
@@ -499,7 +499,7 @@ LXCClusterSpec
 <td>
 <code>controlPlaneEndpoint</code><br/>
 <em>
-<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.10.1">
+<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.10.2">
 sigs.k8s.io/cluster-api/api/v1beta1.APIEndpoint
 </a>
 </em>
@@ -1160,7 +1160,7 @@ bool
 <td>
 <code>addresses</code><br/>
 <em>
-<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.10.1">
+<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.10.2">
 []sigs.k8s.io/cluster-api/api/v1beta1.MachineAddress
 </a>
 </em>
@@ -1174,7 +1174,7 @@ bool
 <td>
 <code>conditions</code><br/>
 <em>
-<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.10.1">
+<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.10.2">
 sigs.k8s.io/cluster-api/api/v1beta1.Conditions
 </a>
 </em>
@@ -1278,7 +1278,7 @@ LXCMachineTemplateResource
 <td>
 <code>metadata</code><br/>
 <em>
-<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.10.1">
+<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.10.2">
 sigs.k8s.io/cluster-api/api/v1beta1.ObjectMeta
 </a>
 </em>
