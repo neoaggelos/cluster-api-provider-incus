@@ -13,7 +13,6 @@ import (
 
 func patchLXCCluster(ctx context.Context, patchHelper *patch.Helper, lxcCluster *infrav1.LXCCluster) error {
 	infraConditions := []clusterv1.ConditionType{
-		infrav1.KubeadmProfileAvailableCondition,
 		infrav1.LoadBalancerAvailableCondition,
 	}
 	hasInfraConditionError := false
