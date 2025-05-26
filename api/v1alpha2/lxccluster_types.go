@@ -262,11 +262,6 @@ func (c *LXCCluster) GetLoadBalancerInstanceName() string {
 	return fmt.Sprintf("%s-%s-lb", c.Name, hex.EncodeToString(hash[:3])[:5])
 }
 
-// GetProfileName returns the profile name for the cluster LXC machines.
-func (c *LXCCluster) GetProfileName() string {
-	return fmt.Sprintf("cluster-api-%s-%s", c.Namespace, c.Name)
-}
-
 // +kubebuilder:object:root=true
 
 // LXCClusterList contains a list of LXCCluster.
