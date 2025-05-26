@@ -51,15 +51,14 @@ type LXCClusterSpec struct {
 	// +optional
 	Unprivileged bool `json:"unprivileged"`
 
-	// Skip creation of the default kubeadm profile "cluster-api-$namespace-$name"
-	// for LXCClusters.
+	// Do not apply the default kubeadm profile on container instances.
 	//
 	// In this case, the cluster administrator is responsible to create the
 	// profile manually and set the `.spec.template.spec.profiles` field of all
 	// LXCMachineTemplate objects.
 	//
-	// This is useful in cases where a restricted project is used, which does not
-	// allow privileged containers.
+	// For more details on the default kubeadm profile that is applied, see
+	// https://lxc.github.io/cluster-api-provider-incus/reference/profile/kubeadm.html
 	//
 	// +optional
 	SkipDefaultKubeadmProfile bool `json:"skipDefaultKubeadmProfile"`

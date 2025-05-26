@@ -105,13 +105,12 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Skip creation of the default kubeadm profile &ldquo;cluster-api-$namespace-$name&rdquo;
-for LXCClusters.</p>
+<p>Do not apply the default kubeadm profile on container instances.</p>
 <p>In this case, the cluster administrator is responsible to create the
 profile manually and set the <code>.spec.template.spec.profiles</code> field of all
 LXCMachineTemplate objects.</p>
-<p>This is useful in cases where a restricted project is used, which does not
-allow privileged containers.</p>
+<p>For more details on the default kubeadm profile that is applied, see
+<a href="https://lxc.github.io/cluster-api-provider-incus/reference/profile/kubeadm.html">https://lxc.github.io/cluster-api-provider-incus/reference/profile/kubeadm.html</a></p>
 </td>
 </tr>
 </table>
@@ -297,13 +296,12 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Skip creation of the default kubeadm profile &ldquo;cluster-api-$namespace-$name&rdquo;
-for LXCClusters.</p>
+<p>Do not apply the default kubeadm profile on container instances.</p>
 <p>In this case, the cluster administrator is responsible to create the
 profile manually and set the <code>.spec.template.spec.profiles</code> field of all
 LXCMachineTemplate objects.</p>
-<p>This is useful in cases where a restricted project is used, which does not
-allow privileged containers.</p>
+<p>For more details on the default kubeadm profile that is applied, see
+<a href="https://lxc.github.io/cluster-api-provider-incus/reference/profile/kubeadm.html">https://lxc.github.io/cluster-api-provider-incus/reference/profile/kubeadm.html</a></p>
 </td>
 </tr>
 </tbody>
@@ -532,13 +530,12 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Skip creation of the default kubeadm profile &ldquo;cluster-api-$namespace-$name&rdquo;
-for LXCClusters.</p>
+<p>Do not apply the default kubeadm profile on container instances.</p>
 <p>In this case, the cluster administrator is responsible to create the
 profile manually and set the <code>.spec.template.spec.profiles</code> field of all
 LXCMachineTemplate objects.</p>
-<p>This is useful in cases where a restricted project is used, which does not
-allow privileged containers.</p>
+<p>For more details on the default kubeadm profile that is applied, see
+<a href="https://lxc.github.io/cluster-api-provider-incus/reference/profile/kubeadm.html">https://lxc.github.io/cluster-api-provider-incus/reference/profile/kubeadm.html</a></p>
 </td>
 </tr>
 </table>
