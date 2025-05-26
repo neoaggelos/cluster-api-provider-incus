@@ -72,7 +72,7 @@ func (c *Client) WaitForStartInstance(ctx context.Context, name string) ([]strin
 
 	if state.Status == "Running" {
 		log.V(2).Info("Instance is already running")
-	} else if err := c.WaitForOperation(ctx, "UpdateInstanceState(Start)", func() (incus.Operation, error) {
+	} else if err := c.WaitForOperation(ctx, "StartInstance", func() (incus.Operation, error) {
 		log.V(2).Info("Starting instance")
 		return c.UpdateInstanceState(name, api.InstanceStatePut{Action: "start"}, "")
 	}); err != nil {
@@ -99,7 +99,7 @@ func (c *Client) WaitForStopInstance(ctx context.Context, name string) error {
 		return nil
 	}
 	log.V(2).Info("Stopping instance")
-	return c.WaitForOperation(ctx, "UpdateInstanceState(Stop)", func() (incus.Operation, error) {
+	return c.WaitForOperation(ctx, "StopInstance", func() (incus.Operation, error) {
 		return c.UpdateInstanceState(name, api.InstanceStatePut{Action: "stop", Force: true}, "")
 	})
 }

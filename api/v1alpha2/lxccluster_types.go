@@ -51,15 +51,14 @@ type LXCClusterSpec struct {
 	// +optional
 	Unprivileged bool `json:"unprivileged"`
 
-	// Skip creation of the default kubeadm profile "cluster-api-$namespace-$name"
-	// for LXCClusters.
+	// Do not apply the default kubeadm profile on container instances.
 	//
 	// In this case, the cluster administrator is responsible to create the
 	// profile manually and set the `.spec.template.spec.profiles` field of all
 	// LXCMachineTemplate objects.
 	//
-	// This is useful in cases where a restricted project is used, which does not
-	// allow privileged containers.
+	// For more details on the default kubeadm profile that is applied, see
+	// https://lxc.github.io/cluster-api-provider-incus/reference/profile/kubeadm.html
 	//
 	// +optional
 	SkipDefaultKubeadmProfile bool `json:"skipDefaultKubeadmProfile"`
@@ -260,11 +259,6 @@ func (c *LXCCluster) GetLoadBalancerInstanceName() string {
 	//    user.role = "loadbalancer"
 	hash := sha256.Sum256([]byte(c.Namespace))
 	return fmt.Sprintf("%s-%s-lb", c.Name, hex.EncodeToString(hash[:3])[:5])
-}
-
-// GetProfileName returns the profile name for the cluster LXC machines.
-func (c *LXCCluster) GetProfileName() string {
-	return fmt.Sprintf("cluster-api-%s-%s", c.Namespace, c.Name)
 }
 
 // +kubebuilder:object:root=true

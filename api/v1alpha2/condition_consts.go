@@ -23,25 +23,6 @@ const (
 	LoadBalancerProvisioningAbortedReason = "LoadBalancerProvisioningAbortedReason"
 )
 
-const (
-	// KubeadmProfileAvailableCondition documents the availability of the default kubeadm LXC profile.
-	KubeadmProfileAvailableCondition = "KubeadmProfileAvailable"
-
-	// KubeadmProfileDisabledReason (Severity=Info) documents a LXCCluster controller detecting that the
-	// LXCCluster spec requests that no default kubeam profile be created.
-	KubeadmProfileDisabledReason = "KubeadmProfileDisabled"
-
-	// KubeadmProfileCreationFailedReason (Severity=Warning) documents a LXCCluster controller detecting
-	// a retriable error while provisioning the default kubeadm LXC profile; those kind of errors are
-	// usually transient and failed provisioning are automatically re-tried by the controller.'
-	KubeadmProfileCreationFailedReason = "KubeadmProfileCreationFailed"
-
-	// KubeadmProfileCreationAbortedReason (Severity=Error) documents a LXCCluster controller detecting
-	// an unrecoverable error while provisioning the default kubeadm LXC profile. This is usually because
-	// of permission issues on the server, therefore requires user intervention.
-	KubeadmProfileCreationAbortedReason = "KubeadmProfileCreationAborted"
-)
-
 // Conditions and condition Reasons for the LXCMachine object.
 
 const (

@@ -3,7 +3,7 @@ package lxcmachine
 import (
 	"context"
 	"fmt"
-	"slices"
+	"maps"
 	"strings"
 	"time"
 
@@ -117,24 +117,12 @@ func launchInstance(ctx context.Context, cluster *clusterv1.Cluster, lxcCluster 
 		instanceType = lxcMachine.Spec.InstanceType
 	}
 
-	ctx = log.IntoContext(ctx, log.FromContext(ctx).WithValues("instance", name, "role", role))
-
-	profiles := lxcMachine.Spec.Profiles
-	if lxcMachine.Spec.InstanceType == lxc.Container && !lxcCluster.Spec.SkipDefaultKubeadmProfile && !slices.Contains(lxcMachine.Spec.Profiles, lxcCluster.GetProfileName()) {
-		// for containers, include the default kubeadm profile
-		profiles = append(lxcMachine.Spec.Profiles, lxcCluster.GetProfileName())
-	}
-
 	// Parse device configurations
-	var devices map[string]map[string]string
+	devices := map[string]map[string]string{}
 	for _, deviceSpec := range lxcMachine.Spec.Devices {
 		deviceName, deviceArgs, hasSeparator := strings.Cut(deviceSpec, ",")
 		if !hasSeparator {
 			return nil, utils.TerminalError(fmt.Errorf("device spec %q is not using the expected %q format", deviceSpec, "<device>,<key>=<value>,<key2>=<value2>"))
-		}
-
-		if devices == nil {
-			devices = map[string]map[string]string{}
 		}
 
 		if _, ok := devices[deviceName]; !ok {
@@ -190,42 +178,33 @@ func launchInstance(ctx context.Context, cluster *clusterv1.Cluster, lxcCluster 
 		}
 	}
 
-	config := map[string]string{
-		"user.cluster-name":      cluster.Name,
-		"user.cluster-namespace": cluster.Namespace,
-		"user.machine-name":      machine.Name,
-		"user.cluster-role":      role,
-		"cloud-init.user-data":   cloudInit,
-	}
-
-	if lxcClient.GetServerName(ctx) == "lxd" && lxcCluster.Spec.Unprivileged && instanceType == lxc.Container {
-		config["security.nesting"] = "true"
-		if devices == nil {
-			devices = make(map[string]map[string]string, 2)
-		}
-		devices["00-disable-snapd"] = map[string]string{
-			"type":   "disk",
-			"source": "/dev/null",
-			"path":   "/usr/lib/systemd/system/snapd.service",
-		}
-		devices["00-disable-apparmor"] = map[string]string{
-			"type":   "disk",
-			"source": "/dev/null",
-			"path":   "/usr/lib/systemd/system/apparmor.service",
-		}
-	}
-
-	return lxcClient.WaitForLaunchInstance(ctx, api.InstancesPost{
+	instance := api.InstancesPost{
 		Name:         name,
 		Type:         api.InstanceType(instanceType),
 		Source:       image,
 		InstanceType: lxcMachine.Spec.Flavor,
 		InstancePut: api.InstancePut{
-			Profiles: profiles,
+			Profiles: lxcMachine.Spec.Profiles,
 			Devices:  devices,
-			Config:   util.MergeMap(config, lxcMachine.Spec.Config),
+			Config: util.MergeMap(map[string]string{
+				"user.cluster-name":      cluster.Name,
+				"user.cluster-namespace": cluster.Namespace,
+				"user.machine-name":      machine.Name,
+				"user.cluster-role":      role,
+				"cloud-init.user-data":   cloudInit,
+			}, lxcMachine.Spec.Config),
 		},
-	}, defaultTemplateFiles)
+	}
+
+	// apply profile for Kubernetes to run in LXC containers
+	if instanceType == lxc.Container && !lxcCluster.Spec.SkipDefaultKubeadmProfile {
+		profile := static.DefaultKubeadmProfile(!lxcCluster.Spec.Unprivileged, lxcClient.GetServerName(ctx))
+
+		maps.Copy(instance.Devices, profile.Devices)
+		maps.Copy(instance.Config, profile.Config)
+	}
+
+	return lxcClient.WaitForLaunchInstance(ctx, instance, defaultTemplateFiles)
 }
 
 // defaultTemplateFiles that are injected to LXCMachine instances.

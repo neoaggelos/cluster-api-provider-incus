@@ -1,0 +1,18 @@
+description: Profile for cluster-api-provider-incus unprivileged nodes (LXD)
+config:
+  linux.kernel_modules: ip_vs,ip_vs_rr,ip_vs_wrr,ip_vs_sh,ip_tables,ip6_tables,iptable_raw,netlink_diag,nf_nat,overlay,br_netfilter,xt_socket
+  security.nesting: "true"
+devices:
+  kubeadm-host-boot:
+    path: /usr/lib/ostree-boot
+    readonly: "true"
+    source: /boot
+    type: disk
+  00-disable-snapd:
+    type: disk
+    source: /dev/null
+    path: /usr/lib/systemd/system/snapd.service
+  00-disable-apparmor:
+    type: disk
+    source: /dev/null
+    path: /usr/lib/systemd/system/apparmor.service

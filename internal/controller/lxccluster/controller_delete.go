@@ -29,7 +29,6 @@ func (r *LXCClusterReconciler) reconcileDelete(ctx context.Context, cluster *clu
 		return ctrl.Result{}, err
 	}
 	conditions.MarkFalse(lxcCluster, infrav1.LoadBalancerAvailableCondition, clusterv1.DeletingReason, clusterv1.ConditionSeverityInfo, "")
-	conditions.MarkFalse(lxcCluster, infrav1.KubeadmProfileAvailableCondition, clusterv1.DeletingReason, clusterv1.ConditionSeverityInfo, "")
 	if err := patchLXCCluster(ctx, patchHelper, lxcCluster); err != nil {
 		return ctrl.Result{}, fmt.Errorf("failed to patch LXCCluster: %w", err)
 	}
@@ -46,11 +45,6 @@ func (r *LXCClusterReconciler) reconcileDelete(ctx context.Context, cluster *clu
 	} else if len(machines) > 0 {
 		log.FromContext(ctx).WithValues("machines", len(machines)).Info("Waiting for all Machines to be deleted")
 		return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
-	}
-
-	log.FromContext(ctx).Info("Deleting default kubeadm profile")
-	if err := lxcClient.DeleteProfile(lxcCluster.GetProfileName()); err != nil {
-		return ctrl.Result{}, fmt.Errorf("failed to delete the default kubeadm profile: %w", err)
 	}
 
 	// Cluster is deleted so remove the finalizer.
