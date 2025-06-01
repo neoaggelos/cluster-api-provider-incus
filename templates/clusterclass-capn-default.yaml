@@ -408,17 +408,14 @@ spec:
       - op: add
         path: /spec/template/spec/kubeadmConfigSpec/files/-
         value:
-          path: /etc/kubernetes/patches/kubeletconfiguration0+strategic.json
+          path: /etc/kubernetes/patches/kubeletconfiguration0+strategic.yaml
           owner: root:root
           permissions: "0400"
           content: |
-            {
-              "apiVersion": "kubelet.config.k8s.io/v1beta1",
-              "kind": "KubeletConfiguration",
-              "featureGates": {
-                "KubeletInUserNamespace": true
-              }
-            }
+            apiVersion: kubelet.config.k8s.io/v1beta1
+            kind: KubeletConfiguration
+            featureGates:
+              KubeletInUserNamespace: true
   - name: workerConfigureUnprivileged
     description: Configure containerd for unprivileged mode in MachineDeployments
     enabledIf: '{{ and (not .privileged) (ne .instance.type "virtual-machine") }}'
@@ -434,17 +431,14 @@ spec:
       - op: add
         path: /spec/template/spec/files/-
         value:
-          path: /etc/kubernetes/patches/kubeletconfiguration0+strategic.json
+          path: /etc/kubernetes/patches/kubeletconfiguration0+strategic.yaml
           owner: root:root
           permissions: "0400"
           content: |
-            {
-              "apiVersion": "kubelet.config.k8s.io/v1beta1",
-              "kind": "KubeletConfiguration",
-              "featureGates": {
-                "KubeletInUserNamespace": true
-              }
-            }
+            apiVersion: kubelet.config.k8s.io/v1beta1
+            kind: KubeletConfiguration
+            featureGates:
+              KubeletInUserNamespace: true
   - name: etcdImageTag
     description: Sets tag to use for the etcd image in the KubeadmControlPlane.
     enabledIf: "{{ not (empty .etcdImageTag) }}"
