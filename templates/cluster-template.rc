@@ -34,9 +34,11 @@ export CONTROL_PLANE_MACHINE_TYPE=container     # 'container' or 'virtual-machin
 export CONTROL_PLANE_MACHINE_FLAVOR=c2-m4       # instance type for control plane nodes
 export CONTROL_PLANE_MACHINE_PROFILES=[default] # profiles for control plane nodes
 export CONTROL_PLANE_MACHINE_DEVICES=[]         # override devices for control plane nodes
+export CONTROL_PLANE_MACHINE_TARGET=""          # override target for control plane nodes (e.g. "@default")
 
 # Worker machine configuration
 export WORKER_MACHINE_TYPE=container            # 'container' or 'virtual-machine'
 export WORKER_MACHINE_FLAVOR=c2-m4              # instance type for worker nodes
 export WORKER_MACHINE_PROFILES=[default]        # profiles for worker nodes
 export WORKER_MACHINE_DEVICES=[]                # override devices for worker nodes
+export WORKER_MACHINE_TARGET=""                 # override target for worker nodes (e.g. "@default")

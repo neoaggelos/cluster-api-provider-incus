@@ -204,7 +204,7 @@ func launchInstance(ctx context.Context, cluster *clusterv1.Cluster, lxcCluster 
 		maps.Copy(instance.Config, profile.Config)
 	}
 
-	return lxcClient.WaitForLaunchInstance(ctx, instance, defaultTemplateFiles)
+	return lxcClient.WithTarget(lxcMachine.Spec.Target).WaitForLaunchInstance(ctx, instance, defaultTemplateFiles)
 }
 
 // defaultTemplateFiles that are injected to LXCMachine instances.

@@ -24,7 +24,7 @@ var _ = Describe("QuickStart", func() {
 			lxcClient, err := lxc.New(ctx, e2eCtx.Settings.LXCClientOptions)
 			Expect(err).ToNot(HaveOccurred())
 
-			err = lxcClient.SupportsInstanceOCI(ctx)
+			err = lxcClient.SupportsInstanceOCI()
 			Expect(err).To(Or(Succeed(), MatchError(utils.IsTerminalError, "IsTerminalError")))
 			if err != nil {
 				Skip(fmt.Sprintf("Server does not support OCI instances: %v", err))

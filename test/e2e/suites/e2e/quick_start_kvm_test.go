@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 	"slices"
-	"strings"
 
 	"sigs.k8s.io/cluster-api/test/e2e"
 	"sigs.k8s.io/cluster-api/util"
@@ -24,17 +23,15 @@ var _ = Describe("QuickStart", func() {
 		BeforeEach(func(ctx context.Context) {
 			lxcClient, err := lxc.New(ctx, e2eCtx.Settings.LXCClientOptions)
 			Expect(err).ToNot(HaveOccurred())
-			info, _, err := lxcClient.GetServer()
-			Expect(err).ToNot(HaveOccurred())
 
 			// skip if server cannot launch kvm instances
-			if !slices.Contains(strings.Split(info.Environment.Driver, " | "), "qemu") {
-				Skip(fmt.Sprintf("Server is missing driver qemu, supported drivers are: %q", info.Environment.Driver))
+			if err := lxcClient.SupportsInstanceKVM(); err != nil {
+				Skip(fmt.Sprintf("Server cannot launch kvm instances: %v", err))
 			}
 
 			// skip if server is not amd64 (kvm images are only available for amd64)
-			if !slices.Contains(info.Environment.Architectures, "x86_64") {
-				Skip(fmt.Sprintf("QuickStart KVM test requires amd64, but server only supports the following architectures: %v", info.Environment.Architectures))
+			if archs := lxcClient.SupportsArchitectures(); !slices.Contains(archs, "x86_64") {
+				Skip(fmt.Sprintf("QuickStart KVM test requires amd64, but server only supports the following architectures: %v", archs))
 			}
 
 			e2eCtx.OverrideVariables(map[string]string{

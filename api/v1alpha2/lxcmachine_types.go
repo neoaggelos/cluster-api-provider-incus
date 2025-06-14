@@ -102,6 +102,22 @@ type LXCMachineSpec struct {
 	//
 	// +optional
 	Image LXCMachineImageSource `json:"image"`
+
+	// Target where the machine should be provisioned, when infrastructure
+	// is a production cluster.
+	//
+	// Can be one of:
+	//
+	//   - `name`: where `name` is the name of a cluster member.
+	//   - `@name`: where `name` is the name of a cluster group.
+	//
+	// Target is ignored when infrastructure is single-node (e.g. for
+	// development purposes).
+	//
+	// For more information on cluster groups, you can refer to https://linuxcontainers.org/incus/docs/main/explanation/clustering/#cluster-groups
+	//
+	// +optional
+	Target string `json:"target"`
 }
 
 type LXCMachineImageSource struct {

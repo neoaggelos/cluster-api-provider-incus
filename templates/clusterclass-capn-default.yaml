@@ -71,6 +71,10 @@ spec:
               image:
                 type: string
                 description: Override the image to use for provisioning the load balancer instance.
+              target:
+                type: string
+                description: Specify a target for the load balancer instance (name of cluster member, or group)
+                default: ""
               profiles:
                 description: List of profiles to apply on the instance
                 type: array
@@ -83,6 +87,10 @@ spec:
               flavor:
                 type: string
                 description: Instance size, e.g. "c1-m1" for 1 CPU and 1 GB RAM
+              target:
+                type: string
+                description: Specify a target for the load balancer instance (name of cluster member, or group)
+                default: ""
               profiles:
                 type: array
                 description: List of profiles to apply on the instance
@@ -150,6 +158,10 @@ spec:
             items:
               type: string
             description: Override device (e.g. network, storage) configuration for the instance
+          target:
+            type: string
+            description: Specify a target for the instance (name of cluster member, or group)
+            default: ""
           installKubeadm:
             type: boolean
             default: false
@@ -207,6 +219,9 @@ spec:
                   image:
                     name: {{ .loadBalancer.lxc.image | quote }}
             {{ end }}
+            {{ if .loadBalancer.lxc.target }}
+                  target: {{ .loadBalancer.lxc.target }}
+            {{ end }}
             {{ end }}
             {{ if hasKey .loadBalancer "oci" }}
             loadBalancer:
@@ -217,6 +232,9 @@ spec:
             {{ end }}
             {{ if .loadBalancer.oci.profiles }}
                   profiles: {{ .loadBalancer.oci.profiles | toJson }}
+            {{ end }}
+            {{ if .loadBalancer.oci.target }}
+                  target: {{ .loadBalancer.oci.target }}
             {{ end }}
             {{ end }}
             {{ if hasKey .loadBalancer "ovn" }}
@@ -342,6 +360,7 @@ spec:
             devices: {{ .instance.devices | toJson }}
             instanceType: {{ .instance.type | quote }}
             flavor: {{ .instance.flavor | quote }}
+            target: {{ .instance.target | quote }}
             image:
               name: {{ .instance.image | quote }}
   - name: workerInstanceSpec
@@ -363,6 +382,7 @@ spec:
             devices: {{ .instance.devices | toJson }}
             instanceType: {{ .instance.type | quote }}
             flavor: {{ .instance.flavor | quote }}
+            target: {{ .instance.target | quote }}
             image:
               name: {{ .instance.image | quote }}
   - name: controlPlaneInstallKubeadm

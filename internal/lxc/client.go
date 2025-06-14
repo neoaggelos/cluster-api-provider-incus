@@ -13,6 +13,8 @@ import (
 type Client struct {
 	incus.InstanceServer
 
+	serverInfo *api.Server
+
 	progressHandler func(api.Operation)
 }
 
@@ -57,12 +59,30 @@ func New(ctx context.Context, config Configuration, options ...Option) (*Client,
 		client = client.UseProject(config.Project)
 	}
 
+	server, _, err := client.GetServer()
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve server information: %w", err)
+	}
+
 	log.V(2).Info("Initialized client")
 
-	c := &Client{InstanceServer: client}
+	c := &Client{InstanceServer: client, serverInfo: server}
 	for _, o := range options {
 		o(c)
 	}
 
 	return c, nil
+}
+
+// WithTarget returns a copy of the client and a set target host.
+// WithTarget will ignore the target argument if server is not clustered.
+func (c *Client) WithTarget(target string) *Client {
+	if c.SupportsInstanceTarget() != nil {
+		return c
+	}
+	return &Client{
+		InstanceServer:  c.InstanceServer.UseTarget(target),
+		serverInfo:      c.serverInfo,
+		progressHandler: c.progressHandler,
+	}
 }
