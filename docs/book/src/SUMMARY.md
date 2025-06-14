@@ -6,6 +6,10 @@
 
 ---
 
+- [Machine Placement](./howto/machine-placement.md)
+
+---
+
 - [Build base images](./howto/images/index.md)
   - [Kubeadm](./howto/images/kubeadm.md)
   - [Haproxy](./howto/images/haproxy.md)

@@ -125,6 +125,10 @@ export WORKER_MACHINE_DEVICES="['eth0,type=nic,network=my-network', 'root,type=d
 
 Instance size for the control plane and worker instances. This is typically specified as `cX-mY`, in which case the instance size will be `X cores` and `Y GB RAM`.
 
+### `CONTROL_PLANE_MACHINE_TARGET` and `WORKER_MACHINE_TARGET`
+
+When infrastructure is a cluster, specify target cluster member or cluster group for control plane and worker machines. See [Machine Placement](../../howto/machine-placement.md) for more details.
+
 ## Cluster Template
 
 ```yaml
