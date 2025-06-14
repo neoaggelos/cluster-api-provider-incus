@@ -40,7 +40,7 @@ type managerOCI struct {
 func (l *managerOCI) Create(ctx context.Context) ([]string, error) {
 	ctx = log.IntoContext(ctx, log.FromContext(ctx).WithValues("loadbalancer.instance", l.name))
 
-	if err := l.lxcClient.SupportsInstanceOCI(ctx); err != nil {
+	if err := l.lxcClient.SupportsInstanceOCI(); err != nil {
 		return nil, fmt.Errorf("server does not support OCI containers: %w", err)
 	}
 

@@ -33,7 +33,7 @@ func (l *managerOVN) Create(ctx context.Context) ([]string, error) {
 		return nil, utils.TerminalError(fmt.Errorf("network load balancer cannot be provisioned as .spec.loadBalancer.ovn.networkName is not specified"))
 	}
 
-	if err := l.lxcClient.SupportsNetworkLoadBalancers(ctx); err != nil {
+	if err := l.lxcClient.SupportsNetworkLoadBalancers(); err != nil {
 		return nil, fmt.Errorf("server does not support network load balancers: %w", err)
 	}
 

@@ -13,6 +13,8 @@ import (
 type Client struct {
 	incus.InstanceServer
 
+	serverInfo *api.Server
+
 	progressHandler func(api.Operation)
 }
 
@@ -57,9 +59,14 @@ func New(ctx context.Context, config Configuration, options ...Option) (*Client,
 		client = client.UseProject(config.Project)
 	}
 
+	server, _, err := client.GetServer()
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve server information: %w", err)
+	}
+
 	log.V(2).Info("Initialized client")
 
-	c := &Client{InstanceServer: client}
+	c := &Client{InstanceServer: client, serverInfo: server}
 	for _, o := range options {
 		o(c)
 	}
