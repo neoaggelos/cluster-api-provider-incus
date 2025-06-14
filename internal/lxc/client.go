@@ -73,3 +73,16 @@ func New(ctx context.Context, config Configuration, options ...Option) (*Client,
 
 	return c, nil
 }
+
+// WithTarget returns a copy of the client and a set target host.
+// WithTarget will ignore the target argument if server is not clustered.
+func (c *Client) WithTarget(target string) *Client {
+	if c.SupportsInstanceTarget() != nil {
+		return c
+	}
+	return &Client{
+		InstanceServer:  c.InstanceServer.UseTarget(target),
+		serverInfo:      c.serverInfo,
+		progressHandler: c.progressHandler,
+	}
+}

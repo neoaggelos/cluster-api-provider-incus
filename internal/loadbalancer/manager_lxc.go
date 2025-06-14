@@ -53,7 +53,7 @@ func (l *managerLXC) Create(ctx context.Context) ([]string, error) {
 	}
 
 	log.FromContext(ctx).V(1).Info("Launching load balancer instance")
-	addrs, err := l.lxcClient.WaitForLaunchInstance(ctx, api.InstancesPost{
+	addrs, err := l.lxcClient.WithTarget(l.spec.Target).WaitForLaunchInstance(ctx, api.InstancesPost{
 		Name:         l.name,
 		Type:         api.InstanceTypeContainer,
 		Source:       image,

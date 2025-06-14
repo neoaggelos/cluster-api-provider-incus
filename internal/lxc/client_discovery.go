@@ -48,3 +48,10 @@ func (c *Client) SupportsInstanceKVM() error {
 func (c *Client) SupportsArchitectures() []string {
 	return slices.Clone(c.serverInfo.Environment.Architectures)
 }
+
+func (c *Client) SupportsInstanceTarget() error {
+	if !c.serverInfo.Environment.ServerClustered {
+		return fmt.Errorf("server is not part of a cluster")
+	}
+	return nil
+}
