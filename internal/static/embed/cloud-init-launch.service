@@ -1,16 +1,18 @@
 [Unit]
 Description=CAPN cloud-init launcher
-After=network.target
+After=network-online.target
 ConditionPathExists=!/hack/cloud-init.success
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/env python3 /hack/cloud-init.py
-ExecStartPost=/usr/bin/touch /hack/cloud-init.success
+ExecStart=/bin/bash -xe -c 'python3 /hack/cloud-init.py && touch /hack/cloud-init.success'
 Restart=on-failure
 RestartSec=5s
 StartLimitInterval=60
 StartLimitBurst=10
+
+# NOTE(neoaggelos): so that logs from cloud-init.py are in order
+Environment=PYTHONUNBUFFERED=1
 
 [Install]
 WantedBy=multi-user.target
