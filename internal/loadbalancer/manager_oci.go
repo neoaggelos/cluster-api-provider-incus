@@ -161,4 +161,8 @@ func (l *managerOCI) Inspect(ctx context.Context) map[string]string {
 	return result
 }
 
+func (l *managerOCI) ControlPlaneSeedFiles() (map[string]string, error) {
+	return nil, nil
+}
+
 var _ Manager = &managerOCI{}

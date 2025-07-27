@@ -19,6 +19,8 @@ type Manager interface {
 	Delete(context.Context) error
 	// Reconfigure updates the load balancer configuration based on the currently running control plane instances.
 	Reconfigure(context.Context) error
+	// ControlPlaneSeedFiles is a map of files that will be injected to control plane instances.
+	ControlPlaneSeedFiles() (map[string]string, error)
 	// Inspect returns a map[string]string of the current state of the load balancer infrastructure.
 	// It is mainly used by the E2E tests.
 	Inspect(context.Context) map[string]string
