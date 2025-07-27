@@ -115,6 +115,15 @@ type LXCClusterLoadBalancer struct {
 	// +optional
 	OVN *LXCLoadBalancerOVN `json:"ovn,omitempty"`
 
+	// Keepalived will configure keepalived on the control plane instances.
+	//
+	// When using keepalived, the controller will automatically inject /etc/keepalived/keepalived.conf into all control plane nodes of the cluster. This requires keepalived to be pre-installed on the image (it is included in the default images starting from version "v1.33.0").
+	//
+	// When using the "keepalived" mode, the load balancer address must be set in `.spec.controlPlaneEndpoint.host` on the LXCCluster object.
+	//
+	// +optional
+	Keepalived *LXCLoadBalancerKeepalived `json:"keepalived,omitempty"`
+
 	// External will not create a load balancer. It must be used alongside something like kube-vip, otherwise the cluster will fail to provision.
 	//
 	// When using the "external" mode, the load balancer address must be set in `.spec.controlPlaneEndpoint.host` on the LXCCluster object.
@@ -136,6 +145,23 @@ type LXCLoadBalancerOVN struct {
 }
 
 type LXCLoadBalancerExternal struct {
+}
+
+type LXCLoadBalancerKeepalived struct {
+	// Interface is the name of the interface where the VIP will be configured.
+	//
+	// +optional
+	Interface string `json:"interface,omitempty"`
+
+	// Password is the value for auth_pass to use in keepalived configuration. If not set, "01234567" will be used.
+	//
+	// +optional
+	Password string `json:"password,omitempty"`
+
+	// VirtualRouterID must be set to a unique value if more than one keepalived VIPs are configured. If not set, the last byte of the VIP address will be used (e.g. 10.0.100.42 -> "42")
+	//
+	// +optional
+	VirtualRouterID uint8 `json:"virtualRouterID,omitempty"`
 }
 
 // LXCLoadBalancerMachineSpec is configuration for the container that will host the cluster load balancer, when using the "lxc" or "oci" load balancer type.

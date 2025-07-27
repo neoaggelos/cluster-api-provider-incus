@@ -106,6 +106,30 @@ spec:
 
                               When using the "external" mode, the load balancer address must be set in `.spec.controlPlaneEndpoint.host` on the LXCCluster object.
                             type: object
+                          keepalived:
+                            description: |-
+                              Keepalived will configure keepalived on the control plane instances.
+
+                              When using keepalived, the controller will automatically inject /etc/keepalived/keepalived.conf into all control plane nodes of the cluster. This requires keepalived to be pre-installed on the image (it is included in the default images starting from version "v1.33.0").
+
+                              When using the "keepalived" mode, the load balancer address must be set in `.spec.controlPlaneEndpoint.host` on the LXCCluster object.
+                            properties:
+                              interface:
+                                description: Interface is the name of the interface
+                                  where the VIP will be configured.
+                                type: string
+                              password:
+                                description: Password is the value for auth_pass to
+                                  use in keepalived configuration. If not set, "01234567"
+                                  will be used.
+                                type: string
+                              virtualRouterID:
+                                description: VirtualRouterID must be set to a unique
+                                  value if more than one keepalived VIPs are configured.
+                                  If not set, the last byte of the VIP address will
+                                  be used (e.g. 10.0.100.42 -> "42")
+                                type: integer
+                            type: object
                           lxc:
                             description: |-
                               LXC will spin up a plain Ubuntu instance with haproxy installed.
