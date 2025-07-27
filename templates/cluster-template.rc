@@ -11,6 +11,7 @@ export WORKER_MACHINE_COUNT=1
 #export LOAD_BALANCER="oci: {profiles: [default], flavor: c1-m1}"
 #export LOAD_BALANCER="kube-vip: {host: 10.0.42.1}"
 #export LOAD_BALANCER="ovn: {host: 10.100.42.1, networkName: default}"
+#export LOAD_BALANCER="keepalived: {host: 10.100.42.1}"
 
 ## [optional] Deploy kube-flannel on the cluster.
 #export DEPLOY_KUBE_FLANNEL=true

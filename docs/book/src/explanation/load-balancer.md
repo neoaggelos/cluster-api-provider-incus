@@ -6,9 +6,9 @@ Part of the responsibilities of the infrastructure provider is to provision a Lo
 
 ## Load balancer types
 
-In the LXCCluster resource, `spec.loadBalancer.type` can be one of:
+In the LXCCluster resource, `spec.loadBalancer` can be one of:
 
-{{#tabs name:"load-balancer-type" tabs:"lxc,oci,ovn,external" }}
+{{#tabs name:"load-balancer-type" tabs:"lxc,oci,ovn,keepalived,external" }}
 
 {{#tab lxc }}
 
@@ -195,6 +195,77 @@ spec:
   loadBalancer:
     ovn:
       networkName: OVN
+```
+
+{{#/tab }}
+
+{{#tab keepalived }}
+
+The `keepalived` load balancer type will seed a `/etc/keepalived/keepalived.conf` config file on all control plane nodes of the cluster. `keepalived` is expected to be installed in the image used to provision nodes.
+
+> **NOTE**: `keepalived` is installed in images from the [default simplestreams server](../reference/default-simplestreams-server.md) starting from version **v1.33.0**.
+
+Consider the following scenario:
+- We have a network `incusbr0` with CIDR `10.217.28.1/24`. We have limited the DHCP ranges to `10.217.28.10-10.217.28.200`, so we are free to use the rest of the IPs without conflicts.
+- We want to use `10.217.28.243` as the control plane VIP.
+
+```bash
+incus network show incusbr0
+```
+
+```yaml,hidelines=#
+config:
+  ipv4.address: 10.217.28.1/24
+  ipv4.dhcp.ranges: 10.217.28.10-10.217.28.200
+  ipv4.nat: "true"
+#description: ""
+name: incusbr0
+type: bridge
+used_by:
+- /1.0/profiles/default
+managed: true
+#status: Created
+#locations:
+#- none
+#project: default
+```
+
+The LXCCluster in that case would be:
+
+```yaml,hidelines=#
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
+kind: LXCCluster
+metadata:
+  name: example-cluster
+spec:
+#  secretRef:
+#    name: example-secret
+  controlPlaneEndpoint:
+    host: 10.217.28.243
+    port: 6443
+  loadBalancer:
+    keepalived: {}
+```
+
+Optionally, if using more than one keepalived instance, you might need to specify different values for virtualRouterID and password:
+
+```yaml,hidelines=#
+
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
+kind: LXCCluster
+metadata:
+  name: example-keepalived-cluster
+spec:
+#  secretRef:
+#    name: example-secret
+  controlPlaneEndpoint:
+    host: 10.217.28.243
+    port: 6443
+  loadBalancer:
+    keepalived:
+      virtualRouterID: 51
+      interface: eth0
+      password: pass1234
 ```
 
 {{#/tab }}

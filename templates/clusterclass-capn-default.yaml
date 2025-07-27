@@ -122,20 +122,36 @@ spec:
                 type: string
                 description: IP address for the OVN Network Load Balancer
                 example: 10.100.42.1
+          keepalived:
+            type: object
+            description: Configure keepalived control plane nodes
+            required: [host]
+            properties:
+              host:
+                type: string
+                description: The VIP address to configure with keepalived
+                example: 10.100.42.1
+              interface:
+                type: string
+                description: Bind the VIP address on a specific interface
+                example: eth0
+              password:
+                type: string
+                description: Configure password for the VIP interface
+                example: pass1234
+              virtualRouterID:
+                type: integer
+                description: Configure virtual_router_id for the VIP interface
+                example: 100
         maxProperties: 1
         minProperties: 1
-        # oneOf:
-        #   - required: ["lxc"]
-        #   - required: ["oci"]
-        #   - required: ["kube-vip"]
-        #   - required: ["ovn"]
   - name: instance
     schema:
       openAPIV3Schema:
         type: object
         properties:
           type:
-            description: One of 'container' or 'virtual-machine'.
+            description: One of 'container', 'virtual-machine', 'kind'.
             type: string
             enum:
             - container
@@ -251,6 +267,16 @@ spec:
               external: {}
             controlPlaneEndpoint:
               host: {{ index .loadBalancer "kube-vip" "host" | quote }}
+              port: 6443
+            {{ end }}
+            {{ if hasKey .loadBalancer "keepalived" }}
+            loadBalancer:
+              keepalived:
+                interface: {{ .loadBalancer.keepalived.interface | default "" | quote }}
+                virtualRouterID: {{ .loadBalancer.keepalived.virtualRouterID | default 0 }}
+                password: {{ .loadBalancer.keepalived.password | default "" | quote }}
+            controlPlaneEndpoint:
+              host: {{ index .loadBalancer "keepalived" "host" | quote }}
               port: 6443
             {{ end }}
   - name: controlPlaneKubeVIP

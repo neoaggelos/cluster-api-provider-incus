@@ -35,7 +35,7 @@ Name of Kubernetes secret with [infrastructure credentials](../identity-secret.m
 
 You must choose between one of the options above to configure the load balancer for the infrastructure. See [Cluster Load Balancer Types](../../explanation/load-balancer.md) for more details.
 
-{{#tabs name:"load-balancer-type" tabs:"LXC,OCI,Kube VIP,OVN" }}
+{{#tabs name:"load-balancer-type" tabs:"LXC,OCI,Kube VIP,OVN,Keepalived" }}
 
 {{#tab LXC }}
 
@@ -74,6 +74,25 @@ Create an OVN network load balancer with IP `10.100.42.1` on the OVN network `ov
 ```bash
 export LOAD_BALANCER="ovn: {host: 10.100.42.1, networkName: ovn-0}"
 ```
+
+{{#/tab }}
+
+{{#tab Keepalived }}
+
+Configure keepalived on control plane nodes with IP `10.0.42.1`.
+
+```bash
+export LOAD_BALANCER="keepalived: {host: 10.0.42.1}"
+```
+
+If configuring multiple VIPs, you can adjust the keepalived configuration with:
+
+```bash
+# configure interface, virtualRouterID and password
+export LOAD_BALANCER="keepalived: {host: 10.0.42.1, interface: eth0, virtualRouterID: 101, password: pass1234}"
+```
+
+> **NOTE**: `keepalived` is available on [default images](../default-simplestreams-server.md) starting from version **v1.33.0**
 
 {{#/tab }}
 
