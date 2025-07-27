@@ -14,6 +14,7 @@ import (
 
 	infrav1 "github.com/lxc/cluster-api-provider-incus/api/v1alpha2"
 	"github.com/lxc/cluster-api-provider-incus/internal/instances"
+	"github.com/lxc/cluster-api-provider-incus/internal/loadbalancer"
 	"github.com/lxc/cluster-api-provider-incus/internal/lxc"
 	"github.com/lxc/cluster-api-provider-incus/internal/utils"
 )
@@ -101,6 +102,15 @@ func launchInstance(ctx context.Context, cluster *clusterv1.Cluster, lxcCluster 
 			"user.cluster-role":      role,
 			"cloud-init.user-data":   cloudInit,
 		})
+
+	// apply seed files from load balancer manager
+	if util.IsControlPlaneMachine(machine) {
+		if files, err := loadbalancer.ManagerForCluster(cluster, lxcCluster, lxcClient).ControlPlaneSeedFiles(); err != nil {
+			return nil, fmt.Errorf("failed to generate load balancer configuration files: %w", err)
+		} else {
+			launchOpts = launchOpts.WithSeedFiles(files)
+		}
+	}
 
 	return lxcClient.WithTarget(lxcMachine.Spec.Target).WaitForLaunchInstance(ctx, lxcMachine.GetInstanceName(), launchOpts)
 }

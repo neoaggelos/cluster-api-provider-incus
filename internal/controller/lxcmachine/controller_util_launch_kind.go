@@ -15,6 +15,7 @@ import (
 	infrav1 "github.com/lxc/cluster-api-provider-incus/api/v1alpha2"
 	"github.com/lxc/cluster-api-provider-incus/internal/cloudinit"
 	"github.com/lxc/cluster-api-provider-incus/internal/instances"
+	"github.com/lxc/cluster-api-provider-incus/internal/loadbalancer"
 	"github.com/lxc/cluster-api-provider-incus/internal/lxc"
 	"github.com/lxc/cluster-api-provider-incus/internal/utils"
 )
@@ -137,6 +138,15 @@ func launchKindInstance(ctx context.Context, cluster *clusterv1.Cluster, lxcClus
 					"/kind/manifests/default-cni.yaml": strings.NewReplacer("{{ .PodSubnet }}", pods.CIDRBlocks[0]),
 				})
 			}
+		}
+	}
+
+	// apply seed files from load balancer manager
+	if util.IsControlPlaneMachine(machine) {
+		if files, err := loadbalancer.ManagerForCluster(cluster, lxcCluster, lxcClient).ControlPlaneSeedFiles(); err != nil {
+			return nil, fmt.Errorf("failed to generate load balancer configuration files: %w", err)
+		} else {
+			launchOpts = launchOpts.WithSeedFiles(files)
 		}
 	}
 
