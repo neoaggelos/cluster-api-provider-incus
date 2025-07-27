@@ -64,6 +64,18 @@ func ManagerForCluster(cluster *clusterv1.Cluster, lxcCluster *infrav1.LXCCluste
 
 			address: lxcCluster.Spec.ControlPlaneEndpoint.Host,
 		}
+	case lxcCluster.Spec.LoadBalancer.Keepalived != nil:
+		return &managerKeepalived{
+			lxcClient:        lxcClient,
+			clusterName:      cluster.Name,
+			clusterNamespace: cluster.Namespace,
+
+			address: lxcCluster.Spec.ControlPlaneEndpoint.Host,
+
+			interfaceName:   lxcCluster.Spec.LoadBalancer.Keepalived.Interface,
+			password:        lxcCluster.Spec.LoadBalancer.Keepalived.Password,
+			virtualRouterID: lxcCluster.Spec.LoadBalancer.Keepalived.VirtualRouterID,
+		}
 	default:
 		// TODO: handle this more gracefully.
 		// If only Go had enums.
