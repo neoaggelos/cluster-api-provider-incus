@@ -19,6 +19,7 @@ LXC_NETWORK_IPV4="10.200.1.1/24"
 LXC_NETWORK_IPV4_DHCP="10.200.1.10-10.200.1.100"
 LXC_NETWORK_IPV4_OVN="10.200.1.101-10.200.1.150"
 LXC_NETWORK_IPV4_KUBE_VIP="10.200.1.151"
+LXC_NETWORK_IPV4_KEEPALIVED="10.200.1.152"
 
 # local OVN network (192.168.200.0/24)
 LXC_OVN_NETWORK_NAME="testovn0"
@@ -46,7 +47,8 @@ if ! "${CLI}" network show "${LXC_NETWORK_NAME}" 2> /dev/null; then
     ipv6.address="${LXC_NETWORK_IPV6}" ipv6.nat=true \
     ipv4.dhcp.ranges="${LXC_NETWORK_IPV4_DHCP}" \
     ipv4.ovn.ranges="${LXC_NETWORK_IPV4_OVN}" \
-    user.capn.e2e.kube-vip-address="${LXC_NETWORK_IPV4_KUBE_VIP}"
+    user.capn.e2e.kube-vip-address="${LXC_NETWORK_IPV4_KUBE_VIP}" \
+    user.capn.e2e.keepalived-address="${LXC_NETWORK_IPV4_KEEPALIVED}"
 fi
 
 # configure ovn network. the user.capn.e2e.ovn-lb-address annotation is used by "QuickStart OVN"
