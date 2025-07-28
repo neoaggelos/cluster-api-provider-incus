@@ -40,6 +40,27 @@ func (l *managerOVN) Create(ctx context.Context) ([]string, error) {
 	if _, _, err := l.lxcClient.GetNetwork(l.networkName); err != nil {
 		return nil, utils.TerminalError(fmt.Errorf("failed to check network %q: %w", l.networkName, err))
 	}
+
+	/**
+	if l.listenAddress == "" {
+		allocator := &ipamAllocator{
+			lxcClient:         l.lxcClient,
+			clusterName:       l.clusterName,
+			clusterNamespace:  l.clusterNamespace,
+			networkName:       l.networkName,
+			rangesKey:         "user.capn.vip.ranges",
+			volatilePrefixKey: "user.capn.vip.volatile",
+		}
+
+		if address, err := allocator.Allocate(ctx); err != nil {
+			return nil, fmt.Errorf("failed to allocate address from network %q: %w", l.networkName, err)
+		} else {
+			log.FromContext(ctx).V(1).Info("Dynamically allocated network load balancer address")
+			l.listenAddress = address
+		}
+	}
+	**/
+
 	if lb, _, err := l.lxcClient.GetNetworkLoadBalancer(l.networkName, l.listenAddress); err != nil && !strings.Contains(err.Error(), "Network load balancer not found") {
 		return nil, fmt.Errorf("failed to GetNetworkLoadBalancer: %w", err)
 	} else if err == nil {
