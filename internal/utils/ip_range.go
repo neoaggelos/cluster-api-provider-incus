@@ -17,7 +17,7 @@ type IPRange struct {
 func ParseIPRange(v string) (*IPRange, error) {
 	parts := strings.Split(v, "-")
 	if len(parts) != 2 {
-		return nil, fmt.Errorf("%q must be use format START-END", v)
+		return nil, fmt.Errorf("%q must be in format START-END", v)
 	}
 
 	startIP, err := netip.ParseAddr(parts[0])
@@ -53,6 +53,40 @@ func (r *IPRange) Iterate() iter.Seq[string] {
 				return
 			}
 			current = current.Next()
+		}
+	}
+}
+
+// IPRanges is one or more (possibly overlapping) range of IPs
+type IPRanges []*IPRange
+
+func ParseIPRanges(v string) (IPRanges, error) {
+	if v == "" {
+		return nil, nil
+	}
+
+	parts := strings.Split(v, ",")
+	ranges := make(IPRanges, 0, len(parts))
+	for _, part := range parts {
+		r, err := ParseIPRange(part)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse range %q: %w", part, err)
+		}
+		ranges = append(ranges, r)
+	}
+
+	return ranges, nil
+}
+
+func (r IPRanges) Iterate() iter.Seq[string] {
+	return func(yield func(string) bool) {
+		// iterate over all IPRanges one by one
+		for _, ipRange := range r {
+			for ip := range ipRange.Iterate() {
+				if !yield(ip) {
+					return
+				}
+			}
 		}
 	}
 }
