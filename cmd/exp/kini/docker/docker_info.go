@@ -1,0 +1,49 @@
+package docker
+
+import (
+	"fmt"
+
+	"github.com/spf13/cobra"
+)
+
+// docker info --format '{{json .}}'
+// docker info --format '{{json .SecurityOptions}}'
+func newDockerInfoCmd(env Environment) *cobra.Command {
+	var (
+		cfg struct {
+			Format string
+		}
+
+		securityOptionsByFormatAndPrivileged = map[string]map[bool]string{
+			"{{json .}}": {
+				true:  `{"CgroupDriver":"systemd","CGroupVersion":"2","MemoryLimit":true,"CPUShares":true,"PidsLimit":true,"SecurityOptions":[]}`,
+				false: `{"CgroupDriver":"systemd","CGroupVersion":"2","MemoryLimit":true,"CPUShares":true,"PidsLimit":true,"SecurityOptions":["name=userns","name=rootless"]}`,
+			},
+			"{{json .SecurityOptions}}": {
+				true:  `[]`,
+				false: `["name=userns","name=rootless"]`,
+			},
+		}
+	)
+
+	cmd := &cobra.Command{
+		Use:          "info",
+		SilenceUsage: true,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			log.V(2).Info("docker info", "config", cfg)
+
+			opts, ok := securityOptionsByFormatAndPrivileged[cfg.Format]
+			if !ok {
+				return fmt.Errorf("unknown format %q", cfg.Format)
+			}
+
+			fmt.Println(opts[env.Privileged()])
+
+			return nil
+		},
+	}
+
+	cmd.Flags().StringVar(&cfg.Format, "format", "", "Output format")
+
+	return cmd
+}
