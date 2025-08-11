@@ -15,6 +15,7 @@ import (
 
 	infrav1 "github.com/lxc/cluster-api-provider-incus/api/v1alpha2"
 	"github.com/lxc/cluster-api-provider-incus/internal/cloudinit"
+	"github.com/lxc/cluster-api-provider-incus/internal/instances"
 	"github.com/lxc/cluster-api-provider-incus/internal/lxc"
 	"github.com/lxc/cluster-api-provider-incus/internal/static"
 	"github.com/lxc/cluster-api-provider-incus/internal/utils"
@@ -114,7 +115,7 @@ func launchKindInstance(ctx context.Context, cluster *clusterv1.Cluster, lxcClus
 		maps.Copy(instance.Config, profile.Config)
 	}
 
-	seedFiles := maps.Clone(defaultKindSeedFiles)
+	launchOpts := instances.DefaultKindLaunchOptions()
 
 	// configure cloud-init
 	aptInstallCloudInit := false
@@ -144,41 +145,20 @@ func launchKindInstance(ctx context.Context, cluster *clusterv1.Cluster, lxcClus
 			return nil, utils.TerminalError(fmt.Errorf("failed to generate JSON cloud-config for instance, please report this bug to github.com/lxc/cluster-api-provider-incus/issues: %w", err))
 		}
 
-		seedFiles["/hack/cloud-init.json"] = string(b)
+		launchOpts = launchOpts.WithSeedFiles(map[string]string{
+			"/hack/cloud-init.json": string(b),
+		})
 	}
 
-	replacements := maps.Clone(defaultKindReplacements)
 	if nwk := cluster.Spec.ClusterNetwork; nwk != nil {
 		if pods := nwk.Pods; pods != nil {
 			if len(pods.CIDRBlocks) > 0 {
-				replacements["/kind/manifests/default-cni.yaml"] = strings.NewReplacer("{{ .PodSubnet }}", pods.CIDRBlocks[0])
+				launchOpts = launchOpts.WithReplacements(map[string]*strings.Replacer{
+					"/kind/manifests/default-cni.yaml": strings.NewReplacer("{{ .PodSubnet }}", pods.CIDRBlocks[0]),
+				})
 			}
 		}
 	}
 
-	return lxcClient.WithTarget(lxcMachine.Spec.Target).WaitForLaunchInstance(ctx, instance, &lxc.LaunchOptions{SeedFiles: seedFiles, Symlinks: defaultKindSymlinks, Replacements: replacements})
-}
-
-// defaultKindSeedFiles that are injected to LXCMachine kind instances.
-var defaultKindSeedFiles = map[string]string{
-	// inject cloud-init into instance.
-	"/var/lib/cloud/seed/nocloud-net/meta-data": static.CloudInitMetaDataTemplate(),
-	"/var/lib/cloud/seed/nocloud-net/user-data": static.CloudInitUserDataTemplate(),
-	// cloud-init-launch.service is used to start the cloud-init scripts.
-	"/etc/systemd/system/cloud-init-launch.service": static.CloudInitLaunchSystemdServiceTemplate(),
-	"/hack/cloud-init.py":                           static.KindCloudInitScript(),
-}
-
-// defaultKindSymlinks that are injected to LXCMachine kind instances.
-var defaultKindSymlinks = map[string]string{
-	// Incus will inject its own PID 1 init process unless the entrypoint is one of "/init", "/sbin/init", "/s6-init".
-	"/init": "/usr/local/bin/entrypoint",
-	// Enable the cloud-init-launch service.
-	"/etc/systemd/system/multi-user.target.wants/cloud-init-launch.service": "/etc/systemd/system/cloud-init-launch.service",
-}
-
-// defaultKindReplacements that are performed to LXCMachine kind instances.
-var defaultKindReplacements = map[string]*strings.Replacer{
-	// Incus unprivileged containers cannot edit /etc/resolv.conf, so do not let the entrypoint attempt it.
-	"/usr/local/bin/entrypoint": strings.NewReplacer(">/etc/resolv.conf", ">/etc/local-resolv.conf"),
+	return lxcClient.WithTarget(lxcMachine.Spec.Target).WaitForLaunchInstance(ctx, instance, launchOpts)
 }
