@@ -14,6 +14,7 @@ import (
 	"sigs.k8s.io/cluster-api/util"
 
 	infrav1 "github.com/lxc/cluster-api-provider-incus/api/v1alpha2"
+	"github.com/lxc/cluster-api-provider-incus/internal/instances"
 	"github.com/lxc/cluster-api-provider-incus/internal/lxc"
 	"github.com/lxc/cluster-api-provider-incus/internal/static"
 	"github.com/lxc/cluster-api-provider-incus/internal/utils"
@@ -137,10 +138,5 @@ func launchInstance(ctx context.Context, cluster *clusterv1.Cluster, lxcCluster 
 		maps.Copy(instance.Config, profile.Config)
 	}
 
-	return lxcClient.WithTarget(lxcMachine.Spec.Target).WaitForLaunchInstance(ctx, instance, &lxc.LaunchOptions{SeedFiles: defaultSeedFiles})
-}
-
-// defaultSeedFiles that are injected to LXCMachine instances.
-var defaultSeedFiles = map[string]string{
-	"/opt/cluster-api/install-kubeadm.sh": static.InstallKubeadmScript(),
+	return lxcClient.WithTarget(lxcMachine.Spec.Target).WaitForLaunchInstance(ctx, instance, instances.DefaultKubeadmLaunchOptions())
 }
