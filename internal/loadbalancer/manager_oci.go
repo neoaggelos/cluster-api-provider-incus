@@ -72,7 +72,7 @@ func (l *managerOCI) Create(ctx context.Context) ([]string, error) {
 				"user.cluster-role":      "loadbalancer",
 			},
 		},
-	}, nil)
+	}, &lxc.LaunchOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create load balancer instance: %w", err)
 	}

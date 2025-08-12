@@ -11,6 +11,7 @@ import (
 	"github.com/lxc/incus/v6/shared/api"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
+	"github.com/lxc/cluster-api-provider-incus/internal/lxc"
 	"github.com/lxc/cluster-api-provider-incus/internal/static"
 )
 
@@ -37,7 +38,7 @@ func (*stageValidateKubeadmImage) run(ctx context.Context) error {
 		InstancePut: api.InstancePut{
 			Profiles: cfg.instanceProfiles,
 		},
-	}, nil); err != nil {
+	}, &lxc.LaunchOptions{}); err != nil {
 		return fmt.Errorf("failed to launch validation instance: %w", err)
 	}
 
