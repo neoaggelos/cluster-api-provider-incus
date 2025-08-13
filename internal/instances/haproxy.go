@@ -1,8 +1,9 @@
 package instances
 
 import (
-	"github.com/lxc/cluster-api-provider-incus/internal/lxc"
 	"github.com/lxc/incus/v6/shared/api"
+
+	"github.com/lxc/cluster-api-provider-incus/internal/lxc"
 )
 
 // DefaultHaproxyLXCLaunchOptions is default options for LXC haproxy load balancer containers

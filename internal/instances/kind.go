@@ -3,9 +3,10 @@ package instances
 import (
 	"strings"
 
+	"github.com/lxc/incus/v6/shared/api"
+
 	"github.com/lxc/cluster-api-provider-incus/internal/lxc"
 	"github.com/lxc/cluster-api-provider-incus/internal/static"
-	"github.com/lxc/incus/v6/shared/api"
 )
 
 // DefaultKindLaunchOptions is default seed files and mutations required for kindest/node images.
