@@ -72,7 +72,7 @@ func (l *managerOCI) Create(ctx context.Context) ([]string, error) {
 				"user.cluster-role":      "loadbalancer",
 			},
 		},
-	}, nil)
+	}, &lxc.LaunchOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create load balancer instance: %w", err)
 	}
@@ -80,7 +80,7 @@ func (l *managerOCI) Create(ctx context.Context) ([]string, error) {
 	return addrs, nil
 }
 
-// Delete implements loadBalancerManager.
+// Delete implements Manager.
 func (l *managerOCI) Delete(ctx context.Context) error {
 	ctx = log.IntoContext(ctx, log.FromContext(ctx).WithValues("loadbalancer.instance", l.name))
 
@@ -92,7 +92,7 @@ func (l *managerOCI) Delete(ctx context.Context) error {
 	return nil
 }
 
-// Reconfigure implements loadBalancerManager.
+// Reconfigure implements Manager.
 func (l *managerOCI) Reconfigure(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, loadBalancerReconfigureTimeout)
 	defer cancel()

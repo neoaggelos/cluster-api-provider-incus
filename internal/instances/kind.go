@@ -1,7 +1,6 @@
 package instances
 
 import (
-	"maps"
 	"strings"
 
 	"github.com/lxc/cluster-api-provider-incus/internal/lxc"
@@ -10,11 +9,10 @@ import (
 
 // DefaultKindLaunchOptions is default seed files and mutations required for kindest/node images.
 func DefaultKindLaunchOptions() *lxc.LaunchOptions {
-	return &lxc.LaunchOptions{
-		SeedFiles:    maps.Clone(defaultKindSeedFiles),
-		Symlinks:     maps.Clone(defaultKindSymlinks),
-		Replacements: maps.Clone(defaultKindReplacements),
-	}
+	return (&lxc.LaunchOptions{}).
+		WithSeedFiles(defaultKindSeedFiles).
+		WithReplacements(defaultKindReplacements).
+		WithSymlinks(defaultKindSymlinks)
 }
 
 // defaultKindSeedFiles that are injected to LXCMachine kind instances.

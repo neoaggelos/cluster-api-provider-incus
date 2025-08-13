@@ -20,7 +20,7 @@ type managerExternal struct {
 	address string
 }
 
-// Create implements loadBalancerManager.
+// Create implements Manager.
 func (l *managerExternal) Create(ctx context.Context) ([]string, error) {
 
 	ctx = log.IntoContext(ctx, log.FromContext(ctx).WithValues("address", l.address))
@@ -38,7 +38,7 @@ func (l *managerExternal) Create(ctx context.Context) ([]string, error) {
 	return []string{l.address}, nil
 }
 
-// Delete implements loadBalancerManager.
+// Delete implements Manager.
 func (l *managerExternal) Delete(ctx context.Context) error {
 	ctx = log.IntoContext(ctx, log.FromContext(ctx).WithValues("address", l.address))
 
@@ -46,7 +46,7 @@ func (l *managerExternal) Delete(ctx context.Context) error {
 	return nil
 }
 
-// Reconfigure implements loadBalancerManager.
+// Reconfigure implements Manager.
 func (l *managerExternal) Reconfigure(ctx context.Context) error {
 	ctx = log.IntoContext(ctx, log.FromContext(ctx).WithValues("address", l.address))
 	log.FromContext(ctx).V(1).Info("Using external load balancer, nothing to reconfigure")
@@ -54,7 +54,7 @@ func (l *managerExternal) Reconfigure(ctx context.Context) error {
 	return nil
 }
 
-// Inspect implements loadBalancerManager.
+// Inspect implements Manager.
 func (l *managerExternal) Inspect(ctx context.Context) map[string]string {
 	return map[string]string{"address": l.address}
 }
