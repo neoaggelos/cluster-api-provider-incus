@@ -35,7 +35,7 @@ func (c *Client) WaitForLaunchInstance(ctx context.Context, instance api.Instanc
 		return nil, err
 	}
 
-	if templates := opts.GetSeedFiles(); len(templates) > 0 {
+	if templates := opts.seedFiles; len(templates) > 0 {
 		metadata, _, err := c.GetInstanceMetadata(instance.Name)
 		if err != nil {
 			return nil, fmt.Errorf("failed to GetInstanceMetadata: %w", err)
@@ -62,7 +62,7 @@ func (c *Client) WaitForLaunchInstance(ctx context.Context, instance api.Instanc
 		}
 	}
 
-	for path, target := range opts.GetSymlinks() {
+	for path, target := range opts.symlinks {
 		if err := c.CreateInstanceFile(instance.Name, path, incus.InstanceFileArgs{
 			Content: bytes.NewReader([]byte(target)),
 			Type:    "symlink",
@@ -71,7 +71,7 @@ func (c *Client) WaitForLaunchInstance(ctx context.Context, instance api.Instanc
 		}
 	}
 
-	for path, replacer := range opts.GetReplacements() {
+	for path, replacer := range opts.replacements {
 		reader, resp, err := c.GetInstanceFile(instance.Name, path)
 		if err != nil {
 			return nil, fmt.Errorf("failed to replace text in %q: failed to GetInstanceFile: %w", path, err)

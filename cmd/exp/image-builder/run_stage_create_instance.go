@@ -62,7 +62,7 @@ func (*stageCreateInstance) run(ctx context.Context) error {
 	}
 
 	log.FromContext(ctx).V(1).Info("Launching instance")
-	if _, err := lxcClient.WaitForLaunchInstance(ctx, instance, nil); err != nil {
+	if _, err := lxcClient.WaitForLaunchInstance(ctx, instance, &lxc.LaunchOptions{}); err != nil {
 		return fmt.Errorf("failed to launch builder instance: %w", err)
 	}
 
