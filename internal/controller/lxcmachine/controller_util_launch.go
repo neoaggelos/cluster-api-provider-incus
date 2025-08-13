@@ -3,7 +3,6 @@ package lxcmachine
 import (
 	"context"
 	"fmt"
-	"maps"
 	"net/http"
 	"strings"
 	"time"
@@ -16,7 +15,6 @@ import (
 	infrav1 "github.com/lxc/cluster-api-provider-incus/api/v1alpha2"
 	"github.com/lxc/cluster-api-provider-incus/internal/instances"
 	"github.com/lxc/cluster-api-provider-incus/internal/lxc"
-	"github.com/lxc/cluster-api-provider-incus/internal/static"
 	"github.com/lxc/cluster-api-provider-incus/internal/utils"
 )
 
@@ -26,15 +24,13 @@ func launchInstance(ctx context.Context, cluster *clusterv1.Cluster, lxcCluster 
 		return launchKindInstance(ctx, cluster, lxcCluster, machine, lxcMachine, lxcClient, cloudInit)
 	}
 
-	name := lxcMachine.GetInstanceName()
-
 	role := "control-plane"
 	if !util.IsControlPlaneMachine(machine) {
 		role = "worker"
 	}
-	instanceType := lxc.Container
+	instanceType := api.InstanceTypeContainer
 	if lxcMachine.Spec.InstanceType != "" {
-		instanceType = lxcMachine.Spec.InstanceType
+		instanceType = api.InstanceType(lxcMachine.Spec.InstanceType)
 	}
 
 	// Parse device configurations
@@ -80,7 +76,7 @@ func launchInstance(ctx context.Context, cluster *clusterv1.Cluster, lxcCluster 
 		// test if image for machine version exists on the default simplestreams server, fail otherwise.
 		if ssClient, err := incus.ConnectSimpleStreams(lxc.DefaultSimplestreamsServer, &incus.ConnectionArgs{HTTPClient: &http.Client{Timeout: 10 * time.Second}}); err != nil {
 			return nil, fmt.Errorf("no image source specified and failed to connect to simplestreams server %q: %w", lxc.DefaultSimplestreamsServer, err)
-		} else if _, _, err := ssClient.GetImageAliasType(instanceType, fmt.Sprintf("kubeadm/%s", machineVersion)); err != nil {
+		} else if _, _, err := ssClient.GetImageAliasType(string(instanceType), fmt.Sprintf("kubeadm/%s", machineVersion)); err != nil {
 			return nil, utils.TerminalError(fmt.Errorf("no image source specified and simplestreams server %q does not provide images for Kubernetes version %q: %w. Please consider using a different Kubernetes version, or build your own base image and set the image source on the LXCMachineTemplate resource", lxc.DefaultSimplestreamsServer, machineVersion, err))
 		}
 
@@ -92,35 +88,19 @@ func launchInstance(ctx context.Context, cluster *clusterv1.Cluster, lxcCluster 
 		}
 	}
 
-	instance := api.InstancesPost{
-		Name:         name,
-		Type:         api.InstanceType(instanceType),
-		Source:       image,
-		InstanceType: lxcMachine.Spec.Flavor,
-		InstancePut: api.InstancePut{
-			Config:   map[string]string{},
-			Profiles: lxcMachine.Spec.Profiles,
-			Devices:  devices,
-		},
-	}
+	launchOpts := instances.DefaultKubeadmLaunchOptions(instanceType, !lxcCluster.Spec.Unprivileged, lxcClient.GetServerName(), lxcCluster.Spec.SkipDefaultKubeadmProfile).
+		WithImage(image).
+		WithFlavor(lxcMachine.Spec.Flavor).
+		WithProfiles(lxcMachine.Spec.Profiles).
+		WithDevices(devices).
+		WithConfig(lxcMachine.Spec.Config).
+		WithConfig(map[string]string{
+			"user.cluster-name":      cluster.Name,
+			"user.cluster-namespace": cluster.Namespace,
+			"user.machine-name":      machine.Name,
+			"user.cluster-role":      role,
+			"cloud-init.user-data":   cloudInit,
+		})
 
-	// apply instance config
-	maps.Copy(instance.Config, lxcMachine.Spec.Config)
-	maps.Copy(instance.Config, map[string]string{
-		"user.cluster-name":      cluster.Name,
-		"user.cluster-namespace": cluster.Namespace,
-		"user.machine-name":      machine.Name,
-		"user.cluster-role":      role,
-		"cloud-init.user-data":   cloudInit,
-	})
-
-	// apply profile for Kubernetes to run in LXC containers
-	if instanceType == lxc.Container && !lxcCluster.Spec.SkipDefaultKubeadmProfile {
-		profile := static.DefaultKubeadmProfile(!lxcCluster.Spec.Unprivileged, lxcClient.GetServerName())
-
-		maps.Copy(instance.Devices, profile.Devices)
-		maps.Copy(instance.Config, profile.Config)
-	}
-
-	return lxcClient.WithTarget(lxcMachine.Spec.Target).WaitForLaunchInstance(ctx, instance, instances.DefaultKubeadmLaunchOptions())
+	return lxcClient.WithTarget(lxcMachine.Spec.Target).WaitForLaunchInstance(ctx, lxcMachine.GetInstanceName(), launchOpts)
 }

@@ -5,14 +5,26 @@ import (
 
 	"github.com/lxc/cluster-api-provider-incus/internal/lxc"
 	"github.com/lxc/cluster-api-provider-incus/internal/static"
+	"github.com/lxc/incus/v6/shared/api"
 )
 
 // DefaultKindLaunchOptions is default seed files and mutations required for kindest/node images.
-func DefaultKindLaunchOptions() *lxc.LaunchOptions {
-	return (&lxc.LaunchOptions{}).
+func DefaultKindLaunchOptions(privileged bool, skipProfile bool) *lxc.LaunchOptions {
+	opts := (&lxc.LaunchOptions{}).
+		WithInstanceType(api.InstanceTypeContainer).
 		WithSeedFiles(defaultKindSeedFiles).
 		WithReplacements(defaultKindReplacements).
 		WithSymlinks(defaultKindSymlinks)
+
+	// apply profile for Kubernetes to run in LXC containers
+	if !skipProfile {
+		profile := static.DefaultKindProfile(privileged)
+		opts = opts.
+			WithConfig(profile.Config).
+			WithDevices(profile.Devices)
+	}
+
+	return opts
 }
 
 // defaultKindSeedFiles that are injected to LXCMachine kind instances.
