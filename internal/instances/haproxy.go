@@ -17,7 +17,9 @@ func DefaultHaproxyLXCLaunchOptions() *lxc.LaunchOptions {
 func DefaultHaproxyOCILaunchOptions() *lxc.LaunchOptions {
 	return (&lxc.LaunchOptions{}).
 		WithInstanceType(api.InstanceTypeContainer).
-		WithImage(defaultHaproxyOCIImage)
+		WithImage(defaultHaproxyOCIImage).
+		WithSymlinks(defaultHaproxyOCISymlinks).
+		WithConfig(defaultHaproxyOCIConfig)
 }
 
 var (
@@ -35,5 +37,17 @@ var (
 		Protocol: "oci",
 		Server:   "https://ghcr.io",
 		Alias:    "lxc/cluster-api-provider-incus/haproxy:v20230606-42a2262b",
+	}
+
+	// defaultHaproxyOCISymlinks is default symlinks for OCI haproxy containers
+	defaultHaproxyOCISymlinks = map[string]string{
+		// Incus will inject its own PID 1 init process unless the entrypoint is one of "/init", "/sbin/init", "/s6-init".
+		"/init": "/usr/sbin/haproxy",
+	}
+
+	// defaultHaproxyOCIConfig is default configuration for OCI haproxy containers
+	defaultHaproxyOCIConfig = map[string]string{
+		// Use the /init symlink to avoid the Incus entrypoint from preventing SIGUSR2 propagating to child processes.
+		"oci.entrypoint": "/init -W -db -f /usr/local/etc/haproxy/haproxy.cfg",
 	}
 )
