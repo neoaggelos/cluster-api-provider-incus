@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"strconv"
 
 	incus "github.com/lxc/incus/v6/client"
 	"github.com/lxc/incus/v6/shared/api"
@@ -105,19 +104,7 @@ func (l *managerOCI) Reconfigure(ctx context.Context) error {
 	}
 
 	log.FromContext(ctx).V(1).Info("Reloading haproxy configuration")
-	var haproxyPids []string
-	if _, response, err := l.lxcClient.GetInstanceFile(l.name, "/proc"); err != nil {
-		return fmt.Errorf("failed to list running processes in load balancer instance: %w", err)
-	} else {
-		for _, entry := range response.Entries {
-			if _, err := strconv.ParseUint(entry, 10, 64); err != nil {
-				continue
-			}
-			haproxyPids = append(haproxyPids, entry)
-		}
-	}
-
-	if err := l.lxcClient.RunCommand(ctx, l.name, append([]string{"kill", "--signal", "SIGUSR2"}, haproxyPids...), nil, nil, nil); err != nil {
+	if err := l.lxcClient.RunCommand(ctx, l.name, append([]string{"kill", "--signal", "SIGUSR2"}, "1"), nil, nil, nil); err != nil {
 		return fmt.Errorf("failed to send SIGUSR2 to haproxy pids: %w", err)
 	}
 
