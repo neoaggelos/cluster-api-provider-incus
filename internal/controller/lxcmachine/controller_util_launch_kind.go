@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"maps"
 	"strconv"
 	"strings"
 
@@ -17,7 +16,6 @@ import (
 	"github.com/lxc/cluster-api-provider-incus/internal/cloudinit"
 	"github.com/lxc/cluster-api-provider-incus/internal/instances"
 	"github.com/lxc/cluster-api-provider-incus/internal/lxc"
-	"github.com/lxc/cluster-api-provider-incus/internal/static"
 	"github.com/lxc/cluster-api-provider-incus/internal/utils"
 )
 
@@ -32,7 +30,6 @@ func launchKindInstance(ctx context.Context, cluster *clusterv1.Cluster, lxcClus
 	if !util.IsControlPlaneMachine(machine) {
 		role = "worker"
 	}
-	instanceType := lxc.Container
 
 	// Parse device configurations
 	devices, err := lxcMachine.Spec.Devices.ToMap()
@@ -86,36 +83,19 @@ func launchKindInstance(ctx context.Context, cluster *clusterv1.Cluster, lxcClus
 		}
 	}
 
-	instance := api.InstancesPost{
-		Name:         name,
-		Type:         api.InstanceType(instanceType),
-		Source:       image,
-		InstanceType: lxcMachine.Spec.Flavor,
-		InstancePut: api.InstancePut{
-			Config:   map[string]string{},
-			Profiles: lxcMachine.Spec.Profiles,
-			Devices:  devices,
-		},
-	}
-
-	// apply custom config
-	maps.Copy(instance.Config, lxcMachine.Spec.Config)
-	maps.Copy(instance.Config, map[string]string{
-		"user.cluster-name":      cluster.Name,
-		"user.cluster-namespace": cluster.Namespace,
-		"user.machine-name":      name,
-		"user.cluster-role":      role,
-		"cloud-init.user-data":   cloudInit,
-	})
-
-	// apply profile for Kubernetes to run in LXC containers
-	if !lxcCluster.Spec.SkipDefaultKubeadmProfile {
-		profile := static.DefaultKindProfile(!lxcCluster.Spec.Unprivileged)
-		maps.Copy(instance.Devices, profile.Devices)
-		maps.Copy(instance.Config, profile.Config)
-	}
-
-	launchOpts := instances.DefaultKindLaunchOptions()
+	launchOpts := instances.DefaultKindLaunchOptions(!lxcCluster.Spec.Unprivileged, lxcCluster.Spec.SkipDefaultKubeadmProfile).
+		WithImage(image).
+		WithFlavor(lxcMachine.Spec.Flavor).
+		WithProfiles(lxcMachine.Spec.Profiles).
+		WithDevices(devices).
+		WithConfig(lxcMachine.Spec.Config).
+		WithConfig(map[string]string{
+			"user.cluster-name":      cluster.Name,
+			"user.cluster-namespace": cluster.Namespace,
+			"user.machine-name":      machine.Name,
+			"user.cluster-role":      role,
+			"cloud-init.user-data":   cloudInit,
+		})
 
 	// configure cloud-init
 	aptInstallCloudInit := false
@@ -160,5 +140,5 @@ func launchKindInstance(ctx context.Context, cluster *clusterv1.Cluster, lxcClus
 		}
 	}
 
-	return lxcClient.WithTarget(lxcMachine.Spec.Target).WaitForLaunchInstance(ctx, instance, launchOpts)
+	return lxcClient.WithTarget(lxcMachine.Spec.Target).WaitForLaunchInstance(ctx, name, launchOpts)
 }
