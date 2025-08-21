@@ -10,11 +10,11 @@ spec:
       cidrBlocks: ${SERVICE_CIDR:=[10.96.0.0/12]}
     serviceDomain: cluster.local
   controlPlaneRef:
-    apiVersion: controlplane.cluster.x-k8s.io/v1beta2
+    apiGroup: controlplane.cluster.x-k8s.io
     kind: KubeadmControlPlane
     name: ${CLUSTER_NAME}-control-plane
   infrastructureRef:
-    apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
+    apiGroup: infrastructure.cluster.x-k8s.io
     kind: LXCCluster
     name: ${CLUSTER_NAME}
 ---
@@ -40,10 +40,11 @@ spec:
   replicas: ${CONTROL_PLANE_MACHINE_COUNT}
   version: ${KUBERNETES_VERSION}
   machineTemplate:
-    infrastructureRef:
-      apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
-      kind: LXCMachineTemplate
-      name: ${CLUSTER_NAME}-control-plane
+    spec:
+      infrastructureRef:
+        apiGroup: infrastructure.cluster.x-k8s.io
+        kind: LXCMachineTemplate
+        name: ${CLUSTER_NAME}-control-plane
   kubeadmConfigSpec:
     preKubeadmCommands:
     - set -x
@@ -110,11 +111,11 @@ spec:
       clusterName: ${CLUSTER_NAME}
       bootstrap:
         configRef:
-          apiVersion: bootstrap.cluster.x-k8s.io/v1beta2
+          apiGroup: bootstrap.cluster.x-k8s.io
           kind: KubeadmConfigTemplate
           name: ${CLUSTER_NAME}-md-0
       infrastructureRef:
-        apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
+        apiGroup: infrastructure.cluster.x-k8s.io
         kind: LXCMachineTemplate
         name: ${CLUSTER_NAME}-md-0
 ---
