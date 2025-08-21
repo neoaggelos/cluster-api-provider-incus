@@ -40,7 +40,7 @@ func (r *LXCClusterReconciler) reconcileNormal(ctx context.Context, cluster *clu
 
 	// Mark the lxcCluster ready
 	lxcCluster.Status.Initialization.Provisioned = true
-	conditions.Set(lxcCluster, metav1.Condition{Type: infrav1.LoadBalancerAvailableCondition, Status: metav1.ConditionTrue})
+	conditions.Set(lxcCluster, metav1.Condition{Type: infrav1.LoadBalancerAvailableCondition, Status: metav1.ConditionTrue, Reason: infrav1.LoadBalancerProvisionedReason})
 
 	return nil
 }

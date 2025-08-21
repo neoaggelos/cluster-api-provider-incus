@@ -10,6 +10,10 @@ const (
 	// having evidence that the operation is started/is in progress.
 	LoadBalancerAvailableCondition = "LoadBalancerAvailable"
 
+	// LoadBalancerProvisionedReason documents a LXCCluster controller detecting that the cluster load
+	// balancer has been provisioned successfully.
+	LoadBalancerProvisionedReason = "LoadBalancerProvisioned"
+
 	// LoadBalancerProvisioningFailedReason (Severity=Warning) documents a LXCCluster controller detecting
 	// an error while provisioning the container that provides the cluster load balancer; those kind of
 	// errors are usually transient and failed provisioning are automatically re-tried by the controller.
@@ -31,6 +35,9 @@ const (
 	// the same reconciliation, so the user will always see a transition from Wait to Provisioned without
 	// having evidence that the operation is started/is in progress.
 	InstanceProvisionedCondition = "InstanceProvisioned"
+
+	// InstanceProvisionedReason documents a LXCMachine for which the instance has been provisioned.
+	InstanceProvisionedReason = "InstanceProvisioned"
 
 	// WaitingForBootstrapDataReason (Severity=Info) documents a LXCMachine waiting for the bootstrap
 	// script to be ready before starting to create the instance that provides the LXCMachine infrastructure.

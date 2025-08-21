@@ -41,7 +41,7 @@ func (r *LXCMachineReconciler) reconcileNormal(ctx context.Context, cluster *clu
 			return ctrl.Result{}, err
 		} else {
 			lxcMachine.Status.Initialization.Provisioned = true
-			conditions.Set(lxcMachine, metav1.Condition{Type: infrav1.InstanceProvisionedCondition, Status: metav1.ConditionTrue})
+			conditions.Set(lxcMachine, metav1.Condition{Type: infrav1.InstanceProvisionedCondition, Status: metav1.ConditionTrue, Reason: infrav1.InstanceProvisionedReason})
 			r.setLXCMachineAddresses(lxcMachine, lxc.ParseHostAddresses(state))
 			return ctrl.Result{}, nil
 		}
@@ -87,7 +87,7 @@ func (r *LXCMachineReconciler) reconcileNormal(ctx context.Context, cluster *clu
 		return ctrl.Result{}, fmt.Errorf("failed to create instance: %w", err)
 	}
 	r.setLXCMachineAddresses(lxcMachine, addresses)
-	conditions.Set(lxcMachine, metav1.Condition{Type: infrav1.InstanceProvisionedCondition, Status: metav1.ConditionTrue})
+	conditions.Set(lxcMachine, metav1.Condition{Type: infrav1.InstanceProvisionedCondition, Status: metav1.ConditionTrue, Reason: infrav1.InstanceProvisionedReason})
 
 	// update load balancer
 	if util.IsControlPlaneMachine(machine) && !lxcMachine.Status.LoadBalancerConfigured {
