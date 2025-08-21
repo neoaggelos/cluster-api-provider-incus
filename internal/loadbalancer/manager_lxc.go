@@ -30,24 +30,21 @@ type managerLXC struct {
 func (l *managerLXC) Create(ctx context.Context) ([]string, error) {
 	ctx = log.IntoContext(ctx, log.FromContext(ctx).WithValues("loadbalancer.instance", l.name))
 
-	launchOpts := instances.DefaultHaproxyLXCLaunchOptions().
+	launchOpts := instances.HaproxyLXCLaunchOptions().
 		WithProfiles(l.spec.Profiles).
 		WithFlavor(l.spec.Flavor).
 		WithConfig(map[string]string{
 			"user.cluster-name":      l.clusterName,
 			"user.cluster-namespace": l.clusterNamespace,
 			"user.cluster-role":      "loadbalancer",
-		})
-
-	if !l.spec.Image.IsZero() {
-		launchOpts = launchOpts.WithImage(api.InstanceSource{
+		}).
+		MaybeWithImage(api.InstanceSource{
 			Type:        "image",
 			Protocol:    l.spec.Image.Protocol,
 			Server:      l.spec.Image.Server,
 			Alias:       l.spec.Image.Name,
 			Fingerprint: l.spec.Image.Fingerprint,
 		})
-	}
 
 	log.FromContext(ctx).V(1).Info("Launching load balancer instance")
 	addrs, err := l.lxcClient.WithTarget(l.spec.Target).WaitForLaunchInstance(ctx, l.name, launchOpts)

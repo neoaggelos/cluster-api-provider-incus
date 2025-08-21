@@ -51,7 +51,6 @@ func launchInstance(ctx context.Context, cluster *clusterv1.Cluster, lxcCluster 
 		}
 		imageSpec.Name = strings.ReplaceAll(imageSpec.Name, "VERSION", machineVersion)
 	}
-
 	image := api.InstanceSource{
 		Type:        "image",
 		Protocol:    imageSpec.Protocol,
@@ -59,37 +58,38 @@ func launchInstance(ctx context.Context, cluster *clusterv1.Cluster, lxcCluster 
 		Alias:       imageSpec.Name,
 		Fingerprint: imageSpec.Fingerprint,
 	}
-	switch {
-	case imageSpec.Name != "":
+	if imageSpec.Name != "" {
 		source, parsed, err := lxc.TryParseImageSource(lxcClient.GetServerName(), imageSpec.Name)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to parse image name: %w", err)
 		} else if parsed {
 			// FIXME: add logging to communicate which image is being used
 			image = source
 		}
-	case imageSpec.IsZero():
+	}
+
+	if imageSpec.IsZero() {
 		if machineVersion == "" {
 			return nil, utils.TerminalError(fmt.Errorf("no image source specified on LXCMachineTemplate and Machine %q does not have a Kubernetes version", machine.Name))
-		}
-
-		// test if image for machine version exists on the default simplestreams server, fail otherwise.
-		if ssClient, err := incus.ConnectSimpleStreams(lxc.DefaultSimplestreamsServer, &incus.ConnectionArgs{HTTPClient: &http.Client{Timeout: 10 * time.Second}}); err != nil {
-			return nil, fmt.Errorf("no image source specified and failed to connect to simplestreams server %q: %w", lxc.DefaultSimplestreamsServer, err)
-		} else if _, _, err := ssClient.GetImageAliasType(string(instanceType), fmt.Sprintf("kubeadm/%s", machineVersion)); err != nil {
-			return nil, utils.TerminalError(fmt.Errorf("no image source specified and simplestreams server %q does not provide images for Kubernetes version %q: %w. Please consider using a different Kubernetes version, or build your own base image and set the image source on the LXCMachineTemplate resource", lxc.DefaultSimplestreamsServer, machineVersion, err))
-		}
-
-		image = api.InstanceSource{
-			Type:     "image",
-			Protocol: "simplestreams",
-			Server:   lxc.DefaultSimplestreamsServer,
-			Alias:    fmt.Sprintf("kubeadm/%s", machineVersion),
+		} else {
+			// test if image for machine version exists on the default simplestreams server, fail otherwise.
+			if ssClient, err := incus.ConnectSimpleStreams(lxc.DefaultSimplestreamsServer, &incus.ConnectionArgs{HTTPClient: &http.Client{Timeout: 10 * time.Second}}); err != nil {
+				return nil, fmt.Errorf("no image source specified and failed to connect to simplestreams server %q: %w", lxc.DefaultSimplestreamsServer, err)
+			} else if _, _, err := ssClient.GetImageAliasType(string(instanceType), fmt.Sprintf("kubeadm/%s", machineVersion)); err != nil {
+				return nil, utils.TerminalError(fmt.Errorf("no image source specified and simplestreams server %q does not provide images for Kubernetes version %q: %w. Please consider using a different Kubernetes version, or build your own base image and set the image source on the LXCMachineTemplate resource", lxc.DefaultSimplestreamsServer, machineVersion, err))
+			}
 		}
 	}
 
-	launchOpts := instances.DefaultKubeadmLaunchOptions(instanceType, !lxcCluster.Spec.Unprivileged, lxcClient.GetServerName(), lxcCluster.Spec.SkipDefaultKubeadmProfile).
-		WithImage(image).
+	launchOpts := instances.KubeadmLaunchOptions(instances.KubeadmLaunchOptionsInput{
+		InstanceType:      instanceType,
+		KubernetesVersion: machineVersion,
+		Privileged:        !lxcCluster.Spec.Unprivileged,
+		SkipProfile:       lxcCluster.Spec.SkipDefaultKubeadmProfile,
+		ServerName:        lxcClient.GetServerName(),
+
+		CloudInit: cloudInit,
+	}).
 		WithFlavor(lxcMachine.Spec.Flavor).
 		WithProfiles(lxcMachine.Spec.Profiles).
 		WithDevices(devices).
@@ -99,8 +99,8 @@ func launchInstance(ctx context.Context, cluster *clusterv1.Cluster, lxcCluster 
 			"user.cluster-namespace": cluster.Namespace,
 			"user.machine-name":      machine.Name,
 			"user.cluster-role":      role,
-			"cloud-init.user-data":   cloudInit,
-		})
+		}).
+		MaybeWithImage(image)
 
 	return lxcClient.WithTarget(lxcMachine.Spec.Target).WaitForLaunchInstance(ctx, lxcMachine.GetInstanceName(), launchOpts)
 }

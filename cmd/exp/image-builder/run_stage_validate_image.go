@@ -28,7 +28,7 @@ func (*stageValidateKubeadmImage) run(ctx context.Context) error {
 	ctx = log.IntoContext(ctx, log.FromContext(ctx).WithValues("instance.name", instanceName))
 
 	launchOpts := (&lxc.LaunchOptions{}).
-		WithImage(api.InstanceSource{Type: "image", Alias: cfg.imageAlias}).
+		MaybeWithImage(api.InstanceSource{Type: "image", Alias: cfg.imageAlias}).
 		WithInstanceType(api.InstanceType(cfg.instanceType)).
 		WithProfiles(cfg.instanceProfiles)
 
