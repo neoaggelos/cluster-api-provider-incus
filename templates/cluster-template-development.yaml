@@ -54,15 +54,21 @@ spec:
     initConfiguration:
       nodeRegistration:
         kubeletExtraArgs:
-          eviction-hard: nodefs.available<0%,nodefs.inodesFree<0%,imagefs.available<0%
-          fail-swap-on: "false"
-          provider-id: "lxc:///{{ v1.local_hostname }}"
+        - name: eviction-hard
+          value: nodefs.available<0%,nodefs.inodesFree<0%,imagefs.available<0%
+        - name: fail-swap-on
+          value: "false"
+        - name: provider-id
+          value: "lxc:///{{ v1.local_hostname }}"
     joinConfiguration:
       nodeRegistration:
         kubeletExtraArgs:
-          eviction-hard: nodefs.available<0%,nodefs.inodesFree<0%,imagefs.available<0%
-          fail-swap-on: "false"
-          provider-id: "lxc:///{{ v1.local_hostname }}"
+        - name: eviction-hard
+          value: nodefs.available<0%,nodefs.inodesFree<0%,imagefs.available<0%
+        - name: fail-swap-on
+          value: "false"
+        - name: provider-id
+          value: "lxc:///{{ v1.local_hostname }}"
     files:
     - path: /run/kubeadm/hack-kube-proxy-config-lxc.yaml
       content: |
@@ -135,6 +141,9 @@ spec:
       joinConfiguration:
         nodeRegistration:
           kubeletExtraArgs:
-            eviction-hard: nodefs.available<0%,nodefs.inodesFree<0%,imagefs.available<0%
-            fail-swap-on: "false"
-            provider-id: "lxc:///{{ v1.local_hostname }}"
+          - name: eviction-hard
+            value: nodefs.available<0%,nodefs.inodesFree<0%,imagefs.available<0%
+          - name: fail-swap-on
+            value: "false"
+          - name: provider-id
+            value: "lxc:///{{ v1.local_hostname }}"
