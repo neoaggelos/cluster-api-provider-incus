@@ -1,29 +1,29 @@
-apiVersion: cluster.x-k8s.io/v1beta1
+apiVersion: cluster.x-k8s.io/v1beta2
 kind: ClusterClass
 metadata:
   name: capn-default
 spec:
   controlPlane:
     ref:
-      apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+      apiVersion: controlplane.cluster.x-k8s.io/v1beta2
       kind: KubeadmControlPlaneTemplate
       name: capn-default-control-plane
     machineInfrastructure:
       ref:
         kind: LXCMachineTemplate
-        apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
+        apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
         name: capn-default-control-plane
     machineHealthCheck:
-      unhealthyConditions:
+      unhealthyNodeConditions:
         - type: Ready
           status: Unknown
-          timeout: 300s
+          timeoutSeconds: 300
         - type: Ready
           status: "False"
-          timeout: 300s
+          timeoutSeconds: 300
   infrastructure:
     ref:
-      apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
+      apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
       kind: LXCClusterTemplate
       name: capn-default-lxc-cluster
   workers:
@@ -32,22 +32,22 @@ spec:
       template:
         bootstrap:
           ref:
-            apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
+            apiVersion: bootstrap.cluster.x-k8s.io/v1beta2
             kind: KubeadmConfigTemplate
             name: capn-default-default-worker
         infrastructure:
           ref:
-            apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
+            apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
             kind: LXCMachineTemplate
             name: capn-default-default-worker
       machineHealthCheck:
-        unhealthyConditions:
+        unhealthyNodeConditions:
           - type: Ready
             status: Unknown
-            timeout: 300s
+            timeoutSeconds: 300
           - type: Ready
             status: "False"
-            timeout: 300s
+            timeoutSeconds: 300
   variables:
   - name: secretRef
     required: true
@@ -192,7 +192,7 @@ spec:
     description: LXCCluster configuration
     definitions:
     - selector:
-        apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
+        apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
         kind: LXCClusterTemplate
         matchResources:
           infrastructureCluster: true
@@ -259,7 +259,7 @@ spec:
       {{ hasKey .loadBalancer "kube-vip" }}
     definitions:
     - selector:
-        apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+        apiVersion: controlplane.cluster.x-k8s.io/v1beta2
         kind: KubeadmControlPlaneTemplate
         matchResources:
           controlPlane: true
@@ -348,7 +348,7 @@ spec:
     description: LXCMachineTemplate configuration for ControlPlane
     definitions:
     - selector:
-        apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
+        apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
         kind: LXCMachineTemplate
         matchResources:
           controlPlane: true
@@ -368,7 +368,7 @@ spec:
     description: LXCMachineTemplate configuration for MachineDeployments
     definitions:
     - selector:
-        apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
+        apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
         kind: LXCMachineTemplate
         matchResources:
           machineDeploymentClass:
@@ -391,7 +391,7 @@ spec:
     enabledIf: "{{ .instance.installKubeadm }}"
     definitions:
     - selector:
-        apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+        apiVersion: controlplane.cluster.x-k8s.io/v1beta2
         kind: KubeadmControlPlaneTemplate
         matchResources:
           controlPlane: true
@@ -405,7 +405,7 @@ spec:
     enabledIf: "{{ .instance.installKubeadm }}"
     definitions:
     - selector:
-        apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
+        apiVersion: bootstrap.cluster.x-k8s.io/v1beta2
         kind: KubeadmConfigTemplate
         matchResources:
           machineDeploymentClass:
@@ -421,7 +421,7 @@ spec:
     enabledIf: '{{ and (not .privileged) (ne .instance.type "virtual-machine") }}'
     definitions:
     - selector:
-        apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+        apiVersion: controlplane.cluster.x-k8s.io/v1beta2
         kind: KubeadmControlPlaneTemplate
         matchResources:
           controlPlane: true
@@ -442,7 +442,7 @@ spec:
     enabledIf: '{{ and (not .privileged) (ne .instance.type "virtual-machine") }}'
     definitions:
     - selector:
-        apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
+        apiVersion: bootstrap.cluster.x-k8s.io/v1beta2
         kind: KubeadmConfigTemplate
         matchResources:
           machineDeploymentClass:
@@ -465,7 +465,7 @@ spec:
     enabledIf: "{{ not (empty .etcdImageTag) }}"
     definitions:
     - selector:
-        apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+        apiVersion: controlplane.cluster.x-k8s.io/v1beta2
         kind: KubeadmControlPlaneTemplate
         matchResources:
           controlPlane: true
@@ -481,7 +481,7 @@ spec:
     enabledIf: "{{ not (empty .coreDNSImageTag) }}"
     definitions:
     - selector:
-        apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+        apiVersion: controlplane.cluster.x-k8s.io/v1beta2
         kind: KubeadmControlPlaneTemplate
         matchResources:
           controlPlane: true
@@ -493,7 +493,7 @@ spec:
             imageTag: {{ .coreDNSImageTag }}
 ---
 kind: KubeadmControlPlaneTemplate
-apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+apiVersion: controlplane.cluster.x-k8s.io/v1beta2
 metadata:
   name: capn-default-control-plane
 spec:
@@ -545,7 +545,7 @@ spec:
           owner: root:root
           permissions: "0444"
 ---
-apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
 kind: LXCClusterTemplate
 metadata:
   name: capn-default-lxc-cluster
@@ -555,7 +555,7 @@ spec:
       loadBalancer:
         lxc: {}
 ---
-apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
 kind: LXCMachineTemplate
 metadata:
   name: capn-default-control-plane
@@ -566,7 +566,7 @@ spec:
       flavor: ""
       profiles: [default]
 ---
-apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
 kind: LXCMachineTemplate
 metadata:
   name: capn-default-default-worker
@@ -577,7 +577,7 @@ spec:
       flavor: ""
       profiles: [default]
 ---
-apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
+apiVersion: bootstrap.cluster.x-k8s.io/v1beta2
 kind: KubeadmConfigTemplate
 metadata:
   name: capn-default-default-worker

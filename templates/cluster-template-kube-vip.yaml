@@ -1,4 +1,4 @@
-apiVersion: cluster.x-k8s.io/v1beta1
+apiVersion: cluster.x-k8s.io/v1beta2
 kind: Cluster
 metadata:
   name: ${CLUSTER_NAME}
@@ -10,15 +10,15 @@ spec:
       cidrBlocks: ${SERVICE_CIDR:=[10.96.0.0/12]}
     serviceDomain: cluster.local
   controlPlaneRef:
-    apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+    apiVersion: controlplane.cluster.x-k8s.io/v1beta2
     kind: KubeadmControlPlane
     name: ${CLUSTER_NAME}-control-plane
   infrastructureRef:
-    apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
+    apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
     kind: LXCCluster
     name: ${CLUSTER_NAME}
 ---
-apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
 kind: LXCCluster
 metadata:
   name: ${CLUSTER_NAME}
@@ -31,7 +31,7 @@ spec:
   loadBalancer:
     external: {}
 ---
-apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+apiVersion: controlplane.cluster.x-k8s.io/v1beta2
 kind: KubeadmControlPlane
 metadata:
   name: ${CLUSTER_NAME}-control-plane
@@ -40,7 +40,7 @@ spec:
   version: ${KUBERNETES_VERSION}
   machineTemplate:
     infrastructureRef:
-      apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
+      apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
       kind: LXCMachineTemplate
       name: ${CLUSTER_NAME}-control-plane
   kubeadmConfigSpec:
@@ -163,7 +163,7 @@ spec:
       owner: root:root
       permissions: "0444"
 ---
-apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
 kind: LXCMachineTemplate
 metadata:
   name: ${CLUSTER_NAME}-control-plane
@@ -177,7 +177,7 @@ spec:
       image:
         name: ${LXC_IMAGE_NAME:=""}
 ---
-apiVersion: cluster.x-k8s.io/v1beta1
+apiVersion: cluster.x-k8s.io/v1beta2
 kind: MachineDeployment
 metadata:
   name: ${CLUSTER_NAME}-md-0
@@ -192,15 +192,15 @@ spec:
       clusterName: ${CLUSTER_NAME}
       bootstrap:
         configRef:
-          apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
+          apiVersion: bootstrap.cluster.x-k8s.io/v1beta2
           kind: KubeadmConfigTemplate
           name: ${CLUSTER_NAME}-md-0
       infrastructureRef:
-        apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
+        apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
         kind: LXCMachineTemplate
         name: ${CLUSTER_NAME}-md-0
 ---
-apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
 kind: LXCMachineTemplate
 metadata:
   name: ${CLUSTER_NAME}-md-0
@@ -214,7 +214,7 @@ spec:
       image:
         name: ${LXC_IMAGE_NAME:=""}
 ---
-apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
+apiVersion: bootstrap.cluster.x-k8s.io/v1beta2
 kind: KubeadmConfigTemplate
 metadata:
   name: ${CLUSTER_NAME}-md-0
