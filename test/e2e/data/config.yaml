@@ -30,7 +30,8 @@ providers:
     type: url
     contract: v1beta2
     files:
-    - sourcePath: "../data/shared/v1beta2/core.yaml"
+    - sourcePath: "../data/shared/v1beta2/v1-11.yaml"
+      targetName: metadata.yaml
     replacements:
     - old: "imagePullPolicy: Always"
       new: "imagePullPolicy: IfNotPresent"
@@ -42,7 +43,8 @@ providers:
     type: url
     contract: v1beta2
     files:
-    - sourcePath: "../data/shared/v1beta2/core.yaml"
+    - sourcePath: "../data/shared/v1beta2/v1-11.yaml"
+      targetName: metadata.yaml
     replacements:
     - old: "imagePullPolicy: Always"
       new: "imagePullPolicy: IfNotPresent"
@@ -54,7 +56,8 @@ providers:
     type: url
     contract: v1beta2
     files:
-    - sourcePath: "../data/shared/v1beta2/core.yaml"
+    - sourcePath: "../data/shared/v1beta2/v1-11.yaml"
+      targetName: metadata.yaml
     replacements:
     - old: "imagePullPolicy: Always"
       new: "imagePullPolicy: IfNotPresent"
@@ -65,7 +68,8 @@ providers:
   - name: v0.88.99
     value: ../../../config/default
     files:
-    - sourcePath: "../data/shared/v1beta2/provider.yaml"
+    - sourcePath: "../data/shared/v1beta2/v0-88.yaml"
+      targetName: metadata.yaml
     - sourcePath: "../../../templates/clusterclass-capn-default.yaml"
     - sourcePath: "../../../templates/cluster-template.yaml"
     - sourcePath: "../../../templates/cluster-template-development.yaml"
