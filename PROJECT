@@ -15,24 +15,24 @@ resources:
   domain: cluster.x-k8s.io
   group: infrastructure
   kind: LXCCluster
-  path: github.com/lxc/cluster-api-provider-incus/api/v1alpha2
-  version: v1alpha2
+  path: github.com/lxc/cluster-api-provider-incus/api/v1alpha3
+  version: v1alpha3
 - api:
     crdVersion: v1
     namespaced: true
   domain: cluster.x-k8s.io
   group: infrastructure
   kind: LXCClusterTemplate
-  path: github.com/lxc/cluster-api-provider-incus/api/v1alpha2
-  version: v1alpha2
+  path: github.com/lxc/cluster-api-provider-incus/api/v1alpha3
+  version: v1alpha3
 - api:
     crdVersion: v1
     namespaced: true
   domain: cluster.x-k8s.io
   group: infrastructure
   kind: LXCMachineTemplate
-  path: github.com/lxc/cluster-api-provider-incus/api/v1alpha2
-  version: v1alpha2
+  path: github.com/lxc/cluster-api-provider-incus/api/v1alpha3
+  version: v1alpha3
 - api:
     crdVersion: v1
     namespaced: true
@@ -40,6 +40,6 @@ resources:
   domain: cluster.x-k8s.io
   group: infrastructure
   kind: LXCMachine
-  path: github.com/lxc/cluster-api-provider-incus/api/v1alpha2
-  version: v1alpha2
+  path: github.com/lxc/cluster-api-provider-incus/api/v1alpha3
+  version: v1alpha3
 version: "3"
