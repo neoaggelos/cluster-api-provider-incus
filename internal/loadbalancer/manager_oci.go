@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"strconv"
 
 	incus "github.com/lxc/incus/v6/client"
 	"github.com/lxc/incus/v6/shared/api"
@@ -36,24 +35,21 @@ func (l *managerOCI) Create(ctx context.Context) ([]string, error) {
 		return nil, fmt.Errorf("server does not support OCI containers: %w", err)
 	}
 
-	launchOpts := instances.DefaultHaproxyOCILaunchOptions().
+	launchOpts := instances.HaproxyOCILaunchOptions().
 		WithProfiles(l.spec.Profiles).
 		WithFlavor(l.spec.Flavor).
 		WithConfig(map[string]string{
 			"user.cluster-name":      l.clusterName,
 			"user.cluster-namespace": l.clusterNamespace,
 			"user.cluster-role":      "loadbalancer",
-		})
-
-	if !l.spec.Image.IsZero() {
-		launchOpts = launchOpts.WithImage(api.InstanceSource{
+		}).
+		MaybeWithImage(api.InstanceSource{
 			Type:        "image",
 			Protocol:    l.spec.Image.Protocol,
 			Server:      l.spec.Image.Server,
 			Alias:       l.spec.Image.Name,
 			Fingerprint: l.spec.Image.Fingerprint,
 		})
-	}
 
 	log.FromContext(ctx).V(1).Info("Launching load balancer instance")
 	addrs, err := l.lxcClient.WithTarget(l.spec.Target).WaitForLaunchInstance(ctx, l.name, launchOpts)
@@ -105,19 +101,7 @@ func (l *managerOCI) Reconfigure(ctx context.Context) error {
 	}
 
 	log.FromContext(ctx).V(1).Info("Reloading haproxy configuration")
-	var haproxyPids []string
-	if _, response, err := l.lxcClient.GetInstanceFile(l.name, "/proc"); err != nil {
-		return fmt.Errorf("failed to list running processes in load balancer instance: %w", err)
-	} else {
-		for _, entry := range response.Entries {
-			if _, err := strconv.ParseUint(entry, 10, 64); err != nil {
-				continue
-			}
-			haproxyPids = append(haproxyPids, entry)
-		}
-	}
-
-	if err := l.lxcClient.RunCommand(ctx, l.name, append([]string{"kill", "--signal", "SIGUSR2"}, haproxyPids...), nil, nil, nil); err != nil {
+	if err := l.lxcClient.RunCommand(ctx, l.name, append([]string{"kill", "--signal", "SIGUSR2"}, "1"), nil, nil, nil); err != nil {
 		return fmt.Errorf("failed to send SIGUSR2 to haproxy pids: %w", err)
 	}
 

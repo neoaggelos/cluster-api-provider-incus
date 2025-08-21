@@ -23,8 +23,11 @@ func (*stageCreateInstance) run(ctx context.Context) error {
 		return fmt.Errorf("failed to pick image source for base image %q: %w", cfg.baseImage, err)
 	}
 
-	launchOpts := instances.DefaultKubeadmLaunchOptions(api.InstanceType(cfg.instanceType), false, lxcClient.GetServerName(), false).
-		WithImage(image).
+	launchOpts := instances.KubeadmLaunchOptions(instances.KubeadmLaunchOptionsInput{
+		InstanceType: api.InstanceType(cfg.instanceType),
+		ServerName:   lxcClient.GetServerName(),
+	}).
+		MaybeWithImage(image).
 		WithProfiles(cfg.instanceProfiles)
 
 	// set size of root volume to 5GB for virtual machines

@@ -5,7 +5,9 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"maps"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	incus "github.com/lxc/incus/v6/client"
@@ -26,10 +28,19 @@ func (c *Client) WaitForLaunchInstance(ctx context.Context, name string, opts *L
 		log.FromContext(ctx).V(2).Info("Instance already exists")
 		return c.WaitForStartInstance(ctx, name)
 	} else if err := c.WaitForOperation(ctx, "CreateInstance", func() (incus.Operation, error) {
-		log.FromContext(ctx).V(2).Info("Creating instance")
 		if op, err := c.tryFindInstanceCreateOperation(ctx, name); err == nil && op != nil {
 			return op, nil
 		}
+
+		log.FromContext(ctx).V(2).WithValues(
+			"lxc.instance.name", name,
+			"lxc.instance.image", opts.image,
+			"lxc.instance.type", opts.instanceType,
+			"lxc.instance.flavor", opts.flavor,
+			"lxc.instance.profiles", opts.profiles,
+			"lxc.instance.devices", slices.Collect(maps.Keys(opts.devices)),
+		).Info("Creating instance")
+
 		return c.CreateInstance(api.InstancesPost{
 			Name:         name,
 			Source:       opts.image,
