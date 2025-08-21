@@ -37,7 +37,7 @@ import (
 	"k8s.io/component-base/logs"
 	logsv1 "k8s.io/component-base/logs/api/v1"
 	"k8s.io/klog/v2"
-	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
+	clusterv1 "sigs.k8s.io/cluster-api/api/core/v1beta2"
 	"sigs.k8s.io/cluster-api/controllers/remote"
 	"sigs.k8s.io/cluster-api/util/flags"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -47,7 +47,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
-	infrav1 "github.com/lxc/cluster-api-provider-incus/api/v1alpha2"
+	infrav1 "github.com/lxc/cluster-api-provider-incus/api/v1alpha3"
 	"github.com/lxc/cluster-api-provider-incus/internal/controller/lxccluster"
 	"github.com/lxc/cluster-api-provider-incus/internal/controller/lxcmachine"
 )

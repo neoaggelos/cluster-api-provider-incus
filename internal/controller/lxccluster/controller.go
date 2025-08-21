@@ -35,7 +35,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 
-	infrav1 "github.com/lxc/cluster-api-provider-incus/api/v1alpha2"
+	infrav1 "github.com/lxc/cluster-api-provider-incus/api/v1alpha3"
 	"github.com/lxc/cluster-api-provider-incus/internal/lxc"
 )
 

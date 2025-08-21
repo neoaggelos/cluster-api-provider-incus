@@ -26,7 +26,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	infrav1 "github.com/lxc/cluster-api-provider-incus/api/v1alpha2"
+	infrav1 "github.com/lxc/cluster-api-provider-incus/api/v1alpha3"
 	"github.com/lxc/cluster-api-provider-incus/internal/controller/lxcmachine"
 
 	. "github.com/onsi/gomega"

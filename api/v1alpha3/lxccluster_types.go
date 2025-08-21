@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1alpha2
+package v1alpha3
 
 import (
 	"crypto/sha256"
@@ -23,14 +23,14 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
+	clusterv1 "sigs.k8s.io/cluster-api/api/core/v1beta2"
 	"sigs.k8s.io/cluster-api/util/paused"
 )
 
 const (
 	// ClusterFinalizer allows LXCClusterReconciler to clean up resources associated with LXCCluster before
 	// removing it from the apiserver.
-	ClusterFinalizer = "lxccluster.infrastructure.cluster.x-k8s.io"
+	ClusterFinalizer = "infrastructure.cluster.x-k8s.io/lxccluster"
 )
 
 // LXCClusterSpec defines the desired state of LXCCluster.
@@ -62,9 +62,6 @@ type LXCClusterSpec struct {
 	//
 	// +optional
 	SkipDefaultKubeadmProfile bool `json:"skipDefaultKubeadmProfile"`
-
-	// TODO(neoaggelos): enable failure domains
-	// FailureDomains clusterv1.FailureDomains `json:"failureDomains,omitempty"`
 }
 
 // SecretRef is a reference to a secret in the cluster.
@@ -183,32 +180,30 @@ type LXCLoadBalancerMachineSpec struct {
 
 // LXCClusterStatus defines the observed state of LXCCluster.
 type LXCClusterStatus struct {
-	// Ready denotes that the LXC cluster (infrastructure) is ready.
+	// Initialization provides observations of the LXCCluster initialization process.
+	// NOTE: Fields in this struct are part of the Cluster API contract and are used to orchestrate initial LXCCluster provisioning.
+	// The value of those fields is never updated after provisioning is completed.
+	// Use conditions to monitor the operational state of the LXCCluster.
 	//
 	// +optional
-	Ready bool `json:"ready"`
+	Initialization LXCClusterInitializationStatus `json:"initialization,omitempty,omitzero"`
 
-	// Conditions defines current service state of the LXCCluster.
-	//
-	// +optional
-	Conditions clusterv1.Conditions `json:"conditions,omitempty"`
-
-	// V1Beta2 groups all status fields that will be added in LXCCluster's status with the v1beta2 version.
-	//
-	// +optional
-	V1Beta2 *LXCClusterV1Beta2Status `json:"v1beta2,omitempty"`
-}
-
-// LXCClusterV1Beta2Status groups all the fields that will be added or modified in LXCCluster with the V1Beta2 version.
-// See https://github.com/kubernetes-sigs/cluster-api/blob/main/docs/proposals/20240916-improve-status-in-CAPI-resources.md for more context.
-type LXCClusterV1Beta2Status struct {
 	// conditions represents the observations of a LXCCluster's current state.
 	// Known condition types are Ready, LoadBalancerAvailable, Deleting, Paused.
+	//
 	// +optional
 	// +listType=map
 	// +listMapKey=type
 	// +kubebuilder:validation:MaxItems=32
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
+}
+
+// LXCClusterInitializationStatus defines the initialization state of LXCCluster.
+type LXCClusterInitializationStatus struct {
+	// Provisioned denotes that the LXC cluster (infrastructure) is provisioned.
+	//
+	// +optional
+	Provisioned bool `json:"provisioned"`
 }
 
 // +kubebuilder:object:root=true
@@ -229,29 +224,13 @@ type LXCCluster struct {
 }
 
 // GetConditions returns the set of conditions for this object.
-func (c *LXCCluster) GetConditions() clusterv1.Conditions {
+func (c *LXCCluster) GetConditions() []metav1.Condition {
 	return c.Status.Conditions
 }
 
 // SetConditions sets the conditions on this object.
-func (c *LXCCluster) SetConditions(conditions clusterv1.Conditions) {
+func (c *LXCCluster) SetConditions(conditions []metav1.Condition) {
 	c.Status.Conditions = conditions
-}
-
-// GetV1Beta2Conditions returns the set of conditions for this object.
-func (c *LXCCluster) GetV1Beta2Conditions() []metav1.Condition {
-	if c.Status.V1Beta2 == nil {
-		return nil
-	}
-	return c.Status.V1Beta2.Conditions
-}
-
-// SetV1Beta2Conditions sets conditions for an API object.
-func (c *LXCCluster) SetV1Beta2Conditions(conditions []metav1.Condition) {
-	if c.Status.V1Beta2 == nil {
-		c.Status.V1Beta2 = &LXCClusterV1Beta2Status{}
-	}
-	c.Status.V1Beta2.Conditions = conditions
 }
 
 // GetLXCSecretNamespacedName returns the client.ObjectKey for the secret containing LXC credentials.
