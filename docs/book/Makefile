@@ -51,8 +51,8 @@ $(TOC):
 	$(TOC_INSTALL) 0.14.2 $(TOOLS_BIN_DIR)
 
 .PHONY: generate-api-docs clean-api-docs
-generate-api-docs: src/reference/api/v1alpha2/api.md
-clean-api-docs: clean-api-docs-v1alpha2
+generate-api-docs: src/reference/api/v1alpha3/api.md
+clean-api-docs: clean-api-docs-v1alpha3
 
 src/reference/api/%/api.md: $(GEN_CRD_API_REFERENCE_DOCS)
 	$(GEN_CRD_API_REFERENCE_DOCS) \

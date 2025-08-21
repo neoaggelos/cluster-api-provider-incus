@@ -20,12 +20,12 @@
         "docsURLTemplate": "https://pkg.go.dev/k8s.io/apimachinery/pkg/apis/meta/v1#ObjectMeta"
       },
       {
-        "typeMatchPrefix": "^sigs\\.k8s\\.io/cluster-api/api/v1beta1",
-        "docsURLTemplate": "https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.10.2"
+        "typeMatchPrefix": "^sigs\\.k8s\\.io/cluster-api/api/core/v1beta2",
+        "docsURLTemplate": "https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.11.0"
       },
       {
         "typeMatchPrefix": "^sigs\\.k8s\\.io/cluster-api/errors",
-        "docsURLTemplate": "https://pkg.go.dev/sigs.k8s.io/cluster-api@v1.10.2/errors#{{.TypeIdentifier}}"
+        "docsURLTemplate": "https://pkg.go.dev/sigs.k8s.io/cluster-api@v1.11.0/errors#{{.TypeIdentifier}}"
       }
     ],
     "typeDisplayNamePrefixOverrides": {

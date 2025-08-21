@@ -1,10 +1,18 @@
-<h2 id="infrastructure.cluster.x-k8s.io/v1alpha2">infrastructure.cluster.x-k8s.io/v1alpha2</h2>
+<h2 id="infrastructure.cluster.x-k8s.io/v1alpha3">infrastructure.cluster.x-k8s.io/v1alpha3</h2>
 <p>
-<p>package v1alpha2 contains API Schema definitions for the infrastructure v1alpha2 API group</p>
+<p>package v1alpha3 contains API Schema definitions for the infrastructure v1alpha3 API group</p>
 </p>
 Resource Types:
 <ul></ul>
-<h3 id="infrastructure.cluster.x-k8s.io/v1alpha2.LXCCluster">LXCCluster
+<h3 id="infrastructure.cluster.x-k8s.io/v1alpha3.Devices">Devices
+(<code>[]string</code> alias)</p></h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha3.LXCMachineSpec">LXCMachineSpec</a>)
+</p>
+<p>
+</p>
+<h3 id="infrastructure.cluster.x-k8s.io/v1alpha3.LXCCluster">LXCCluster
 </h3>
 <p>
 <p>LXCCluster is the Schema for the lxcclusters API.</p>
@@ -35,7 +43,7 @@ Refer to the Kubernetes API documentation for the fields of the
 <td>
 <code>spec</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1alpha2.LXCClusterSpec">
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha3.LXCClusterSpec">
 LXCClusterSpec
 </a>
 </em>
@@ -48,8 +56,8 @@ LXCClusterSpec
 <td>
 <code>controlPlaneEndpoint</code><br/>
 <em>
-<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.10.2">
-sigs.k8s.io/cluster-api/api/v1beta1.APIEndpoint
+<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.11.0">
+sigs.k8s.io/cluster-api/api/core/v1beta2.APIEndpoint
 </a>
 </em>
 </td>
@@ -61,7 +69,7 @@ sigs.k8s.io/cluster-api/api/v1beta1.APIEndpoint
 <td>
 <code>secretRef</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1alpha2.SecretRef">
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha3.SecretRef">
 SecretRef
 </a>
 </em>
@@ -74,7 +82,7 @@ SecretRef
 <td>
 <code>loadBalancer</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1alpha2.LXCClusterLoadBalancer">
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha3.LXCClusterLoadBalancer">
 LXCClusterLoadBalancer
 </a>
 </em>
@@ -120,7 +128,7 @@ LXCMachineTemplate objects.</p>
 <td>
 <code>status</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1alpha2.LXCClusterStatus">
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha3.LXCClusterStatus">
 LXCClusterStatus
 </a>
 </em>
@@ -130,11 +138,42 @@ LXCClusterStatus
 </tr>
 </tbody>
 </table>
-<h3 id="infrastructure.cluster.x-k8s.io/v1alpha2.LXCClusterLoadBalancer">LXCClusterLoadBalancer
+<h3 id="infrastructure.cluster.x-k8s.io/v1alpha3.LXCClusterInitializationStatus">LXCClusterInitializationStatus
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1alpha2.LXCClusterSpec">LXCClusterSpec</a>)
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha3.LXCClusterStatus">LXCClusterStatus</a>)
+</p>
+<p>
+<p>LXCClusterInitializationStatus defines the initialization state of LXCCluster.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>provisioned</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Provisioned denotes that the LXC cluster (infrastructure) is provisioned.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1alpha3.LXCClusterLoadBalancer">LXCClusterLoadBalancer
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha3.LXCClusterSpec">LXCClusterSpec</a>)
 </p>
 <p>
 <p>LXCClusterLoadBalancer is configuration for provisioning the load balancer of the cluster.</p>
@@ -151,7 +190,7 @@ LXCClusterStatus
 <td>
 <code>lxc</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1alpha2.LXCLoadBalancerInstance">
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha3.LXCLoadBalancerInstance">
 LXCLoadBalancerInstance
 </a>
 </em>
@@ -168,7 +207,7 @@ LXCLoadBalancerInstance
 <td>
 <code>oci</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1alpha2.LXCLoadBalancerInstance">
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha3.LXCLoadBalancerInstance">
 LXCLoadBalancerInstance
 </a>
 </em>
@@ -186,7 +225,7 @@ LXCLoadBalancerInstance
 <td>
 <code>ovn</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1alpha2.LXCLoadBalancerOVN">
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha3.LXCLoadBalancerOVN">
 LXCLoadBalancerOVN
 </a>
 </em>
@@ -204,7 +243,7 @@ LXCLoadBalancerOVN
 <td>
 <code>external</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1alpha2.LXCLoadBalancerExternal">
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha3.LXCLoadBalancerExternal">
 LXCLoadBalancerExternal
 </a>
 </em>
@@ -217,12 +256,12 @@ LXCLoadBalancerExternal
 </tr>
 </tbody>
 </table>
-<h3 id="infrastructure.cluster.x-k8s.io/v1alpha2.LXCClusterSpec">LXCClusterSpec
+<h3 id="infrastructure.cluster.x-k8s.io/v1alpha3.LXCClusterSpec">LXCClusterSpec
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1alpha2.LXCCluster">LXCCluster</a>,
-<a href="#infrastructure.cluster.x-k8s.io/v1alpha2.LXCClusterTemplateResource">LXCClusterTemplateResource</a>)
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha3.LXCCluster">LXCCluster</a>, 
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha3.LXCClusterTemplateResource">LXCClusterTemplateResource</a>)
 </p>
 <p>
 <p>LXCClusterSpec defines the desired state of LXCCluster.</p>
@@ -239,8 +278,8 @@ LXCLoadBalancerExternal
 <td>
 <code>controlPlaneEndpoint</code><br/>
 <em>
-<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.10.2">
-sigs.k8s.io/cluster-api/api/v1beta1.APIEndpoint
+<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.11.0">
+sigs.k8s.io/cluster-api/api/core/v1beta2.APIEndpoint
 </a>
 </em>
 </td>
@@ -252,7 +291,7 @@ sigs.k8s.io/cluster-api/api/v1beta1.APIEndpoint
 <td>
 <code>secretRef</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1alpha2.SecretRef">
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha3.SecretRef">
 SecretRef
 </a>
 </em>
@@ -265,7 +304,7 @@ SecretRef
 <td>
 <code>loadBalancer</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1alpha2.LXCClusterLoadBalancer">
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha3.LXCClusterLoadBalancer">
 LXCClusterLoadBalancer
 </a>
 </em>
@@ -306,11 +345,11 @@ LXCMachineTemplate objects.</p>
 </tr>
 </tbody>
 </table>
-<h3 id="infrastructure.cluster.x-k8s.io/v1alpha2.LXCClusterStatus">LXCClusterStatus
+<h3 id="infrastructure.cluster.x-k8s.io/v1alpha3.LXCClusterStatus">LXCClusterStatus
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1alpha2.LXCCluster">LXCCluster</a>)
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha3.LXCCluster">LXCCluster</a>)
 </p>
 <p>
 <p>LXCClusterStatus defines the observed state of LXCCluster.</p>
@@ -325,47 +364,39 @@ LXCMachineTemplate objects.</p>
 <tbody>
 <tr>
 <td>
-<code>ready</code><br/>
+<code>initialization,omitempty,omitzero</code><br/>
 <em>
-bool
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha3.LXCClusterInitializationStatus">
+LXCClusterInitializationStatus
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Ready denotes that the LXC cluster (infrastructure) is ready.</p>
+<p>Initialization provides observations of the LXCCluster initialization process.
+NOTE: Fields in this struct are part of the Cluster API contract and are used to orchestrate initial LXCCluster provisioning.
+The value of those fields is never updated after provisioning is completed.
+Use conditions to monitor the operational state of the LXCCluster.</p>
 </td>
 </tr>
 <tr>
 <td>
 <code>conditions</code><br/>
 <em>
-<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.10.2">
-sigs.k8s.io/cluster-api/api/v1beta1.Conditions
+<a href="https://pkg.go.dev/k8s.io/apimachinery/pkg/apis/meta/v1#Condition">
+[]Kubernetes meta/v1.Condition
 </a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Conditions defines current service state of the LXCCluster.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>v1beta2</code><br/>
-<em>
-<a href="#infrastructure.cluster.x-k8s.io/v1alpha2.LXCClusterV1Beta2Status">
-LXCClusterV1Beta2Status
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>V1Beta2 groups all status fields that will be added in LXCCluster&rsquo;s status with the v1beta2 version.</p>
+<p>conditions represents the observations of a LXCCluster&rsquo;s current state.
+Known condition types are Ready, LoadBalancerAvailable, Deleting, Paused.</p>
 </td>
 </tr>
 </tbody>
 </table>
-<h3 id="infrastructure.cluster.x-k8s.io/v1alpha2.LXCClusterTemplate">LXCClusterTemplate
+<h3 id="infrastructure.cluster.x-k8s.io/v1alpha3.LXCClusterTemplate">LXCClusterTemplate
 </h3>
 <p>
 <p>LXCClusterTemplate is the Schema for the lxcclustertemplates API.</p>
@@ -396,7 +427,7 @@ Refer to the Kubernetes API documentation for the fields of the
 <td>
 <code>spec</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1alpha2.LXCClusterTemplateSpec">
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha3.LXCClusterTemplateSpec">
 LXCClusterTemplateSpec
 </a>
 </em>
@@ -409,7 +440,7 @@ LXCClusterTemplateSpec
 <td>
 <code>template</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1alpha2.LXCClusterTemplateResource">
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha3.LXCClusterTemplateResource">
 LXCClusterTemplateResource
 </a>
 </em>
@@ -422,11 +453,11 @@ LXCClusterTemplateResource
 </tr>
 </tbody>
 </table>
-<h3 id="infrastructure.cluster.x-k8s.io/v1alpha2.LXCClusterTemplateResource">LXCClusterTemplateResource
+<h3 id="infrastructure.cluster.x-k8s.io/v1alpha3.LXCClusterTemplateResource">LXCClusterTemplateResource
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1alpha2.LXCClusterTemplateSpec">LXCClusterTemplateSpec</a>)
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha3.LXCClusterTemplateSpec">LXCClusterTemplateSpec</a>)
 </p>
 <p>
 <p>LXCClusterTemplateResource describes the data needed to create a LXCCluster from a template.</p>
@@ -443,8 +474,8 @@ LXCClusterTemplateResource
 <td>
 <code>metadata</code><br/>
 <em>
-<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.10.2">
-sigs.k8s.io/cluster-api/api/v1beta1.ObjectMeta
+<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.11.0">
+sigs.k8s.io/cluster-api/api/core/v1beta2.ObjectMeta
 </a>
 </em>
 </td>
@@ -460,7 +491,7 @@ Refer to the Kubernetes API documentation for the fields of the
 <td>
 <code>spec</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1alpha2.LXCClusterSpec">
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha3.LXCClusterSpec">
 LXCClusterSpec
 </a>
 </em>
@@ -473,8 +504,8 @@ LXCClusterSpec
 <td>
 <code>controlPlaneEndpoint</code><br/>
 <em>
-<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.10.2">
-sigs.k8s.io/cluster-api/api/v1beta1.APIEndpoint
+<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.11.0">
+sigs.k8s.io/cluster-api/api/core/v1beta2.APIEndpoint
 </a>
 </em>
 </td>
@@ -486,7 +517,7 @@ sigs.k8s.io/cluster-api/api/v1beta1.APIEndpoint
 <td>
 <code>secretRef</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1alpha2.SecretRef">
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha3.SecretRef">
 SecretRef
 </a>
 </em>
@@ -499,7 +530,7 @@ SecretRef
 <td>
 <code>loadBalancer</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1alpha2.LXCClusterLoadBalancer">
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha3.LXCClusterLoadBalancer">
 LXCClusterLoadBalancer
 </a>
 </em>
@@ -543,11 +574,11 @@ LXCMachineTemplate objects.</p>
 </tr>
 </tbody>
 </table>
-<h3 id="infrastructure.cluster.x-k8s.io/v1alpha2.LXCClusterTemplateSpec">LXCClusterTemplateSpec
+<h3 id="infrastructure.cluster.x-k8s.io/v1alpha3.LXCClusterTemplateSpec">LXCClusterTemplateSpec
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1alpha2.LXCClusterTemplate">LXCClusterTemplate</a>)
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha3.LXCClusterTemplate">LXCClusterTemplate</a>)
 </p>
 <p>
 <p>LXCClusterTemplateSpec defines the desired state of LXCClusterTemplate.</p>
@@ -564,7 +595,7 @@ LXCMachineTemplate objects.</p>
 <td>
 <code>template</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1alpha2.LXCClusterTemplateResource">
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha3.LXCClusterTemplateResource">
 LXCClusterTemplateResource
 </a>
 </em>
@@ -574,54 +605,19 @@ LXCClusterTemplateResource
 </tr>
 </tbody>
 </table>
-<h3 id="infrastructure.cluster.x-k8s.io/v1alpha2.LXCClusterV1Beta2Status">LXCClusterV1Beta2Status
+<h3 id="infrastructure.cluster.x-k8s.io/v1alpha3.LXCLoadBalancerExternal">LXCLoadBalancerExternal
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1alpha2.LXCClusterStatus">LXCClusterStatus</a>)
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha3.LXCClusterLoadBalancer">LXCClusterLoadBalancer</a>)
 </p>
 <p>
-<p>LXCClusterV1Beta2Status groups all the fields that will be added or modified in LXCCluster with the V1Beta2 version.
-See <a href="https://github.com/kubernetes-sigs/cluster-api/blob/main/docs/proposals/20240916-improve-status-in-CAPI-resources.md">https://github.com/kubernetes-sigs/cluster-api/blob/main/docs/proposals/20240916-improve-status-in-CAPI-resources.md</a> for more context.</p>
 </p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>conditions</code><br/>
-<em>
-<a href="https://pkg.go.dev/k8s.io/apimachinery/pkg/apis/meta/v1#Condition">
-[]Kubernetes meta/v1.Condition
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>conditions represents the observations of a LXCCluster&rsquo;s current state.
-Known condition types are Ready, LoadBalancerAvailable, Deleting, Paused.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="infrastructure.cluster.x-k8s.io/v1alpha2.LXCLoadBalancerExternal">LXCLoadBalancerExternal
+<h3 id="infrastructure.cluster.x-k8s.io/v1alpha3.LXCLoadBalancerInstance">LXCLoadBalancerInstance
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1alpha2.LXCClusterLoadBalancer">LXCClusterLoadBalancer</a>)
-</p>
-<p>
-</p>
-<h3 id="infrastructure.cluster.x-k8s.io/v1alpha2.LXCLoadBalancerInstance">LXCLoadBalancerInstance
-</h3>
-<p>
-(<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1alpha2.LXCClusterLoadBalancer">LXCClusterLoadBalancer</a>)
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha3.LXCClusterLoadBalancer">LXCClusterLoadBalancer</a>)
 </p>
 <p>
 </p>
@@ -637,7 +633,7 @@ Known condition types are Ready, LoadBalancerAvailable, Deleting, Paused.</p>
 <td>
 <code>instanceSpec</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1alpha2.LXCLoadBalancerMachineSpec">
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha3.LXCLoadBalancerMachineSpec">
 LXCLoadBalancerMachineSpec
 </a>
 </em>
@@ -649,11 +645,11 @@ LXCLoadBalancerMachineSpec
 </tr>
 </tbody>
 </table>
-<h3 id="infrastructure.cluster.x-k8s.io/v1alpha2.LXCLoadBalancerMachineSpec">LXCLoadBalancerMachineSpec
+<h3 id="infrastructure.cluster.x-k8s.io/v1alpha3.LXCLoadBalancerMachineSpec">LXCLoadBalancerMachineSpec
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1alpha2.LXCLoadBalancerInstance">LXCLoadBalancerInstance</a>)
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha3.LXCLoadBalancerInstance">LXCLoadBalancerInstance</a>)
 </p>
 <p>
 <p>LXCLoadBalancerMachineSpec is configuration for the container that will host the cluster load balancer, when using the &ldquo;lxc&rdquo; or &ldquo;oci&rdquo; load balancer type.</p>
@@ -699,7 +695,7 @@ string
 <td>
 <code>image</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1alpha2.LXCMachineImageSource">
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha3.LXCMachineImageSource">
 LXCMachineImageSource
 </a>
 </em>
@@ -737,11 +733,11 @@ development purposes).</p>
 </tr>
 </tbody>
 </table>
-<h3 id="infrastructure.cluster.x-k8s.io/v1alpha2.LXCLoadBalancerOVN">LXCLoadBalancerOVN
+<h3 id="infrastructure.cluster.x-k8s.io/v1alpha3.LXCLoadBalancerOVN">LXCLoadBalancerOVN
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1alpha2.LXCClusterLoadBalancer">LXCClusterLoadBalancer</a>)
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha3.LXCClusterLoadBalancer">LXCClusterLoadBalancer</a>)
 </p>
 <p>
 </p>
@@ -766,7 +762,7 @@ string
 </tr>
 </tbody>
 </table>
-<h3 id="infrastructure.cluster.x-k8s.io/v1alpha2.LXCMachine">LXCMachine
+<h3 id="infrastructure.cluster.x-k8s.io/v1alpha3.LXCMachine">LXCMachine
 </h3>
 <p>
 <p>LXCMachine is the Schema for the lxcmachines API.</p>
@@ -797,7 +793,7 @@ Refer to the Kubernetes API documentation for the fields of the
 <td>
 <code>spec</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1alpha2.LXCMachineSpec">
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha3.LXCMachineSpec">
 LXCMachineSpec
 </a>
 </em>
@@ -865,7 +861,9 @@ string
 <td>
 <code>devices</code><br/>
 <em>
-[]string
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha3.Devices">
+Devices
+</a>
 </em>
 </td>
 <td>
@@ -905,7 +903,7 @@ for details.</p>
 <td>
 <code>image</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1alpha2.LXCMachineImageSource">
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha3.LXCMachineImageSource">
 LXCMachineImageSource
 </a>
 </em>
@@ -948,7 +946,7 @@ development purposes).</p>
 <td>
 <code>status</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1alpha2.LXCMachineStatus">
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha3.LXCMachineStatus">
 LXCMachineStatus
 </a>
 </em>
@@ -958,12 +956,12 @@ LXCMachineStatus
 </tr>
 </tbody>
 </table>
-<h3 id="infrastructure.cluster.x-k8s.io/v1alpha2.LXCMachineImageSource">LXCMachineImageSource
+<h3 id="infrastructure.cluster.x-k8s.io/v1alpha3.LXCMachineImageSource">LXCMachineImageSource
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1alpha2.LXCLoadBalancerMachineSpec">LXCLoadBalancerMachineSpec</a>,
-<a href="#infrastructure.cluster.x-k8s.io/v1alpha2.LXCMachineSpec">LXCMachineSpec</a>)
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha3.LXCLoadBalancerMachineSpec">LXCLoadBalancerMachineSpec</a>, 
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha3.LXCMachineSpec">LXCMachineSpec</a>)
 </p>
 <p>
 </p>
@@ -1045,12 +1043,43 @@ string
 </tr>
 </tbody>
 </table>
-<h3 id="infrastructure.cluster.x-k8s.io/v1alpha2.LXCMachineSpec">LXCMachineSpec
+<h3 id="infrastructure.cluster.x-k8s.io/v1alpha3.LXCMachineInitializationStatus">LXCMachineInitializationStatus
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1alpha2.LXCMachine">LXCMachine</a>,
-<a href="#infrastructure.cluster.x-k8s.io/v1alpha2.LXCMachineTemplateResource">LXCMachineTemplateResource</a>)
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha3.LXCMachineStatus">LXCMachineStatus</a>)
+</p>
+<p>
+<p>LXCMachineInitializationStatus defines the initialization state of LXCMachine.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>provisioned</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Provisioned denotes that the LXC Machine (infrastructure) is provisioned.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1alpha3.LXCMachineSpec">LXCMachineSpec
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha3.LXCMachine">LXCMachine</a>, 
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha3.LXCMachineTemplateResource">LXCMachineTemplateResource</a>)
 </p>
 <p>
 <p>LXCMachineSpec defines the desired state of LXCMachine.</p>
@@ -1122,7 +1151,9 @@ string
 <td>
 <code>devices</code><br/>
 <em>
-[]string
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha3.Devices">
+Devices
+</a>
 </em>
 </td>
 <td>
@@ -1162,7 +1193,7 @@ for details.</p>
 <td>
 <code>image</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1alpha2.LXCMachineImageSource">
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha3.LXCMachineImageSource">
 LXCMachineImageSource
 </a>
 </em>
@@ -1200,11 +1231,11 @@ development purposes).</p>
 </tr>
 </tbody>
 </table>
-<h3 id="infrastructure.cluster.x-k8s.io/v1alpha2.LXCMachineStatus">LXCMachineStatus
+<h3 id="infrastructure.cluster.x-k8s.io/v1alpha3.LXCMachineStatus">LXCMachineStatus
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1alpha2.LXCMachine">LXCMachine</a>)
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha3.LXCMachine">LXCMachine</a>)
 </p>
 <p>
 <p>LXCMachineStatus defines the observed state of LXCMachine.</p>
@@ -1219,14 +1250,19 @@ development purposes).</p>
 <tbody>
 <tr>
 <td>
-<code>ready</code><br/>
+<code>initialization,omitempty,omitzero</code><br/>
 <em>
-bool
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha3.LXCMachineInitializationStatus">
+LXCMachineInitializationStatus
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Ready denotes that the LXC machine is ready.</p>
+<p>Initialization provides observations of the LXCMachine initialization process.
+NOTE: Fields in this struct are part of the Cluster API contract and are used to orchestrate initial LXCMachine provisioning.
+The value of those fields is never updated after provisioning is completed.
+Use conditions to monitor the operational state of the LXCMachine.</p>
 </td>
 </tr>
 <tr>
@@ -1245,8 +1281,8 @@ bool
 <td>
 <code>addresses</code><br/>
 <em>
-<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.10.2">
-[]sigs.k8s.io/cluster-api/api/v1beta1.MachineAddress
+<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.11.0">
+[]sigs.k8s.io/cluster-api/api/core/v1beta2.MachineAddress
 </a>
 </em>
 </td>
@@ -1259,33 +1295,20 @@ bool
 <td>
 <code>conditions</code><br/>
 <em>
-<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.10.2">
-sigs.k8s.io/cluster-api/api/v1beta1.Conditions
+<a href="https://pkg.go.dev/k8s.io/apimachinery/pkg/apis/meta/v1#Condition">
+[]Kubernetes meta/v1.Condition
 </a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Conditions defines current service state of the LXCMachine.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>v1beta2</code><br/>
-<em>
-<a href="#infrastructure.cluster.x-k8s.io/v1alpha2.LXCMachineV1Beta2Status">
-LXCMachineV1Beta2Status
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>V1Beta2 groups all status fields that will be added in LXCMachine&rsquo;s status with the v1beta2 version.</p>
+<p>conditions represents the observations of a LXCMachine&rsquo;s current state.
+Known condition types are Ready, InstanceProvisioned, Deleting, Paused.</p>
 </td>
 </tr>
 </tbody>
 </table>
-<h3 id="infrastructure.cluster.x-k8s.io/v1alpha2.LXCMachineTemplate">LXCMachineTemplate
+<h3 id="infrastructure.cluster.x-k8s.io/v1alpha3.LXCMachineTemplate">LXCMachineTemplate
 </h3>
 <p>
 <p>LXCMachineTemplate is the Schema for the lxcmachinetemplates API.</p>
@@ -1316,7 +1339,7 @@ Refer to the Kubernetes API documentation for the fields of the
 <td>
 <code>spec</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1alpha2.LXCMachineTemplateSpec">
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha3.LXCMachineTemplateSpec">
 LXCMachineTemplateSpec
 </a>
 </em>
@@ -1329,7 +1352,7 @@ LXCMachineTemplateSpec
 <td>
 <code>template</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1alpha2.LXCMachineTemplateResource">
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha3.LXCMachineTemplateResource">
 LXCMachineTemplateResource
 </a>
 </em>
@@ -1342,11 +1365,11 @@ LXCMachineTemplateResource
 </tr>
 </tbody>
 </table>
-<h3 id="infrastructure.cluster.x-k8s.io/v1alpha2.LXCMachineTemplateResource">LXCMachineTemplateResource
+<h3 id="infrastructure.cluster.x-k8s.io/v1alpha3.LXCMachineTemplateResource">LXCMachineTemplateResource
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1alpha2.LXCMachineTemplateSpec">LXCMachineTemplateSpec</a>)
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha3.LXCMachineTemplateSpec">LXCMachineTemplateSpec</a>)
 </p>
 <p>
 <p>LXCMachineTemplateResource describes the data needed to create a LXCMachine from a template.</p>
@@ -1363,8 +1386,8 @@ LXCMachineTemplateResource
 <td>
 <code>metadata</code><br/>
 <em>
-<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.10.2">
-sigs.k8s.io/cluster-api/api/v1beta1.ObjectMeta
+<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.11.0">
+sigs.k8s.io/cluster-api/api/core/v1beta2.ObjectMeta
 </a>
 </em>
 </td>
@@ -1380,7 +1403,7 @@ Refer to the Kubernetes API documentation for the fields of the
 <td>
 <code>spec</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1alpha2.LXCMachineSpec">
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha3.LXCMachineSpec">
 LXCMachineSpec
 </a>
 </em>
@@ -1449,7 +1472,9 @@ string
 <td>
 <code>devices</code><br/>
 <em>
-[]string
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha3.Devices">
+Devices
+</a>
 </em>
 </td>
 <td>
@@ -1489,7 +1514,7 @@ for details.</p>
 <td>
 <code>image</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1alpha2.LXCMachineImageSource">
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha3.LXCMachineImageSource">
 LXCMachineImageSource
 </a>
 </em>
@@ -1530,11 +1555,11 @@ development purposes).</p>
 </tr>
 </tbody>
 </table>
-<h3 id="infrastructure.cluster.x-k8s.io/v1alpha2.LXCMachineTemplateSpec">LXCMachineTemplateSpec
+<h3 id="infrastructure.cluster.x-k8s.io/v1alpha3.LXCMachineTemplateSpec">LXCMachineTemplateSpec
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1alpha2.LXCMachineTemplate">LXCMachineTemplate</a>)
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha3.LXCMachineTemplate">LXCMachineTemplate</a>)
 </p>
 <p>
 <p>LXCMachineTemplateSpec defines the desired state of LXCMachineTemplate.</p>
@@ -1551,7 +1576,7 @@ development purposes).</p>
 <td>
 <code>template</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1alpha2.LXCMachineTemplateResource">
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha3.LXCMachineTemplateResource">
 LXCMachineTemplateResource
 </a>
 </em>
@@ -1561,46 +1586,11 @@ LXCMachineTemplateResource
 </tr>
 </tbody>
 </table>
-<h3 id="infrastructure.cluster.x-k8s.io/v1alpha2.LXCMachineV1Beta2Status">LXCMachineV1Beta2Status
+<h3 id="infrastructure.cluster.x-k8s.io/v1alpha3.SecretRef">SecretRef
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1alpha2.LXCMachineStatus">LXCMachineStatus</a>)
-</p>
-<p>
-<p>LXCMachineV1Beta2Status groups all the fields that will be added or modified in LXCMachine with the V1Beta2 version.
-See <a href="https://github.com/kubernetes-sigs/cluster-api/blob/main/docs/proposals/20240916-improve-status-in-CAPI-resources.md">https://github.com/kubernetes-sigs/cluster-api/blob/main/docs/proposals/20240916-improve-status-in-CAPI-resources.md</a> for more context.</p>
-</p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>conditions</code><br/>
-<em>
-<a href="https://pkg.go.dev/k8s.io/apimachinery/pkg/apis/meta/v1#Condition">
-[]Kubernetes meta/v1.Condition
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>conditions represents the observations of a LXCMachine&rsquo;s current state.
-Known condition types are Ready, InstanceProvisioned, Deleting, Paused.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="infrastructure.cluster.x-k8s.io/v1alpha2.SecretRef">SecretRef
-</h3>
-<p>
-(<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1alpha2.LXCClusterSpec">LXCClusterSpec</a>)
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha3.LXCClusterSpec">LXCClusterSpec</a>)
 </p>
 <p>
 <p>SecretRef is a reference to a secret in the cluster.</p>
