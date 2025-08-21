@@ -9,7 +9,7 @@ import (
 
 	incus "github.com/lxc/incus/v6/client"
 	"github.com/lxc/incus/v6/shared/api"
-	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
+	clusterv1 "sigs.k8s.io/cluster-api/api/core/v1beta2"
 	"sigs.k8s.io/cluster-api/util"
 
 	infrav1 "github.com/lxc/cluster-api-provider-incus/api/v1alpha2"
@@ -39,17 +39,12 @@ func launchInstance(ctx context.Context, cluster *clusterv1.Cluster, lxcCluster 
 		return nil, utils.TerminalError(fmt.Errorf("invalid .spec.devices on LXCMachine: %w", err))
 	}
 
-	var machineVersion string
-	if v := machine.Spec.Version; v != nil {
-		machineVersion = *v
-	}
-
 	imageSpec := lxcMachine.Spec.Image.DeepCopy()
 	if strings.Contains(imageSpec.Name, "VERSION") {
-		if machineVersion == "" {
+		if machine.Spec.Version == "" {
 			return nil, utils.TerminalError(fmt.Errorf("image name %q contains VERSION but Machine %q does not have a Kubernetes version", imageSpec.Name, machine.Name))
 		}
-		imageSpec.Name = strings.ReplaceAll(imageSpec.Name, "VERSION", machineVersion)
+		imageSpec.Name = strings.ReplaceAll(imageSpec.Name, "VERSION", machine.Spec.Version)
 	}
 	image := api.InstanceSource{
 		Type:        "image",
@@ -69,21 +64,21 @@ func launchInstance(ctx context.Context, cluster *clusterv1.Cluster, lxcCluster 
 	}
 
 	if imageSpec.IsZero() {
-		if machineVersion == "" {
+		if machine.Spec.Version == "" {
 			return nil, utils.TerminalError(fmt.Errorf("no image source specified on LXCMachineTemplate and Machine %q does not have a Kubernetes version", machine.Name))
 		} else {
 			// test if image for machine version exists on the default simplestreams server, fail otherwise.
 			if ssClient, err := incus.ConnectSimpleStreams(lxc.DefaultSimplestreamsServer, &incus.ConnectionArgs{HTTPClient: &http.Client{Timeout: 10 * time.Second}}); err != nil {
 				return nil, fmt.Errorf("no image source specified and failed to connect to simplestreams server %q: %w", lxc.DefaultSimplestreamsServer, err)
-			} else if _, _, err := ssClient.GetImageAliasType(string(instanceType), fmt.Sprintf("kubeadm/%s", machineVersion)); err != nil {
-				return nil, utils.TerminalError(fmt.Errorf("no image source specified and simplestreams server %q does not provide images for Kubernetes version %q: %w. Please consider using a different Kubernetes version, or build your own base image and set the image source on the LXCMachineTemplate resource", lxc.DefaultSimplestreamsServer, machineVersion, err))
+			} else if _, _, err := ssClient.GetImageAliasType(string(instanceType), fmt.Sprintf("kubeadm/%s", machine.Spec.Version)); err != nil {
+				return nil, utils.TerminalError(fmt.Errorf("no image source specified and simplestreams server %q does not provide images for Kubernetes version %q: %w. Please consider using a different Kubernetes version, or build your own base image and set the image source on the LXCMachineTemplate resource", lxc.DefaultSimplestreamsServer, machine.Spec.Version, err))
 			}
 		}
 	}
 
 	launchOpts := instances.KubeadmLaunchOptions(instances.KubeadmLaunchOptionsInput{
 		InstanceType:      instanceType,
-		KubernetesVersion: machineVersion,
+		KubernetesVersion: machine.Spec.Version,
 		Privileged:        !lxcCluster.Spec.Unprivileged,
 		SkipProfile:       lxcCluster.Spec.SkipDefaultKubeadmProfile,
 		ServerName:        lxcClient.GetServerName(),
