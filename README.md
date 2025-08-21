@@ -31,12 +31,29 @@ See [Quick Start](https://capn.linuxcontainers.org/tutorial/quick-start.html) to
 - Supports virtual machines or LXC containers for the cluster machines. Automatically manages the [profile](https://capn.linuxcontainers.org/reference/profile/kubeadm.html) for Kubernetes to work in LXC containers.
 - Can be used for local development similar to CAPD for quickly iterating on custom bootstrap and control-plane providers, e.g. K3s, Canonical Kubernetes, etc.
 
+## ClusterAPI Support
+
+ClusterAPI v1.11 (August 2025) introduced a new `v1beta2` API. `cluster-api-provider-incus` supports it starting from version `v0.8.0`, using API version `v1alpha3`.
+
+| cluster-api version | contract  | CAPN version | CAPN API   | Incus | Canonical LXD |
+| ------------------- | --------- | -------------| ---------- | ----- | ------------- |
+| `old` -> `v1.10.x`  | `v1beta1` | `v0.7.x`     | `v1alpha2` | 6.0+  | 5.21+         |
+| `v1.11.x`           | `v1beta2` | `v0.8.x`     | `v1alpha3` | 6.0+  | 5.21+         |
+
+Support commitments for CAPN versions are:
+
+- Development and new features are added to the latest version of `cluster-api-provider-incus` only, and are generally not backported to older versions.
+- `release-0.7` branch will be kept alive until EOL of ClusterAPI v1.10. There will not be any new development work in the `release-0.7` branch, only security and bug fix releases.
+
+**WARNING**: There is no migration path for CAPN `v0.7.0/v1alpha2` -> CAPN `v0.8.0/v1alpha3`. If you are already using `v0.7.0`, you must remove it from the cluster and deploy `v0.8.0` from scratch. Migrating any existing cluster template LXC resources should be as simple as replacing `v1alpha2` with `v1alpha3`, as there are no schema differences between the two.
+
 ## Project Roadmap
 
 ### v0.8.0
 
 Rough steps for version v0.8.0:
 
+- [ ] Support ClusterAPI contract `v1beta2` (ClusterAPI v1.11+)
 - [ ] Add `kini` command line tool, re-using building blocks from [kind](https://kind.sigs.k8s.io).
 - [ ] Use `kini` for quick start guide and e2e tests.
 - [x] Private initial alpha testing.
