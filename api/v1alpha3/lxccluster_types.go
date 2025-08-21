@@ -210,7 +210,7 @@ type LXCClusterInitializationStatus struct {
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="Cluster",type="string",JSONPath=".metadata.labels.cluster\\.x-k8s\\.io/cluster-name",description="Cluster"
 // +kubebuilder:printcolumn:name="Load Balancer",type="string",JSONPath=".spec.controlPlaneEndpoint.host",description="Load Balancer address"
-// +kubebuilder:printcolumn:name="Ready",type="string",JSONPath=".status.ready",description="Cluster infrastructure is ready"
+// +kubebuilder:printcolumn:name="Provisioned",type="string",JSONPath=".status.initialization.provisioned",description="Cluster infrastructure is provisioned"
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp",description="Time duration since creation of LXCCluster"
 // +kubebuilder:resource:categories=cluster-api
 

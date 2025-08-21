@@ -29,9 +29,9 @@ spec:
       jsonPath: .spec.providerID
       name: ProviderID
       type: string
-    - description: Machine ready status
-      jsonPath: .status.ready
-      name: Ready
+    - description: Machine is provisioned
+      jsonPath: .status.initialization.provisioned
+      name: Provisioned
       type: string
     - description: Time duration since creation of LXCMachine
       jsonPath: .metadata.creationTimestamp

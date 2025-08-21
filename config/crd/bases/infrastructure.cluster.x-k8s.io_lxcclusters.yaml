@@ -25,9 +25,9 @@ spec:
       jsonPath: .spec.controlPlaneEndpoint.host
       name: Load Balancer
       type: string
-    - description: Cluster infrastructure is ready
-      jsonPath: .status.ready
-      name: Ready
+    - description: Cluster infrastructure is provisioned
+      jsonPath: .status.initialization.provisioned
+      name: Provisioned
       type: string
     - description: Time duration since creation of LXCCluster
       jsonPath: .metadata.creationTimestamp
