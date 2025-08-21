@@ -89,9 +89,12 @@ func (o *LaunchOptions) WithProfiles(new []string) *LaunchOptions {
 	return o
 }
 
-// WithImage sets the instance image.
-func (o *LaunchOptions) WithImage(image api.InstanceSource) *LaunchOptions {
-	o.image = image
+// MaybeWithImage sets the instance image.
+// MaybeWithImage is a no-op if no alias or fingerprint are specified on the image.
+func (o *LaunchOptions) MaybeWithImage(image api.InstanceSource) *LaunchOptions {
+	if len(image.Alias) != 0 || len(image.Fingerprint) != 0 {
+		o.image = image
+	}
 	return o
 }
 
