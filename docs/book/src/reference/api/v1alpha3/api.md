@@ -164,7 +164,8 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Provisioned denotes that the LXC cluster (infrastructure) is provisioned.</p>
+<p>provisioned is true when the infrastructure provider reports that the Cluster&rsquo;s infrastructure is fully provisioned.
+NOTE: this field is part of the Cluster API contract, and it is used to orchestrate initial Cluster provisioning.</p>
 </td>
 </tr>
 </tbody>
@@ -1069,7 +1070,8 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Provisioned denotes that the LXC Machine (infrastructure) is provisioned.</p>
+<p>provisioned is true when the infrastructure provider reports that the Machine&rsquo;s infrastructure is fully provisioned.
+NOTE: this field is part of the Cluster API contract, and it is used to orchestrate initial Machine provisioning.</p>
 </td>
 </tr>
 </tbody>

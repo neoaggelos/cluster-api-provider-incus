@@ -171,7 +171,7 @@ func (r *LXCMachineReconciler) SetupWithManager(ctx context.Context, mgr ctrl.Ma
 		return fmt.Errorf("required field Client must not be nil")
 	}
 
-	predicateLog := ctrl.LoggerFrom(ctx).WithValues("controller", "lxcmachine")
+	predicateLog := ctrl.LoggerFrom(ctx).WithValues("controller", "lxcmachine").V(5)
 	clusterToLXCMachines, err := util.ClusterToTypedObjectsMapper(mgr.GetClient(), &infrav1.LXCMachineList{}, mgr.GetScheme())
 	if err != nil {
 		return err

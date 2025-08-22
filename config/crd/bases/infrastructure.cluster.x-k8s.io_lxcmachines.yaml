@@ -171,6 +171,8 @@ spec:
               providerID:
                 description: ProviderID is the container name in ProviderID format
                   (lxc:///<containername>).
+                maxLength: 512
+                minLength: 1
                 type: string
               target:
                 description: |-
@@ -288,8 +290,9 @@ spec:
                   Use conditions to monitor the operational state of the LXCMachine.
                 properties:
                   provisioned:
-                    description: Provisioned denotes that the LXC Machine (infrastructure)
-                      is provisioned.
+                    description: |-
+                      provisioned is true when the infrastructure provider reports that the Machine's infrastructure is fully provisioned.
+                      NOTE: this field is part of the Cluster API contract, and it is used to orchestrate initial Machine provisioning.
                     type: boolean
                 type: object
               loadBalancerConfigured:

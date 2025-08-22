@@ -200,10 +200,10 @@ type LXCClusterStatus struct {
 
 // LXCClusterInitializationStatus defines the initialization state of LXCCluster.
 type LXCClusterInitializationStatus struct {
-	// Provisioned denotes that the LXC cluster (infrastructure) is provisioned.
-	//
+	// provisioned is true when the infrastructure provider reports that the Cluster's infrastructure is fully provisioned.
+	// NOTE: this field is part of the Cluster API contract, and it is used to orchestrate initial Cluster provisioning.
 	// +optional
-	Provisioned bool `json:"provisioned"`
+	Provisioned *bool `json:"provisioned,omitempty"`
 }
 
 // +kubebuilder:object:root=true

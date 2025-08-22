@@ -39,7 +39,9 @@ type LXCMachineSpec struct {
 	// ProviderID is the container name in ProviderID format (lxc:///<containername>).
 	//
 	// +optional
-	ProviderID *string `json:"providerID,omitempty"`
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=512
+	ProviderID string `json:"providerID,omitempty"`
 
 	// InstanceType is `container` or `virtual-machine`. Empty defaults to `container`.
 	//
@@ -236,10 +238,11 @@ type LXCMachineStatus struct {
 
 // LXCMachineInitializationStatus defines the initialization state of LXCMachine.
 type LXCMachineInitializationStatus struct {
-	// Provisioned denotes that the LXC Machine (infrastructure) is provisioned.
+	// provisioned is true when the infrastructure provider reports that the Machine's infrastructure is fully provisioned.
+	// NOTE: this field is part of the Cluster API contract, and it is used to orchestrate initial Machine provisioning.
 	//
 	// +optional
-	Provisioned bool `json:"provisioned"`
+	Provisioned *bool `json:"provisioned"`
 }
 
 // +kubebuilder:object:root=true

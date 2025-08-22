@@ -128,7 +128,7 @@ func (r *LXCClusterReconciler) SetupWithManager(ctx context.Context, mgr ctrl.Ma
 		return fmt.Errorf("required field Client must not be nil")
 	}
 
-	predicateLog := ctrl.LoggerFrom(ctx).WithValues("controller", "lxccluster")
+	predicateLog := ctrl.LoggerFrom(ctx).WithValues("controller", "lxccluster").V(5)
 
 	if err := ctrl.NewControllerManagedBy(mgr).
 		For(&infrav1.LXCCluster{}).

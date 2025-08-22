@@ -29,7 +29,7 @@ func (r *LXCMachineReconciler) reconcileNormal(ctx context.Context, cluster *clu
 	}
 
 	// if the machine is already provisioned, return
-	if lxcMachine.Spec.ProviderID != nil {
+	if lxcMachine.Spec.ProviderID != "" {
 		state, _, err := lxcClient.GetInstanceState(lxcMachine.GetInstanceName())
 		if err != nil {
 			if strings.Contains(err.Error(), "Instance not found") {
@@ -40,7 +40,7 @@ func (r *LXCMachineReconciler) reconcileNormal(ctx context.Context, cluster *clu
 			log.FromContext(ctx).Error(err, "Failed to check instance state")
 			return ctrl.Result{}, err
 		} else {
-			lxcMachine.Status.Initialization.Provisioned = true
+			lxcMachine.Status.Initialization.Provisioned = ptr.To(true)
 			conditions.Set(lxcMachine, metav1.Condition{Type: infrav1.InstanceProvisionedCondition, Status: metav1.ConditionTrue, Reason: infrav1.InstanceProvisionedReason})
 			r.setLXCMachineAddresses(lxcMachine, lxc.ParseHostAddresses(state))
 			return ctrl.Result{}, nil
@@ -99,8 +99,8 @@ func (r *LXCMachineReconciler) reconcileNormal(ctx context.Context, cluster *clu
 		lxcMachine.Status.LoadBalancerConfigured = true
 	}
 
-	lxcMachine.Spec.ProviderID = ptr.To(lxcMachine.GetExpectedProviderID())
-	lxcMachine.Status.Initialization.Provisioned = true
+	lxcMachine.Spec.ProviderID = lxcMachine.GetExpectedProviderID()
+	lxcMachine.Status.Initialization.Provisioned = ptr.To(true)
 
 	return ctrl.Result{}, nil
 }

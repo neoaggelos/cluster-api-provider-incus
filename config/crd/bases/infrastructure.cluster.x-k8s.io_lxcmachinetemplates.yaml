@@ -188,6 +188,8 @@ spec:
                       providerID:
                         description: ProviderID is the container name in ProviderID
                           format (lxc:///<containername>).
+                        maxLength: 512
+                        minLength: 1
                         type: string
                       target:
                         description: |-

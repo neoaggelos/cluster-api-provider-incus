@@ -394,8 +394,9 @@ spec:
                   Use conditions to monitor the operational state of the LXCCluster.
                 properties:
                   provisioned:
-                    description: Provisioned denotes that the LXC cluster (infrastructure)
-                      is provisioned.
+                    description: |-
+                      provisioned is true when the infrastructure provider reports that the Cluster's infrastructure is fully provisioned.
+                      NOTE: this field is part of the Cluster API contract, and it is used to orchestrate initial Cluster provisioning.
                     type: boolean
                 type: object
             type: object
