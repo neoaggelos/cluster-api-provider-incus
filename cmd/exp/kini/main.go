@@ -17,7 +17,7 @@ var (
 	cmds = map[string]func(context.Context) error{
 		"kini":   kini.NewCmd().ExecuteContext,
 		"docker": docker.NewCmd().ExecuteContext,
-		"kind":   kind.Run,
+		"kind":   kind.NewCmd().ExecuteContext,
 	}
 )
 
