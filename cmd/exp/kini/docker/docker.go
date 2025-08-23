@@ -29,6 +29,7 @@ func NewCmd() *cobra.Command {
 			if err != nil {
 				return nil, fmt.Errorf("failed to retrieve local configuration: %w", err)
 			}
+			opts.Project = os.Getenv("KINI_PROJECT")
 
 			return lxc.New(ctx, opts)
 		},
