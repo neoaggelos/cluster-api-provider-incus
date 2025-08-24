@@ -4,8 +4,10 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"sigs.k8s.io/yaml"
 )
 
+// docker info
 // docker info --format '{{json .}}'
 // docker info --format '{{json .SecurityOptions}}'
 func newDockerInfoCmd(env Environment) *cobra.Command {
@@ -31,6 +33,25 @@ func newDockerInfoCmd(env Environment) *cobra.Command {
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			log.V(2).Info("docker info", "config", cfg)
+
+			if cfg.Format == "" {
+				lxcClient, err := env.Client(cmd.Context())
+				if err != nil {
+					return fmt.Errorf("failed to initialize client: %w", err)
+				}
+
+				info, _, err := lxcClient.GetServer()
+				if err != nil {
+					return fmt.Errorf("failed to get server info: %w", err)
+				}
+
+				b, err := yaml.Marshal(info)
+				if err != nil {
+					return fmt.Errorf("failed to marshal YAML: %w", err)
+				}
+				fmt.Println(string(b))
+				return nil
+			}
 
 			opts, ok := securityOptionsByFormatAndPrivileged[cfg.Format]
 			if !ok {

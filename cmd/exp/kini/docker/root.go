@@ -55,10 +55,14 @@ func NewCmd() *cobra.Command {
 		Version: "kini",
 	}
 
-	cmd.AddCommand(newDockerPsCmd(env))
-	cmd.AddCommand(newDockerRmCmd(env))
 	cmd.AddCommand(newDockerExecCmd(env))
 	cmd.AddCommand(newDockerInfoCmd(env))
+	cmd.AddCommand(newDockerInspectCmd(env))
+	cmd.AddCommand(newDockerLogsCmd(env))
+	cmd.AddCommand(newDockerNetworkCmd(env))
+	cmd.AddCommand(newDockerPsCmd(env))
+	cmd.AddCommand(newDockerRmCmd(env))
+	cmd.AddCommand(newDockerRunCmd(env))
 
 	return cmd
 }

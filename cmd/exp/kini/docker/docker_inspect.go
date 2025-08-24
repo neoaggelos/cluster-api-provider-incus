@@ -1,0 +1,98 @@
+package docker
+
+import (
+	"fmt"
+	"net/netip"
+	"strings"
+
+	"github.com/lxc/cluster-api-provider-incus/internal/lxc"
+	"github.com/spf13/cobra"
+	"sigs.k8s.io/yaml"
+)
+
+// docker inspect c1-control-plane
+// docker inspect --format '{{ index .Config.Labels "io.x-k8s.kind.role"}}' c1-control-plane
+// docker inspect --format '{{ index .Config.Labels "desktop.docker.io/ports/6443/tcp" }}' c1-control-plane
+// docker inspect --format '{{ with (index (index .NetworkSettings.Ports "6443/tcp") 0) }}{{ printf "%s\t%s" .HostIp .HostPort }}{{ end }}' c1-control-plane
+// docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}},{{.GlobalIPv6Address}}{{end}}' c1-control-plane
+func newDockerInspectCmd(env Environment) *cobra.Command {
+	var (
+		cfg struct {
+			Format string
+		}
+	)
+
+	cmd := &cobra.Command{
+		Use:          "inspect INSTANCE",
+		SilenceUsage: true,
+		Args:         cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			log.V(2).Info("docker inspect", "config", cfg, "args", args)
+
+			lxcClient, err := env.Client(cmd.Context())
+			if err != nil {
+				return fmt.Errorf("failed to initialize client: %w", err)
+			}
+
+			instance, _, err := lxcClient.GetInstanceFull(args[0])
+			if err != nil {
+				return fmt.Errorf("failed to retrieve instance %q: %w", args[0], err)
+			}
+
+			switch cfg.Format {
+			case ``:
+				b, err := yaml.Marshal(instance)
+				if err != nil {
+					return fmt.Errorf("failed to marshal YAML: %w", err)
+				}
+				fmt.Println(string(b))
+				return nil
+			case `{{ index .Config.Labels "io.x-k8s.kind.role"}}`:
+				fmt.Println(instance.Config["user.io.x-k8s.kind.role"])
+				return nil
+			case `{{ index .Config.Labels "desktop.docker.io/ports/6443/tcp" }}`:
+				return nil
+			case "{{ with (index (index .NetworkSettings.Ports \"6443/tcp\") 0) }}{{ printf \"%s\t%s\" .HostIp .HostPort }}{{ end }}", `test`:
+				for _, device := range instance.Devices {
+					if device["type"] != "proxy" {
+						continue
+					}
+					if device["bind"] != "host" {
+						continue
+					}
+					if device["connect"] != "tcp::6443" {
+						continue
+					}
+
+					parts := strings.Split(device["listen"], ":")
+					if parts[0] != "tcp" || len(parts) != 3 {
+						continue
+					}
+					fmt.Printf("%s\t%s\n", parts[1], parts[2])
+					break
+				}
+				return nil
+			case `{{range .NetworkSettings.Networks}}{{.IPAddress}},{{.GlobalIPv6Address}}{{end}}`, `t2`:
+				addrs := lxc.ParseHostAddresses(instance.State)
+				var ipv4, ipv6 string
+				for _, addr := range addrs {
+					if ip, err := netip.ParseAddr(addr); err == nil {
+						if ip.Is4() {
+							ipv4 = addr
+						} else if ip.Is6() {
+							ipv6 = addr
+						}
+					}
+				}
+				fmt.Printf("%s,%s\n", ipv4, ipv6)
+				return nil
+			default:
+				return fmt.Errorf("unknown format %q", cfg.Format)
+			}
+		},
+	}
+
+	cmd.Flags().StringVar(&cfg.Format, "format", "", "Output format")
+
+	return cmd
+}
