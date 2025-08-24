@@ -10,9 +10,12 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/google/go-containerregistry/pkg/crane"
 	incus "github.com/lxc/incus/v6/client"
 	"github.com/lxc/incus/v6/shared/api"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+
+	"github.com/lxc/cluster-api-provider-incus/internal/utils"
 )
 
 // WaitForLaunchInstance attempts to launch and start the specified instance.
@@ -30,6 +33,19 @@ func (c *Client) WaitForLaunchInstance(ctx context.Context, name string, opts *L
 	} else if err := c.WaitForOperation(ctx, "CreateInstance", func() (incus.Operation, error) {
 		if op, err := c.tryFindInstanceCreateOperation(ctx, name); err == nil && op != nil {
 			return op, nil
+		}
+
+		// verify OCI images with a pinned hash, if any
+		// NOTE(neoaggelos): this is not sound, as only the client verifies the hash.
+		if opts.image.Protocol == "oci" {
+			if image, wantHash, ok := strings.Cut(opts.image.Alias, "@"); ok {
+				if img, err := crane.Head(image); err != nil {
+					return nil, fmt.Errorf("failed to check image %q: %w", image, err)
+				} else if hash := img.Digest.String(); hash != wantHash {
+					return nil, utils.TerminalError(fmt.Errorf("image %q hash mismatch, expected %q but got %q", image, wantHash, hash))
+				}
+				opts.image.Alias = image
+			}
 		}
 
 		log.FromContext(ctx).V(2).WithValues(
