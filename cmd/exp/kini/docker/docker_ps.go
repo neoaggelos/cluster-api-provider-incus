@@ -13,7 +13,7 @@ import (
 // docker ps -a --filter label=io.x-k8s.kind.cluster=$name --format {{.Names}}
 // docker ps -a --filter label=io.x-k8s.kind.cluster --format {{.Label "io.x-k8s.kind.cluster"}}
 func newDockerPsCmd(env Environment) *cobra.Command {
-	var cfg struct {
+	var flags struct {
 		Format string
 		Filter string
 		All    bool
@@ -23,7 +23,7 @@ func newDockerPsCmd(env Environment) *cobra.Command {
 		Use:          "ps",
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			log.V(2).Info("docker ps", "config", cfg)
+			log.V(2).Info("docker ps", "flags", flags)
 
 			lxcClient, err := env.Client(cmd.Context())
 			if err != nil {
@@ -31,12 +31,12 @@ func newDockerPsCmd(env Environment) *cobra.Command {
 			}
 
 			var filter lxc.ListInstanceFilter
-			if clusterName, hasPrefix := strings.CutPrefix(cfg.Filter, "label=io.x-k8s.kind.cluster="); hasPrefix {
+			if clusterName, hasPrefix := strings.CutPrefix(flags.Filter, "label=io.x-k8s.kind.cluster="); hasPrefix {
 				filter = lxc.WithConfig(map[string]string{"user.io.x-k8s.kind.cluster": clusterName})
-			} else if cfg.Filter == "label=io.x-k8s.kind.cluster" {
+			} else if flags.Filter == "label=io.x-k8s.kind.cluster" {
 				filter = lxc.WithConfigKeys("user.io.x-k8s.kind.cluster")
 			} else {
-				return fmt.Errorf("unknown filter %q", cfg.Filter)
+				return fmt.Errorf("unknown filter %q", flags.Filter)
 			}
 
 			instances, err := lxcClient.ListInstances(cmd.Context(), filter)
@@ -44,7 +44,7 @@ func newDockerPsCmd(env Environment) *cobra.Command {
 				return fmt.Errorf("failed to list instances: %w", err)
 			}
 
-			switch cfg.Format {
+			switch flags.Format {
 			case `{{.Names}}`:
 				for _, instance := range instances {
 					fmt.Println(instance.Name)
@@ -59,15 +59,15 @@ func newDockerPsCmd(env Environment) *cobra.Command {
 
 				fmt.Println(strings.Join(clusterNames.UnsortedList(), "\n"))
 			default:
-				return fmt.Errorf("unknown format %q", cfg.Format)
+				return fmt.Errorf("unknown format %q", flags.Format)
 			}
 			return nil
 		},
 	}
 
-	cmd.Flags().BoolVarP(&cfg.All, "all", "a", false, "Show all containers")
-	cmd.Flags().StringVar(&cfg.Format, "format", "", "Output format")
-	cmd.Flags().StringVar(&cfg.Filter, "filter", "", "Filter rules")
+	cmd.Flags().BoolVarP(&flags.All, "all", "a", false, "Show all containers")
+	cmd.Flags().StringVar(&flags.Format, "format", "", "Output format")
+	cmd.Flags().StringVar(&flags.Filter, "filter", "", "Filter rules")
 
 	return cmd
 }

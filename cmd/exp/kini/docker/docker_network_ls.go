@@ -8,7 +8,7 @@ import (
 
 // docker network ls --filter=name=^kind$ --format={{.ID}}
 func newDockerNetworkLsCmd(env Environment) *cobra.Command {
-	var cfg struct {
+	var flags struct {
 		Filter string
 		Format string
 	}
@@ -17,14 +17,14 @@ func newDockerNetworkLsCmd(env Environment) *cobra.Command {
 		Use:          "ls NETWORK",
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			log.V(2).Info("docker network ls", "config", cfg)
+			log.V(2).Info("docker network ls", "flags", flags)
 
-			if cfg.Filter != "name=^kind$" {
-				return fmt.Errorf("invalid filter %q", cfg.Filter)
+			if flags.Filter != "name=^kind$" {
+				return fmt.Errorf("invalid filter %q", flags.Filter)
 			}
 
-			if cfg.Format != "{{.ID}}" {
-				return fmt.Errorf("invalid format %q", cfg.Format)
+			if flags.Format != "{{.ID}}" {
+				return fmt.Errorf("invalid format %q", flags.Format)
 			}
 
 			fmt.Println("kind")
@@ -32,8 +32,8 @@ func newDockerNetworkLsCmd(env Environment) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&cfg.Format, "format", "", "Output format")
-	cmd.Flags().StringVar(&cfg.Filter, "filter", "", "Filter rules")
+	cmd.Flags().StringVar(&flags.Format, "format", "", "Output format")
+	cmd.Flags().StringVar(&flags.Filter, "filter", "", "Filter rules")
 
 	return cmd
 }

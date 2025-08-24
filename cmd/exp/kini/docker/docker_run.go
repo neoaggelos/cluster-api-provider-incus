@@ -12,7 +12,7 @@ import (
 
 // docker run --name c1-control-plane --hostname c1-control-plane --label io.x-k8s.kind.role=control-plane --privileged --security-opt seccomp=unconfined --security-opt apparmor=unconfined --tmpfs /tmp --tmpfs /run --volume /var --volume /lib/modules:/lib/modules:ro -e KIND_EXPERIMENTAL_CONTAINERD_SNAPSHOTTER --detach --tty --label io.x-k8s.kind.cluster=c1 --net kind --restart=on-failure:1 --init=false --cgroupns=private --publish=127.0.0.1:41435:6443/TCP -e KUBECONFIG=/etc/kubernetes/admin.conf kindest/node:v1.31.2@sha256:18fbefc20a7113353c7b75b5c869d7145a6abd6269154825872dc59c1329912e
 func newDockerRunCmd(env Environment) *cobra.Command {
-	var cfg struct {
+	var flags struct {
 		// passed in command line, but will be ignored
 		Init         bool
 		TTY          bool
@@ -38,7 +38,7 @@ func newDockerRunCmd(env Environment) *cobra.Command {
 		Args:         cobra.ExactArgs(1),
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			log.V(2).Info("docker run", "config", cfg, "args", args)
+			log.V(2).Info("docker run", "flags", flags, "args", args)
 
 			lxcClient, err := env.Client(cmd.Context())
 			if err != nil {
@@ -47,7 +47,7 @@ func newDockerRunCmd(env Environment) *cobra.Command {
 
 			// environment
 			var environment []string
-			for _, v := range cfg.Environment {
+			for _, v := range flags.Environment {
 				if !strings.Contains(v, "=") {
 					v = fmt.Sprintf("%s=%s", v, env.Getenv(v))
 				}
@@ -55,14 +55,14 @@ func newDockerRunCmd(env Environment) *cobra.Command {
 			}
 
 			// labels
-			labels := make(map[string]string, len(cfg.Labels))
-			for key, value := range cfg.Labels {
+			labels := make(map[string]string, len(flags.Labels))
+			for key, value := range flags.Labels {
 				labels[fmt.Sprintf("user.%s", key)] = value
 			}
 
 			// TODO: publish ports
-			proxyDevices := make(map[string]map[string]string, len(cfg.PublishPorts))
-			for idx, publishPort := range cfg.PublishPorts {
+			proxyDevices := make(map[string]map[string]string, len(flags.PublishPorts))
+			for idx, publishPort := range flags.PublishPorts {
 				publishPort, protocol, ok := strings.Cut(strings.ToLower(publishPort), "/")
 				if !ok {
 					return fmt.Errorf("publish port %q does not specify protocol", publishPort)
@@ -111,27 +111,27 @@ func newDockerRunCmd(env Environment) *cobra.Command {
 				fmt.Fprintf(cmd.ErrOrStderr(), "Launching instance %#v\n", launchOpts)
 			}
 
-			_, err = lxcClient.WaitForLaunchInstance(cmd.Context(), cfg.Name, launchOpts)
+			_, err = lxcClient.WaitForLaunchInstance(cmd.Context(), flags.Name, launchOpts)
 			return err
 		},
 	}
 
-	cmd.Flags().BoolVar(&cfg.Init, "init", false, "use entrypoint")
-	cmd.Flags().BoolVar(&cfg.TTY, "tty", true, "tty")
-	cmd.Flags().BoolVar(&cfg.Privileged, "privileged", true, "privileged")
-	cmd.Flags().BoolVar(&cfg.Detach, "detach", true, "detach")
-	cmd.Flags().StringVar(&cfg.CgroupNS, "cgroupns", "private", "cgroup namespace")
-	cmd.Flags().StringVar(&cfg.Network, "net", "kind", "network")
-	cmd.Flags().StringVar(&cfg.Restart, "restart", "on-failure:1", "restart")
-	cmd.Flags().StringToStringVar(&cfg.SecurityOpts, "security-opt", nil, "security opt")
-	cmd.Flags().StringSliceVar(&cfg.Volumes, "volume", nil, "volumes")
-	cmd.Flags().StringSliceVar(&cfg.Tmpfs, "tmpfs", nil, "tmpfs mounts")
+	cmd.Flags().BoolVar(&flags.Init, "init", false, "use entrypoint")
+	cmd.Flags().BoolVar(&flags.TTY, "tty", true, "tty")
+	cmd.Flags().BoolVar(&flags.Privileged, "privileged", true, "privileged")
+	cmd.Flags().BoolVar(&flags.Detach, "detach", true, "detach")
+	cmd.Flags().StringVar(&flags.CgroupNS, "cgroupns", "private", "cgroup namespace")
+	cmd.Flags().StringVar(&flags.Network, "net", "kind", "network")
+	cmd.Flags().StringVar(&flags.Restart, "restart", "on-failure:1", "restart")
+	cmd.Flags().StringToStringVar(&flags.SecurityOpts, "security-opt", nil, "security opt")
+	cmd.Flags().StringSliceVar(&flags.Volumes, "volume", nil, "volumes")
+	cmd.Flags().StringSliceVar(&flags.Tmpfs, "tmpfs", nil, "tmpfs mounts")
 
-	cmd.Flags().StringVar(&cfg.Name, "name", "", "container name")
-	cmd.Flags().StringVar(&cfg.Hostname, "hostname", "", "container host name")
-	cmd.Flags().StringSliceVarP(&cfg.Environment, "environment", "e", nil, "environment")
-	cmd.Flags().StringToStringVar(&cfg.Labels, "label", nil, "labels")
-	cmd.Flags().StringSliceVar(&cfg.PublishPorts, "publish", nil, "publish ports")
+	cmd.Flags().StringVar(&flags.Name, "name", "", "container name")
+	cmd.Flags().StringVar(&flags.Hostname, "hostname", "", "container host name")
+	cmd.Flags().StringSliceVarP(&flags.Environment, "environment", "e", nil, "environment")
+	cmd.Flags().StringToStringVar(&flags.Labels, "label", nil, "labels")
+	cmd.Flags().StringSliceVar(&flags.PublishPorts, "publish", nil, "publish ports")
 
 	return cmd
 }

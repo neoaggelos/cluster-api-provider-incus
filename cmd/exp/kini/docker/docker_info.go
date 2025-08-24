@@ -12,7 +12,7 @@ import (
 // docker info --format '{{json .SecurityOptions}}'
 func newDockerInfoCmd(env Environment) *cobra.Command {
 	var (
-		cfg struct {
+		flags struct {
 			Format string
 		}
 
@@ -32,9 +32,9 @@ func newDockerInfoCmd(env Environment) *cobra.Command {
 		Use:          "info",
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			log.V(2).Info("docker info", "config", cfg)
+			log.V(2).Info("docker info", "flags", flags)
 
-			if cfg.Format == "" {
+			if flags.Format == "" {
 				lxcClient, err := env.Client(cmd.Context())
 				if err != nil {
 					return fmt.Errorf("failed to initialize client: %w", err)
@@ -53,9 +53,9 @@ func newDockerInfoCmd(env Environment) *cobra.Command {
 				return nil
 			}
 
-			opts, ok := securityOptionsByFormatAndPrivileged[cfg.Format]
+			opts, ok := securityOptionsByFormatAndPrivileged[flags.Format]
 			if !ok {
-				return fmt.Errorf("unknown format %q", cfg.Format)
+				return fmt.Errorf("unknown format %q", flags.Format)
 			}
 
 			fmt.Println(opts[env.Privileged()])
@@ -64,7 +64,7 @@ func newDockerInfoCmd(env Environment) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&cfg.Format, "format", "", "Output format")
+	cmd.Flags().StringVar(&flags.Format, "format", "", "Output format")
 
 	return cmd
 }

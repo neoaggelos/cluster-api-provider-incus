@@ -8,7 +8,7 @@ import (
 
 // docker rm -f -v c1-control-plane
 func newDockerRmCmd(env Environment) *cobra.Command {
-	var cfg struct {
+	var flags struct {
 		Force   bool
 		Volumes bool
 	}
@@ -17,7 +17,7 @@ func newDockerRmCmd(env Environment) *cobra.Command {
 		Use:  "rm",
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			log.V(2).Info("docker rm", "config", cfg, "args", args)
+			log.V(2).Info("docker rm", "flags", flags, "args", args)
 
 			lxcClient, err := env.Client(cmd.Context())
 			if err != nil {
@@ -28,8 +28,8 @@ func newDockerRmCmd(env Environment) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().BoolVarP(&cfg.Force, "force", "f", false, "Force delete")
-	cmd.Flags().BoolVarP(&cfg.Volumes, "volumes", "v", false, "Delete volumes")
+	cmd.Flags().BoolVarP(&flags.Force, "force", "f", false, "Force delete")
+	cmd.Flags().BoolVarP(&flags.Volumes, "volumes", "v", false, "Delete volumes")
 
 	return cmd
 }

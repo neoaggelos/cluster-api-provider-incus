@@ -8,7 +8,7 @@ import (
 )
 
 func newKiniExampleCmd() *cobra.Command {
-	// var cfg struct {
+	// var flags struct {
 	// 	format string
 	// }
 

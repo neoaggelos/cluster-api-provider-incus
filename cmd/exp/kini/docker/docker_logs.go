@@ -10,7 +10,7 @@ import (
 // docker logs -f c1-control-plane
 // docker logs c1-control-plane
 func newDockerLogsCmd(env Environment) *cobra.Command {
-	var cfg struct {
+	var flags struct {
 		Follow bool
 	}
 	cmd := &cobra.Command{
@@ -18,7 +18,7 @@ func newDockerLogsCmd(env Environment) *cobra.Command {
 		Args:         cobra.ExactArgs(1),
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			log.V(2).Info("docker logs", "cfg", cfg, "args", args)
+			log.V(2).Info("docker logs", "flags", flags, "args", args)
 
 			lxcClient, err := env.Client(cmd.Context())
 			if err != nil {
@@ -26,7 +26,7 @@ func newDockerLogsCmd(env Environment) *cobra.Command {
 			}
 
 			command := []string{"journalctl", "--boot", "--no-tail"}
-			if cfg.Follow {
+			if flags.Follow {
 				command = append(command, "--follow")
 			}
 
@@ -34,7 +34,7 @@ func newDockerLogsCmd(env Environment) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().BoolVarP(&cfg.Follow, "follow", "f", false, "follow logs")
+	cmd.Flags().BoolVarP(&flags.Follow, "follow", "f", false, "follow logs")
 
 	return cmd
 }

@@ -16,18 +16,16 @@ import (
 // docker inspect --format '{{ with (index (index .NetworkSettings.Ports "6443/tcp") 0) }}{{ printf "%s\t%s" .HostIp .HostPort }}{{ end }}' c1-control-plane
 // docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}},{{.GlobalIPv6Address}}{{end}}' c1-control-plane
 func newDockerInspectCmd(env Environment) *cobra.Command {
-	var (
-		cfg struct {
-			Format string
-		}
-	)
+	var flags struct {
+		Format string
+	}
 
 	cmd := &cobra.Command{
 		Use:          "inspect INSTANCE",
 		SilenceUsage: true,
 		Args:         cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			log.V(2).Info("docker inspect", "config", cfg, "args", args)
+			log.V(2).Info("docker inspect", "flags", flags, "args", args)
 
 			lxcClient, err := env.Client(cmd.Context())
 			if err != nil {
@@ -39,7 +37,7 @@ func newDockerInspectCmd(env Environment) *cobra.Command {
 				return fmt.Errorf("failed to retrieve instance %q: %w", args[0], err)
 			}
 
-			switch cfg.Format {
+			switch flags.Format {
 			case ``:
 				b, err := yaml.Marshal(instance)
 				if err != nil {
@@ -87,12 +85,12 @@ func newDockerInspectCmd(env Environment) *cobra.Command {
 				fmt.Printf("%s,%s\n", ipv4, ipv6)
 				return nil
 			default:
-				return fmt.Errorf("unknown format %q", cfg.Format)
+				return fmt.Errorf("unknown format %q", flags.Format)
 			}
 		},
 	}
 
-	cmd.Flags().StringVar(&cfg.Format, "format", "", "Output format")
+	cmd.Flags().StringVar(&flags.Format, "format", "", "Output format")
 
 	return cmd
 }
