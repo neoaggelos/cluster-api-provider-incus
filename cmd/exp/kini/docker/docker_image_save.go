@@ -13,7 +13,7 @@ import (
 )
 
 // docker save -o /tmp/images-tar2590373421/images.tar registry.k8s.io/cluster-api/cluster-api-controller:v1.9.3
-func newDockerSaveCmd(env Environment) *cobra.Command {
+func newDockerImageSaveCmd(env Environment) *cobra.Command {
 	var flags struct {
 		Output   string
 		Platform string

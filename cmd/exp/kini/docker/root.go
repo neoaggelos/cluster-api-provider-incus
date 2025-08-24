@@ -56,6 +56,9 @@ func NewCmd() *cobra.Command {
 	}
 
 	cmd.AddCommand(newDockerExecCmd(env))
+	cmd.AddCommand(newDockerImageCmd(env))
+	cmd.AddCommand(newDockerImagePullCmd(env)) // "docker pull" same as "docker image pull"
+	cmd.AddCommand(newDockerImageSaveCmd(env)) // "docker save" same as "docker image save"
 	cmd.AddCommand(newDockerInfoCmd(env))
 	cmd.AddCommand(newDockerInspectCmd(env))
 	cmd.AddCommand(newDockerLogsCmd(env))
@@ -63,7 +66,6 @@ func NewCmd() *cobra.Command {
 	cmd.AddCommand(newDockerPsCmd(env))
 	cmd.AddCommand(newDockerRmCmd(env))
 	cmd.AddCommand(newDockerRunCmd(env))
-	cmd.AddCommand(newDockerSaveCmd(env))
 
 	return cmd
 }
