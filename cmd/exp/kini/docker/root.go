@@ -63,6 +63,7 @@ func NewCmd() *cobra.Command {
 	cmd.AddCommand(newDockerPsCmd(env))
 	cmd.AddCommand(newDockerRmCmd(env))
 	cmd.AddCommand(newDockerRunCmd(env))
+	cmd.AddCommand(newDockerSaveCmd(env))
 
 	return cmd
 }

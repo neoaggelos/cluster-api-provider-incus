@@ -3,6 +3,7 @@ package docker
 import (
 	"context"
 	"io"
+	"os"
 	"strconv"
 
 	"github.com/lxc/cluster-api-provider-incus/internal/lxc"
@@ -42,4 +43,24 @@ func (e *Environment) KindInstances(ctx context.Context) bool {
 
 		return client.SupportsInstanceOCI() == nil
 	}
+}
+
+// CacheDir is a local directory for caching image tarballs
+func (e *Environment) CacheDir() string {
+	cache := e.Getenv("KINI_CACHE")
+
+	// KINI_CACHE=no disables cache
+	if v, err := strconv.ParseBool(cache); err == nil && !v {
+		return ""
+	}
+	if cache == "" {
+		cache = os.ExpandEnv("$HOME/.cache/kini")
+	}
+
+	if err := os.MkdirAll(cache, 0755); err != nil {
+		log.Error(err, "Failed to create local cache directory", "dir", cache)
+		return ""
+	}
+
+	return cache
 }
