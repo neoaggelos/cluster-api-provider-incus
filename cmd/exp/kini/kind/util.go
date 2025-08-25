@@ -4,12 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-
-	"k8s.io/klog/v2"
-)
-
-var (
-	log = klog.Background()
 )
 
 func setupSelfAsDocker() (func() error, error) {

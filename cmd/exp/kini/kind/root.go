@@ -4,11 +4,17 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"k8s.io/klog/v2"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/kind/pkg/cmd"
 	"sigs.k8s.io/kind/pkg/cmd/kind"
+)
+
+var (
+	log = ctrl.Log
 )
 
 func NewCmd() *cobra.Command {
@@ -38,6 +44,8 @@ func NewCmd() *cobra.Command {
 		cmd.PersistentPostRunE = func(cmd *cobra.Command, args []string) error {
 			return cleanup()
 		}
+
+		log.V(1).Info("kind command invocation", "command", strings.Join(os.Args, " "))
 		return nil
 	}
 
