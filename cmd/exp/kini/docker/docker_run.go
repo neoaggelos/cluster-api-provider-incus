@@ -55,12 +55,12 @@ func newDockerRunCmd(env Environment) *cobra.Command {
 			}
 
 			// environment
-			var environment []string
+			var environment string
 			for _, v := range flags.Environment {
 				if !strings.Contains(v, "=") {
 					v = fmt.Sprintf("%s=%s", v, env.Getenv(v))
 				}
-				environment = append(environment, v)
+				environment += v + "\n"
 			}
 
 			// labels
@@ -80,10 +80,10 @@ func newDockerRunCmd(env Environment) *cobra.Command {
 				var connect, listen string
 				parts := strings.Split(publishPort, ":")
 				switch len(parts) {
-				case 2: // 16443:6443
+				case 2: // "16443:6443" -> listen="tcp::16443", connect="tcp::6443"
 					listen = fmt.Sprintf("%s::%s", protocol, parts[0])
 					connect = fmt.Sprintf("%s::%s", protocol, parts[1])
-				case 3: // 127.0.0.1:16443:6443
+				case 3: // "127.0.0.1:16443:6443" -> listen="tcp:127.0.0.1:16443", connect="tcp::6443"
 					listen = fmt.Sprintf("%s:%s:%s", protocol, parts[0], parts[1])
 					connect = fmt.Sprintf("%s::%s", protocol, parts[2])
 				default:
@@ -115,7 +115,7 @@ func newDockerRunCmd(env Environment) *cobra.Command {
 				WithConfig(labels).
 				WithDevices(proxyDevices).
 				WithReplacements(map[string]*strings.Replacer{
-					"/etc/environment": strings.NewReplacer("", strings.Join(environment, "\n")+"\n"),
+					"/etc/environment": strings.NewReplacer("", environment),
 				})
 
 			log.V(4).Info("Launching instance", "opts", strings.ReplaceAll(fmt.Sprintf("%#v", launchOpts), "\"", "'"))
