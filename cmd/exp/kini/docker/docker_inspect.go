@@ -21,11 +21,12 @@ func newDockerInspectCmd(env Environment) *cobra.Command {
 	}
 
 	cmd := &cobra.Command{
-		Use:          "inspect INSTANCE",
-		SilenceUsage: true,
-		Args:         cobra.ExactArgs(1),
+		Use:           "inspect INSTANCE",
+		SilenceUsage:  true,
+		SilenceErrors: true,
+		Args:          cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			log.V(2).Info("docker inspect", "flags", flags, "args", args)
+			log.V(5).Info("docker inspect", "flags", flags, "args", args)
 
 			lxcClient, err := env.Client(cmd.Context())
 			if err != nil {
@@ -90,7 +91,7 @@ func newDockerInspectCmd(env Environment) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&flags.Format, "format", "", "Output format")
+	cmd.Flags().StringVarP(&flags.Format, "format", "f", "", "Output format")
 
 	return cmd
 }

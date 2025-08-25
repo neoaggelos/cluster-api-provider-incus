@@ -14,10 +14,11 @@ func newDockerNetworkLsCmd(env Environment) *cobra.Command {
 	}
 
 	cmd := &cobra.Command{
-		Use:          "ls NETWORK",
-		SilenceUsage: true,
+		Use:           "ls NETWORK",
+		SilenceUsage:  true,
+		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			log.V(2).Info("docker network ls", "flags", flags)
+			log.V(5).Info("docker network ls", "flags", flags)
 
 			if flags.Filter != "name=^kind$" {
 				return fmt.Errorf("invalid filter %q", flags.Filter)

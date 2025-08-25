@@ -2,13 +2,12 @@ package docker
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"os"
-	"strconv"
+	"strings"
 
 	"github.com/spf13/cobra"
-	"k8s.io/component-base/logs"
-	logsv1 "k8s.io/component-base/logs/api/v1"
 	"k8s.io/klog/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
 
@@ -16,8 +15,7 @@ import (
 )
 
 var (
-	logOptions = logs.NewOptions()
-	log        = ctrl.Log
+	log = ctrl.Log
 )
 
 func NewCmd() *cobra.Command {
@@ -38,18 +36,26 @@ func NewCmd() *cobra.Command {
 	}
 
 	cmd := &cobra.Command{
-		Use: "docker",
+		Use:           "docker",
+		SilenceErrors: true,
+		SilenceUsage:  true,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			// configure logging
-			ctrl.SetLogger(klog.Background())
+			logFlags := &flag.FlagSet{}
+			klog.InitFlags(logFlags)
+
+			if logFile := os.Getenv("KINI_LOG"); logFile != "" {
+				logFlags.Set("logtostderr", "false")
+				logFlags.Set("log_file", logFile)
+				logFlags.Set("alsologtostderr", "true")
+				logFlags.Set("skip_log_headers", "true")
+			}
 			if verbosity := os.Getenv("V"); verbosity != "" {
-				if v, err := strconv.ParseUint(verbosity, 10, 32); err == nil {
-					logOptions.Verbosity = logsv1.VerbosityLevel(v)
-				}
+				logFlags.Set("v", verbosity)
 			}
-			if err := logsv1.ValidateAndApply(logOptions, nil); err != nil {
-				return fmt.Errorf("failed to configure logging: %w", err)
-			}
+			logFlags.Parse(nil)
+
+			log.V(1).Info("docker command invocation", "command", strings.Join(os.Args, " "))
+
 			return nil
 		},
 		Version: "kini",

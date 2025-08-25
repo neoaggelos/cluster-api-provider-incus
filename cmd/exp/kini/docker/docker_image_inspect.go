@@ -14,11 +14,12 @@ func newDockerImageInspectCmd(env Environment) *cobra.Command {
 	}
 
 	cmd := &cobra.Command{
-		Use:          "inspect IMAGE",
-		SilenceUsage: true,
-		Args:         cobra.ExactArgs(1),
+		Use:           "inspect IMAGE",
+		SilenceUsage:  true,
+		SilenceErrors: true,
+		Args:          cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			log.V(2).Info("docker image inspect", "flags", flags)
+			log.V(5).Info("docker image inspect", "flags", flags)
 
 			if flags.Format != "{{ .Id }}" {
 				return fmt.Errorf("invalid format %q", flags.Format)

@@ -14,11 +14,12 @@ func newDockerLogsCmd(env Environment) *cobra.Command {
 		Follow bool
 	}
 	cmd := &cobra.Command{
-		Use:          "logs INSTANCE",
-		Args:         cobra.ExactArgs(1),
-		SilenceUsage: true,
+		Use:           "logs INSTANCE",
+		Args:          cobra.ExactArgs(1),
+		SilenceUsage:  true,
+		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			log.V(2).Info("docker logs", "flags", flags, "args", args)
+			log.V(5).Info("docker logs", "flags", flags, "args", args)
 
 			lxcClient, err := env.Client(cmd.Context())
 			if err != nil {

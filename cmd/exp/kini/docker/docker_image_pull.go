@@ -10,8 +10,9 @@ func newDockerImagePullCmd(env Environment) *cobra.Command {
 		Use:          "pull IMAGE ...",
 		Args:         cobra.MinimumNArgs(1),
 		SilenceUsage: true,
+		SilenceErrors:      true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			log.V(2).Info("docker pull", "args", args)
+			log.V(5).Info("docker pull", "args", args)
 
 			return nil
 		},

@@ -29,10 +29,11 @@ func newDockerInfoCmd(env Environment) *cobra.Command {
 	)
 
 	cmd := &cobra.Command{
-		Use:          "info",
-		SilenceUsage: true,
+		Use:           "info",
+		SilenceUsage:  true,
+		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			log.V(2).Info("docker info", "flags", flags)
+			log.V(5).Info("docker info", "flags", flags)
 
 			if flags.Format == "" {
 				lxcClient, err := env.Client(cmd.Context())

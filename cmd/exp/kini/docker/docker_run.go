@@ -23,6 +23,7 @@ func newDockerRunCmd(env Environment) *cobra.Command {
 		Restart      string
 		SecurityOpts map[string]string
 		Volumes      []string
+		Devices      []string
 		Tmpfs        []string
 
 		// configuration we care about
@@ -34,11 +35,12 @@ func newDockerRunCmd(env Environment) *cobra.Command {
 	}
 
 	cmd := &cobra.Command{
-		Use:          "run [image]",
-		Args:         cobra.ExactArgs(1),
-		SilenceUsage: true,
+		Use:           "run [image]",
+		Args:          cobra.ExactArgs(1),
+		SilenceUsage:  true,
+		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			log.V(2).Info("docker run", "flags", flags, "args", args)
+			log.V(5).Info("docker run", "flags", flags, "args", args)
 
 			lxcClient, err := env.Client(cmd.Context())
 			if err != nil {
@@ -105,11 +107,11 @@ func newDockerRunCmd(env Environment) *cobra.Command {
 				}).
 				WithConfig(labels).
 				WithDevices(proxyDevices).
-				WithSeedFiles(map[string]string{"/etc/environment": strings.Join(environment, "\n")})
+				WithReplacements(map[string]*strings.Replacer{
+					"/etc/environment": strings.NewReplacer("", strings.Join(environment, "\n")+"\n"),
+				})
 
-			if log.V(4).Enabled() {
-				fmt.Fprintf(cmd.ErrOrStderr(), "Launching instance %#v\n", launchOpts)
-			}
+			log.V(4).Info("Launching instance", "opts", strings.ReplaceAll(fmt.Sprintf("%#v", launchOpts), "\"", "'"))
 
 			_, err = lxcClient.WaitForLaunchInstance(cmd.Context(), flags.Name, launchOpts)
 			return err
@@ -125,6 +127,7 @@ func newDockerRunCmd(env Environment) *cobra.Command {
 	cmd.Flags().StringVar(&flags.Restart, "restart", "on-failure:1", "restart")
 	cmd.Flags().StringToStringVar(&flags.SecurityOpts, "security-opt", nil, "security opt")
 	cmd.Flags().StringSliceVar(&flags.Volumes, "volume", nil, "volumes")
+	cmd.Flags().StringSliceVar(&flags.Devices, "device", nil, "devices")
 	cmd.Flags().StringSliceVar(&flags.Tmpfs, "tmpfs", nil, "tmpfs mounts")
 
 	cmd.Flags().StringVar(&flags.Name, "name", "", "container name")

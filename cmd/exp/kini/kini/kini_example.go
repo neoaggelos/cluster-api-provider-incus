@@ -13,8 +13,9 @@ func newKiniExampleCmd() *cobra.Command {
 	// }
 
 	cmd := &cobra.Command{
-		Use:          "example",
-		SilenceUsage: true,
+		Use:           "example",
+		SilenceErrors: true,
+		SilenceUsage:  true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			log.V(1).Info("Running kini example")
 

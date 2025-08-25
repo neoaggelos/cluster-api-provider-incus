@@ -20,9 +20,10 @@ func newDockerExecCmd(env Environment) *cobra.Command {
 		Use:                "exec INSTANCE COMMAND ...",
 		Args:               cobra.MinimumNArgs(2),
 		SilenceUsage:       true,
+		SilenceErrors:      true,
 		DisableFlagParsing: true, // do not parse flags, as they will passed through as command-line to the instance
 		RunE: func(cmd *cobra.Command, args []string) error {
-			log.V(2).Info("docker exec", "args", args)
+			log.V(5).Info("docker exec", "args", args)
 
 			// ignore --privileged and -i flags
 			for args[0] == "--privileged" || args[0] == "-i" {

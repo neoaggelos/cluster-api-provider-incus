@@ -1,20 +1,20 @@
 package kind
 
 import (
+	"flag"
 	"fmt"
 	"os"
-	"strconv"
 
 	"github.com/spf13/cobra"
-	"k8s.io/component-base/logs"
-	logsv1 "k8s.io/component-base/logs/api/v1"
+	"k8s.io/klog/v2"
 	"sigs.k8s.io/kind/pkg/cmd"
 	"sigs.k8s.io/kind/pkg/cmd/kind"
 )
 
 func NewCmd() *cobra.Command {
 	cmd := kind.NewCommand(cmd.NewLogger(), cmd.StandardIOStreams())
-	cmd.SilenceErrors = false
+	cmd.SilenceErrors = true
+	cmd.SilenceUsage = true
 
 	kindPreRunE := cmd.PersistentPreRunE
 	cmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
@@ -23,17 +23,11 @@ func NewCmd() *cobra.Command {
 		}
 
 		// use the --verbosity/-v flag from the kind command to set log level
-		logOptions := logs.NewOptions()
+		logFlags := &flag.FlagSet{}
+		klog.InitFlags(logFlags)
 		if verbosity := cmd.Flags().Lookup("verbosity").Value.String(); verbosity != "" {
-			if v, err := strconv.ParseUint(verbosity, 10, 32); err == nil {
-				logOptions.Verbosity = logsv1.VerbosityLevel(v)
-			}
-		}
-		if err := logsv1.ValidateAndApply(logOptions, nil); err != nil {
-			return fmt.Errorf("failed to configure logging: %w", err)
-		}
-		if logOptions.Verbosity != 0 {
-			_ = os.Setenv("V", fmt.Sprintf("%d", logOptions.Verbosity))
+			logFlags.Set("v", verbosity)
+			_ = os.Setenv("V", verbosity)
 		}
 
 		// configure self for docker commands

@@ -20,10 +20,11 @@ func newDockerPsCmd(env Environment) *cobra.Command {
 	}
 
 	cmd := &cobra.Command{
-		Use:          "ps",
-		SilenceUsage: true,
+		Use:           "ps",
+		SilenceUsage:  true,
+		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			log.V(2).Info("docker ps", "flags", flags)
+			log.V(5).Info("docker ps", "flags", flags)
 
 			lxcClient, err := env.Client(cmd.Context())
 			if err != nil {

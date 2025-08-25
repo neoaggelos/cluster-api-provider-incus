@@ -7,28 +7,29 @@ import (
 
 	"github.com/spf13/cobra"
 	cliflag "k8s.io/component-base/cli/flag"
-	"k8s.io/component-base/logs"
-	logsv1 "k8s.io/component-base/logs/api/v1"
 	"k8s.io/klog/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
 var (
-	logOptions = logs.NewOptions()
-	log        = ctrl.Log
+	log = ctrl.Log
 )
 
 func NewCmd() *cobra.Command {
+	var logFlags = &flag.FlagSet{}
+
 	cmd := &cobra.Command{
 		Use:          "kini",
 		SilenceUsage: true,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			ctrl.SetLogger(klog.Background())
-			if err := logsv1.ValidateAndApply(logOptions, nil); err != nil {
-				return fmt.Errorf("failed to configure logging: %w", err)
+			if logFile := os.Getenv("KINI_LOG"); logFile != "" {
+				logFlags.Set("logtostderr", "false")
+				logFlags.Set("log_file", logFile)
+				logFlags.Set("alsologtostderr", "true")
+				logFlags.Set("skip_log_headers", "true")
 			}
-			if logOptions.Verbosity != 0 {
-				_ = os.Setenv("V", fmt.Sprintf("%d", logOptions.Verbosity))
+			if v := cmd.Flags().Lookup("v").Value.String(); v != "" {
+				os.Setenv("V", v)
 			}
 
 			cleanup, err := setupSelfAsDocker()
@@ -43,16 +44,9 @@ func NewCmd() *cobra.Command {
 		},
 	}
 
-	logsv1.AddFlags(logOptions, cmd.PersistentFlags())
+	klog.InitFlags(logFlags)
 	cmd.SetGlobalNormalizationFunc(cliflag.WordSepNormalizeFunc)
-	cmd.PersistentFlags().AddGoFlagSet(flag.CommandLine)
-
-	_ = cmd.PersistentFlags().MarkHidden("kubeconfig")
-	_ = cmd.PersistentFlags().MarkHidden("log-text-info-buffer-size")
-	_ = cmd.PersistentFlags().MarkHidden("log-flush-frequency")
-	_ = cmd.PersistentFlags().MarkHidden("log-text-split-stream")
-	_ = cmd.PersistentFlags().MarkHidden("logging-format")
-
+	cmd.PersistentFlags().AddGoFlagSet(logFlags)
 	cmd.AddCommand(newKiniExampleCmd())
 
 	return cmd

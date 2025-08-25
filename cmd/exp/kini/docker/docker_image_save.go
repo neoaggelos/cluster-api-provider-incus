@@ -19,11 +19,12 @@ func newDockerImageSaveCmd(env Environment) *cobra.Command {
 		Platform string
 	}
 	cmd := &cobra.Command{
-		Use:          "save IMAGE ...",
-		Args:         cobra.MinimumNArgs(1),
-		SilenceUsage: true,
+		Use:           "save IMAGE ...",
+		Args:          cobra.MinimumNArgs(1),
+		SilenceUsage:  true,
+		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			log.V(2).Info("docker save", "flags", flags, "args", args)
+			log.V(5).Info("docker save", "flags", flags, "args", args)
 
 			cacheDir := env.CacheDir()
 			var opts []remote.Option

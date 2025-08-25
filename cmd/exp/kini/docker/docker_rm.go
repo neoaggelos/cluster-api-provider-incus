@@ -14,10 +14,12 @@ func newDockerRmCmd(env Environment) *cobra.Command {
 	}
 
 	cmd := &cobra.Command{
-		Use:  "rm",
-		Args: cobra.ExactArgs(1),
+		Use:           "rm",
+		SilenceUsage:  true,
+		SilenceErrors: true,
+		Args:          cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			log.V(2).Info("docker rm", "flags", flags, "args", args)
+			log.V(5).Info("docker rm", "flags", flags, "args", args)
 
 			lxcClient, err := env.Client(cmd.Context())
 			if err != nil {

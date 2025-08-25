@@ -5,10 +5,12 @@ import (
 	"os"
 	"path/filepath"
 
+	"k8s.io/klog/v2"
+	ctrl "sigs.k8s.io/controller-runtime"
+
 	"github.com/lxc/cluster-api-provider-incus/cmd/exp/kini/docker"
 	"github.com/lxc/cluster-api-provider-incus/cmd/exp/kini/kind"
 	"github.com/lxc/cluster-api-provider-incus/cmd/exp/kini/kini"
-	ctrl "sigs.k8s.io/controller-runtime"
 )
 
 var (
@@ -19,9 +21,12 @@ var (
 		"docker": docker.NewCmd().ExecuteContext,
 		"kind":   kind.NewCmd().ExecuteContext,
 	}
+
+	log = ctrl.Log
 )
 
 func main() {
+	defer klog.Flush()
 	run, ok := cmds[filepath.Base(os.Args[0])]
 	if cmdName := os.Getenv("KINI_CMD"); cmdName != "" {
 		run, ok = cmds[cmdName]
@@ -34,10 +39,14 @@ func main() {
 	_ = os.Setenv("KINI_CMD", "")
 
 	if err := run(ctx); err != nil {
+		log.Error(err, "command failed")
+		klog.Flush() // ensure error is flushed before exit
 		os.Exit(1)
 	}
 }
 
 func init() {
 	ctx = ctrl.SetupSignalHandler()
+	ctrl.SetLogger(klog.Background())
+	ctx = ctrl.LoggerInto(ctx, log)
 }
