@@ -7,7 +7,7 @@ import (
 )
 
 // docker network ls --filter=name=^kind$ --format={{.ID}}
-func newDockerNetworkLsCmd(env Environment) *cobra.Command {
+func newDockerNetworkLsCmd(_ Environment) *cobra.Command {
 	var flags struct {
 		Filter string
 		Format string

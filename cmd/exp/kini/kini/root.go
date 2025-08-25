@@ -23,13 +23,13 @@ func NewCmd() *cobra.Command {
 		SilenceUsage: true,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			if logFile := os.Getenv("KINI_LOG"); logFile != "" {
-				logFlags.Set("logtostderr", "false")
-				logFlags.Set("log_file", logFile)
-				logFlags.Set("alsologtostderr", "true")
-				logFlags.Set("skip_log_headers", "true")
+				_ = logFlags.Set("logtostderr", "false")
+				_ = logFlags.Set("log_file", logFile)
+				_ = logFlags.Set("alsologtostderr", "true")
+				_ = logFlags.Set("skip_log_headers", "true")
 			}
 			if v := cmd.Flags().Lookup("v").Value.String(); v != "" {
-				os.Setenv("V", v)
+				_ = os.Setenv("V", v)
 			}
 
 			cleanup, err := setupSelfAsDocker()

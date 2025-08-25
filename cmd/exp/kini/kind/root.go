@@ -26,7 +26,7 @@ func NewCmd() *cobra.Command {
 		logFlags := &flag.FlagSet{}
 		klog.InitFlags(logFlags)
 		if verbosity := cmd.Flags().Lookup("verbosity").Value.String(); verbosity != "" {
-			logFlags.Set("v", verbosity)
+			_ = logFlags.Set("v", verbosity)
 			_ = os.Setenv("V", verbosity)
 		}
 

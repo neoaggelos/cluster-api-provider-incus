@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/lxc/incus/v6/shared/api"
 	"github.com/spf13/cobra"
 
 	"github.com/lxc/cluster-api-provider-incus/internal/instances"
-	"github.com/lxc/incus/v6/shared/api"
 )
 
 // docker run --name c1-control-plane --hostname c1-control-plane --label io.x-k8s.kind.role=control-plane --privileged --security-opt seccomp=unconfined --security-opt apparmor=unconfined --tmpfs /tmp --tmpfs /run --volume /var --volume /lib/modules:/lib/modules:ro -e KIND_EXPERIMENTAL_CONTAINERD_SNAPSHOTTER --detach --tty --label io.x-k8s.kind.cluster=c1 --net kind --restart=on-failure:1 --init=false --cgroupns=private --publish=127.0.0.1:41435:6443/TCP -e KUBECONFIG=/etc/kubernetes/admin.conf kindest/node:v1.31.2@sha256:18fbefc20a7113353c7b75b5c869d7145a6abd6269154825872dc59c1329912e

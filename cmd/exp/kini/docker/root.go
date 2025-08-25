@@ -44,15 +44,14 @@ func NewCmd() *cobra.Command {
 			klog.InitFlags(logFlags)
 
 			if logFile := os.Getenv("KINI_LOG"); logFile != "" {
-				logFlags.Set("logtostderr", "false")
-				logFlags.Set("log_file", logFile)
-				logFlags.Set("alsologtostderr", "true")
-				logFlags.Set("skip_log_headers", "true")
+				_ = logFlags.Set("logtostderr", "false")
+				_ = logFlags.Set("log_file", logFile)
+				_ = logFlags.Set("alsologtostderr", "true")
+				_ = logFlags.Set("skip_log_headers", "true")
 			}
 			if verbosity := os.Getenv("V"); verbosity != "" {
-				logFlags.Set("v", verbosity)
+				_ = logFlags.Set("v", verbosity)
 			}
-			logFlags.Parse(nil)
 
 			log.V(1).Info("docker command invocation", "command", strings.Join(os.Args, " "))
 

@@ -8,7 +8,7 @@ import (
 )
 
 // docker image inspect -f '{{ .Id }}' registry.k8s.io/cluster-api/cluster-api-controller:v1.9.3
-func newDockerImageInspectCmd(env Environment) *cobra.Command {
+func newDockerImageInspectCmd(_ Environment) *cobra.Command {
 	var flags struct {
 		Format string
 	}

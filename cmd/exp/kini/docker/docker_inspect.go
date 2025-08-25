@@ -5,9 +5,10 @@ import (
 	"net/netip"
 	"strings"
 
-	"github.com/lxc/cluster-api-provider-incus/internal/lxc"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/yaml"
+
+	"github.com/lxc/cluster-api-provider-incus/internal/lxc"
 )
 
 // docker inspect c1-control-plane
