@@ -42,6 +42,11 @@ func newDockerRunCmd(env Environment) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			log.V(5).Info("docker run", "flags", flags, "args", args)
 
+			// TODO(neoaggelos): implement lxc mode
+			if !env.KindInstances(cmd.Context()) {
+				return fmt.Errorf("cannot launch kind instances")
+			}
+
 			lxcClient, err := env.Client(cmd.Context())
 			if err != nil {
 				return fmt.Errorf("failed to initialize client: %w", err)
