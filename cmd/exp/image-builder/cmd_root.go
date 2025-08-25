@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 	cliflag "k8s.io/component-base/cli/flag"
-	logsv1 "k8s.io/component-base/logs/api/v1"
+	"k8s.io/klog/v2"
 
 	"github.com/lxc/cluster-api-provider-incus/internal/lxc"
 )
@@ -45,10 +45,6 @@ var (
 		Use:          "image-builder",
 		SilenceUsage: true,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			if err := logsv1.ValidateAndApply(logOptions, nil); err != nil {
-				return fmt.Errorf("failed to configure logging: %w", err)
-			}
-
 			switch cfg.instanceType {
 			case lxc.Container, lxc.VirtualMachine:
 			default:
@@ -84,15 +80,14 @@ func init() {
 	rootCmd.AddGroup(&cobra.Group{ID: "build", Title: "Available Image Types:"})
 	rootCmd.AddCommand(kubeadmCmd, haproxyCmd)
 
-	logsv1.AddFlags(logOptions, rootCmd.PersistentFlags())
 	rootCmd.SetGlobalNormalizationFunc(cliflag.WordSepNormalizeFunc)
-	rootCmd.PersistentFlags().AddGoFlagSet(flag.CommandLine)
 
-	_ = rootCmd.PersistentFlags().MarkHidden("kubeconfig")
-	_ = rootCmd.PersistentFlags().MarkHidden("log-text-info-buffer-size")
-	_ = rootCmd.PersistentFlags().MarkHidden("log-flush-frequency")
-	_ = rootCmd.PersistentFlags().MarkHidden("log-text-split-stream")
-	_ = rootCmd.PersistentFlags().MarkHidden("logging-format")
+	// logging flags
+	klog.InitFlags(nil)
+	flag.CommandLine.VisitAll(func(f *flag.Flag) {
+		f.Usage = "[logging] " + f.Usage
+	})
+	rootCmd.PersistentFlags().AddGoFlagSet(flag.CommandLine)
 
 	rootCmd.PersistentFlags().StringVar(&cfg.configFile, "config-file", "",
 		"Read client configuration from file")
