@@ -21,6 +21,9 @@ func setupSelfAsDocker() (func() error, error) {
 	if err := os.Symlink(self, filepath.Join(dir, "docker")); err != nil {
 		return nil, fmt.Errorf("failed to create symlink as docker for self: %w", err)
 	}
+	if err := os.Symlink(self, filepath.Join(dir, "kind")); err != nil {
+		return nil, fmt.Errorf("failed to create symlink as kind for self: %w", err)
+	}
 
 	log.V(4).Info("Setting up", "dir", dir)
 

@@ -48,6 +48,7 @@ func NewCmd() *cobra.Command {
 	cmd.SetGlobalNormalizationFunc(cliflag.WordSepNormalizeFunc)
 	cmd.PersistentFlags().AddGoFlagSet(logFlags)
 	cmd.AddCommand(newKiniExampleCmd())
+	cmd.AddCommand(newKiniActivateCmd())
 
 	return cmd
 }
