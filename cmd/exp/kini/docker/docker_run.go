@@ -11,6 +11,7 @@ import (
 )
 
 // docker run --name c1-control-plane --hostname c1-control-plane --label io.x-k8s.kind.role=control-plane --privileged --security-opt seccomp=unconfined --security-opt apparmor=unconfined --tmpfs /tmp --tmpfs /run --volume /var --volume /lib/modules:/lib/modules:ro -e KIND_EXPERIMENTAL_CONTAINERD_SNAPSHOTTER --detach --tty --label io.x-k8s.kind.cluster=c1 --net kind --restart=on-failure:1 --init=false --cgroupns=private --publish=127.0.0.1:41435:6443/TCP -e KUBECONFIG=/etc/kubernetes/admin.conf kindest/node:v1.31.2@sha256:18fbefc20a7113353c7b75b5c869d7145a6abd6269154825872dc59c1329912e
+// docker run --name t1-control-plane --hostname t1-control-plane --label io.x-k8s.kind.role=control-plane --privileged --security-opt seccomp=unconfined --security-opt apparmor=unconfined --tmpfs /tmp --tmpfs /run --volume /var --volume /lib/modules:/lib/modules:ro -e KIND_EXPERIMENTAL_CONTAINERD_SNAPSHOTTER --detach --tty --label io.x-k8s.kind.cluster=t1 --net kind --restart=on-failure:1 --init=false --cgroupns=private --userns=host --device /dev/fuse --publish=127.0.0.1:45295:6443/TCP -e KUBECONFIG=/etc/kubernetes/admin.conf kindest/node:v1.33.0@sha256:18fbefc20a7113353c7b75b5c869d7145a6abd6269154825872dc59c1329912e
 func newDockerRunCmd(env Environment) *cobra.Command {
 	var flags struct {
 		// passed in command line, but will be ignored
@@ -19,6 +20,7 @@ func newDockerRunCmd(env Environment) *cobra.Command {
 		Privileged   bool
 		Detach       bool
 		CgroupNS     string
+		UserNS       string
 		Network      string
 		Restart      string
 		SecurityOpts map[string]string
@@ -128,6 +130,7 @@ func newDockerRunCmd(env Environment) *cobra.Command {
 	cmd.Flags().BoolVar(&flags.Privileged, "privileged", true, "privileged")
 	cmd.Flags().BoolVar(&flags.Detach, "detach", true, "detach")
 	cmd.Flags().StringVar(&flags.CgroupNS, "cgroupns", "private", "cgroup namespace")
+	cmd.Flags().StringVar(&flags.UserNS, "userns", "", "user namespace")
 	cmd.Flags().StringVar(&flags.Network, "net", "kind", "network")
 	cmd.Flags().StringVar(&flags.Restart, "restart", "on-failure:1", "restart")
 	cmd.Flags().StringToStringVar(&flags.SecurityOpts, "security-opt", nil, "security opt")

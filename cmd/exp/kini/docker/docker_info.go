@@ -21,7 +21,7 @@ func newDockerInfoCmd(env Environment) *cobra.Command {
 				true:  `{"CgroupDriver":"systemd","CGroupVersion":"2","MemoryLimit":true,"CPUShares":true,"PidsLimit":true,"SecurityOptions":[]}`,
 				false: `{"CgroupDriver":"systemd","CGroupVersion":"2","MemoryLimit":true,"CPUShares":true,"PidsLimit":true,"SecurityOptions":["name=userns","name=rootless"]}`,
 			},
-			"{{json .SecurityOptions}}": {
+			"'{{json .SecurityOptions}}'": {
 				true:  `[]`,
 				false: `["name=userns","name=rootless"]`,
 			},
