@@ -34,8 +34,6 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/tools/leaderelection/resourcelock"
 	cliflag "k8s.io/component-base/cli/flag"
-	"k8s.io/component-base/logs"
-	logsv1 "k8s.io/component-base/logs/api/v1"
 	"k8s.io/klog/v2"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/cluster-api/controllers/remote"
@@ -75,7 +73,6 @@ var (
 	webhookKeyName              string
 	healthAddr                  string
 	managerOptions              = flags.ManagerOptions{}
-	logOptions                  = logs.NewOptions()
 
 	// CAPN specific flags.
 	concurrency int
@@ -90,7 +87,13 @@ func init() {
 }
 
 func InitFlags(fs *pflag.FlagSet) {
-	logsv1.AddFlags(logOptions, fs)
+	// logging flags
+	logFlags := &flag.FlagSet{}
+	klog.InitFlags(logFlags)
+	logFlags.VisitAll(func(f *flag.Flag) {
+		f.Usage = "[logging] " + f.Usage
+	})
+	fs.AddGoFlagSet(logFlags)
 
 	fs.BoolVar(&enableLeaderElection, "leader-elect", false,
 		"Enable leader election for controller manager. Enabling this will ensure there is only one"+
@@ -169,11 +172,6 @@ func main() {
 		os.Exit(1)
 	}
 	pflag.Parse()
-
-	if err := logsv1.ValidateAndApply(logOptions, nil); err != nil {
-		setupLog.Error(err, "Unable to start manager")
-		os.Exit(1)
-	}
 
 	// klog.Background will automatically use the right logger.
 	ctrl.SetLogger(klog.Background())

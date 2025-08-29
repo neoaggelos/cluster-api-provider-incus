@@ -4,15 +4,13 @@ import (
 	"context"
 	"os"
 
-	"k8s.io/component-base/logs"
 	"k8s.io/klog/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
 var (
-	ctx        context.Context
-	log        = ctrl.Log
-	logOptions = logs.NewOptions()
+	ctx context.Context
+	log = ctrl.Log
 )
 
 func main() {
