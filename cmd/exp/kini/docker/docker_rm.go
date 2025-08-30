@@ -7,6 +7,7 @@ import (
 )
 
 // docker rm -f -v c1-control-plane
+// docker rm -f -v c1-control-plane c1-control-plane2
 func newDockerRmCmd(env Environment) *cobra.Command {
 	var flags struct {
 		Force   bool
@@ -14,10 +15,10 @@ func newDockerRmCmd(env Environment) *cobra.Command {
 	}
 
 	cmd := &cobra.Command{
-		Use:           "rm",
+		Use:           "rm INSTANCE",
 		SilenceUsage:  true,
 		SilenceErrors: true,
-		Args:          cobra.ExactArgs(1),
+		Args:          cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			log.V(5).Info("docker rm", "flags", flags, "args", args)
 
@@ -26,7 +27,12 @@ func newDockerRmCmd(env Environment) *cobra.Command {
 				return fmt.Errorf("failed to initialize client: %w", err)
 			}
 
-			return lxcClient.WaitForDeleteInstance(cmd.Context(), args[0])
+			for _, arg := range args {
+				if err := lxcClient.WaitForDeleteInstance(cmd.Context(), arg); err != nil {
+					return fmt.Errorf("failed to delete instance %q: %w", arg, err)
+				}
+			}
+			return nil
 		},
 	}
 
