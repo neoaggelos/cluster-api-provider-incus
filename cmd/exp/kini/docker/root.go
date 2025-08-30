@@ -62,6 +62,7 @@ func NewCmd() *cobra.Command {
 
 	cmd.AddCommand(newDockerExecCmd(env))
 	cmd.AddCommand(newDockerImageCmd(env))
+	cmd.AddCommand(newDockerImageLoadCmd(env)) // "docker load" same as "docker image load"
 	cmd.AddCommand(newDockerImagePullCmd(env)) // "docker pull" same as "docker image pull"
 	cmd.AddCommand(newDockerImageSaveCmd(env)) // "docker save" same as "docker image save"
 	cmd.AddCommand(newDockerInfoCmd(env))

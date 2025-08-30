@@ -2,7 +2,9 @@ package docker
 
 import (
 	"fmt"
+	"path/filepath"
 	"runtime"
+	"strings"
 
 	"github.com/google/go-containerregistry/pkg/crane"
 	"github.com/google/go-containerregistry/pkg/name"
@@ -38,6 +40,15 @@ func newDockerImageSaveCmd(env Environment) *cobra.Command {
 
 			imgMap := make(map[string]v1.Image, len(args))
 			for _, arg := range args {
+				// if image has been `docker load`ed, use the local tarball
+				loadedFileName := filepath.Join(cacheDir, "loaded--"+strings.ReplaceAll(arg, "/", "--")+".tar")
+				if img, err := crane.Load(loadedFileName); err == nil {
+					log.V(4).Info("Using local image", "tag", arg, "path", loadedFileName)
+					imgMap[arg] = img
+					continue
+				}
+
+				// otherwise, attempt to pull remote image
 				ref, err := name.ParseReference(arg)
 				if err != nil {
 					return fmt.Errorf("failed to parse image %q: %w", arg, err)

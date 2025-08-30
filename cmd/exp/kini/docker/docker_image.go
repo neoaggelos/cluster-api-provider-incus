@@ -12,6 +12,7 @@ func newDockerImageCmd(env Environment) *cobra.Command {
 		SilenceErrors: true,
 	}
 	cmd.AddCommand(newDockerImageInspectCmd(env))
+	cmd.AddCommand(newDockerImageLoadCmd(env))
 	cmd.AddCommand(newDockerImagePullCmd(env))
 	cmd.AddCommand(newDockerImageSaveCmd(env))
 	return cmd
