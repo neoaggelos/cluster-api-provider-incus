@@ -19,8 +19,9 @@ func NewCmd() *cobra.Command {
 	var logFlags = &flag.FlagSet{}
 
 	cmd := &cobra.Command{
-		Use:          "kini",
-		SilenceUsage: true,
+		Use:           "kini",
+		SilenceUsage:  true,
+		SilenceErrors: true,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			if logFile := os.Getenv("KINI_LOG"); logFile != "" {
 				_ = logFlags.Set("logtostderr", "false")
