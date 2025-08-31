@@ -5,9 +5,13 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	incus "github.com/lxc/incus/v6/client"
 	"github.com/spf13/cobra"
+
+	"github.com/lxc/cluster-api-provider-incus/internal/loadbalancer"
+	"github.com/lxc/cluster-api-provider-incus/internal/lxc"
 )
 
 // docker exec --privileged c1-control-plane cat /etc/kubernetes/admin.conf
@@ -43,6 +47,18 @@ func newDockerExecCmd(env Environment) *cobra.Command {
 				if err != nil {
 					return fmt.Errorf("failed to read stdin: %w", err)
 				}
+
+				// HACK: "docker exec --privileged -i test-external-load-balancer cp /dev/stdin /usr/local/etc/haproxy/haproxy.cfg"
+				// Default haproxy configuration requires DNS names, which does not work as expected in Incus.
+				if args[3] == "/usr/local/etc/haproxy/haproxy.cfg" {
+					if b, err = loadbalancer.GenerateHaproxyLoadBalancerConfiguration(cmd.Context(), lxcClient, lxc.WithConfig(map[string]string{
+						"user.io.x-k8s.kind.cluster": strings.TrimSuffix(instanceName, "-external-load-balancer"),
+						"user.io.x-k8s.kind.role":    "control-plane",
+					})); err != nil {
+						return fmt.Errorf("failed to generate hack haproxy configuration: %w", err)
+					}
+				}
+
 				if err := lxcClient.CreateInstanceFile(instanceName, args[3], incus.InstanceFileArgs{
 					Content: bytes.NewReader(b),
 					Type:    "file",

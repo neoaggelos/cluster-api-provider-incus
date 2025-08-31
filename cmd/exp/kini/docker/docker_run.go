@@ -8,10 +8,32 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/lxc/cluster-api-provider-incus/internal/instances"
+	"github.com/lxc/cluster-api-provider-incus/internal/lxc"
 )
+
+// launchOptionsForImage initializes LaunchOptions for node or haproxy instances.
+func launchOptionsForImage(image string, env Environment) (*lxc.LaunchOptions, error) {
+	// handle haproxy instances
+	if strings.Contains(image, "kindest/haproxy") {
+		log.V(3).Info("Launching haproxy instance", "image", image)
+		return instances.HaproxyOCILaunchOptions().MaybeWithImage(api.InstanceSource{
+			Type:     "image",
+			Server:   "https://docker.io",
+			Alias:    strings.TrimPrefix(image, "docker.io/"),
+			Protocol: "oci",
+		}), nil
+	}
+
+	// handle node instances
+	log.V(3).Info("Launching node instance", "image", image)
+	return instances.KindLaunchOptions(instances.KindLaunchOptionsInput{
+		Privileged: env.Privileged(),
+	})
+}
 
 // docker run --name c1-control-plane --hostname c1-control-plane --label io.x-k8s.kind.role=control-plane --privileged --security-opt seccomp=unconfined --security-opt apparmor=unconfined --tmpfs /tmp --tmpfs /run --volume /var --volume /lib/modules:/lib/modules:ro -e KIND_EXPERIMENTAL_CONTAINERD_SNAPSHOTTER --detach --tty --label io.x-k8s.kind.cluster=c1 --net kind --restart=on-failure:1 --init=false --cgroupns=private --publish=127.0.0.1:41435:6443/TCP -e KUBECONFIG=/etc/kubernetes/admin.conf kindest/node:v1.31.2@sha256:18fbefc20a7113353c7b75b5c869d7145a6abd6269154825872dc59c1329912e
 // docker run --name t1-control-plane --hostname t1-control-plane --label io.x-k8s.kind.role=control-plane --privileged --security-opt seccomp=unconfined --security-opt apparmor=unconfined --tmpfs /tmp --tmpfs /run --volume /var --volume /lib/modules:/lib/modules:ro -e KIND_EXPERIMENTAL_CONTAINERD_SNAPSHOTTER --detach --tty --label io.x-k8s.kind.cluster=t1 --net kind --restart=on-failure:1 --init=false --cgroupns=private --userns=host --device /dev/fuse --publish=127.0.0.1:45295:6443/TCP -e KUBECONFIG=/etc/kubernetes/admin.conf kindest/node:v1.33.0@sha256:18fbefc20a7113353c7b75b5c869d7145a6abd6269154825872dc59c1329912e
+// docker run --name test-external-load-balancer --hostname test-external-load-balancer --label io.x-k8s.kind.role=external-load-balancer --detach --tty --label io.x-k8s.kind.cluster=test --net kind --restart=on-failure:1 --init=false --cgroupns=private --publish=127.0.0.1:37715:6443/TCP docker.io/kindest/haproxy:v20230606-42a2262b
 func newDockerRunCmd(env Environment) *cobra.Command {
 	var flags struct {
 		// passed in command line, but will be ignored
@@ -44,11 +66,6 @@ func newDockerRunCmd(env Environment) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			log.V(5).Info("docker run", "flags", flags, "args", args)
 
-			// TODO(neoaggelos): implement lxc mode
-			if !env.KindInstances(cmd.Context()) {
-				return fmt.Errorf("cannot launch kind instances")
-			}
-
 			lxcClient, err := env.Client(cmd.Context())
 			if err != nil {
 				return fmt.Errorf("failed to initialize client: %w", err)
@@ -69,7 +86,7 @@ func newDockerRunCmd(env Environment) *cobra.Command {
 				labels[fmt.Sprintf("user.%s", key)] = value
 			}
 
-			// TODO: publish ports
+			// publish ports
 			proxyDevices := make(map[string]map[string]string, len(flags.PublishPorts))
 			for idx, publishPort := range flags.PublishPorts {
 				publishPort, protocol, ok := strings.Cut(strings.ToLower(publishPort), "/")
@@ -98,28 +115,28 @@ func newDockerRunCmd(env Environment) *cobra.Command {
 				}
 			}
 
-			launchOpts, err := instances.KindLaunchOptions(instances.KindLaunchOptionsInput{
-				Privileged: env.Privileged(),
-			})
+			launchOpts, err := launchOptionsForImage(args[0], env)
 			if err != nil {
-				return fmt.Errorf("failed to generate kind launch options: %w", err)
+				return fmt.Errorf("failed to generate launch options: %w", err)
 			}
 
 			launchOpts = launchOpts.
 				MaybeWithImage(api.InstanceSource{
 					Type:     "image",
 					Server:   "https://docker.io",
-					Alias:    args[0],
+					Alias:    strings.TrimPrefix(args[0], "docker.io/"),
 					Protocol: "oci",
 				}).
 				WithConfig(labels).
-				WithDevices(proxyDevices).
-				WithReplacements(map[string]*strings.Replacer{
+				WithDevices(proxyDevices)
+
+			if len(environment) > 0 {
+				launchOpts = launchOpts.WithReplacements(map[string]*strings.Replacer{
 					"/etc/environment": strings.NewReplacer("", environment),
 				})
+			}
 
 			log.V(4).Info("Launching instance", "opts", strings.ReplaceAll(fmt.Sprintf("%#v", launchOpts), "\"", "'"))
-
 			_, err = lxcClient.WaitForLaunchInstance(cmd.Context(), flags.Name, launchOpts)
 			return err
 		},
