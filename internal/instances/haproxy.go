@@ -35,6 +35,9 @@ func HaproxyOCILaunchOptions() *lxc.LaunchOptions {
 		WithConfig(map[string]string{
 			// Use the /init symlink to avoid the Incus entrypoint from preventing SIGUSR2 propagating to child processes.
 			"oci.entrypoint": "/init -W -db -f /usr/local/etc/haproxy/haproxy.cfg",
+		}).
+		WithCreateFiles(map[string]string{
+			// Default kindest/haproxy image does not have /etc/environment, leading to issues downstream.
+			"/etc/environment": "",
 		})
-
 }
