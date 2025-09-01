@@ -59,7 +59,7 @@ func newDockerRunCmd(env Environment) *cobra.Command {
 	}
 
 	cmd := &cobra.Command{
-		Use:           "run [image]",
+		Use:           "run IMAGE",
 		Args:          cobra.ExactArgs(1),
 		SilenceUsage:  true,
 		SilenceErrors: true,
@@ -128,13 +128,10 @@ func newDockerRunCmd(env Environment) *cobra.Command {
 					Protocol: "oci",
 				}).
 				WithConfig(labels).
-				WithDevices(proxyDevices)
-
-			if len(environment) > 0 {
-				launchOpts = launchOpts.WithReplacements(map[string]*strings.Replacer{
+				WithDevices(proxyDevices).
+				WithReplacements(map[string]*strings.Replacer{
 					"/etc/environment": strings.NewReplacer("", environment),
 				})
-			}
 
 			log.V(4).Info("Launching instance", "opts", strings.ReplaceAll(fmt.Sprintf("%#v", launchOpts), "\"", "'"))
 			_, err = lxcClient.WaitForLaunchInstance(cmd.Context(), flags.Name, launchOpts)
