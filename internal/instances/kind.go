@@ -50,7 +50,7 @@ func KindLaunchOptions(in KindLaunchOptionsInput) (*lxc.LaunchOptions, error) {
 			WithConfig(map[string]string{
 				"cloud-init.user-data": in.CloudInit,
 			}).
-			WithSeedFiles(map[string]string{
+			WithInstanceTemplates(map[string]string{
 				// inject cloud-init into instance.
 				"/var/lib/cloud/seed/nocloud-net/meta-data": static.CloudInitMetaDataTemplate(),
 				"/var/lib/cloud/seed/nocloud-net/user-data": static.CloudInitUserDataTemplate(),
@@ -81,7 +81,7 @@ func KindLaunchOptions(in KindLaunchOptionsInput) (*lxc.LaunchOptions, error) {
 				return nil, utils.TerminalError(fmt.Errorf("failed to generate JSON cloud-config for instance, please report this bug to github.com/lxc/cluster-api-provider-incus/issues: %w", err))
 			}
 
-			opts = opts.WithSeedFiles(map[string]string{
+			opts = opts.WithInstanceTemplates(map[string]string{
 				"/hack/cloud-init.json": string(b),
 			})
 		}
