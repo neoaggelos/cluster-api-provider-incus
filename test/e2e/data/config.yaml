@@ -139,3 +139,6 @@ intervals:
 
   # [Autoscaler] wait for autoscaler operations
   default/wait-autoscaler: ["5m", "10s"]
+
+  # [QuickStart Kind] wait for kind cni manifests
+  default/wait-kind-cni: ["1m", "5s"]

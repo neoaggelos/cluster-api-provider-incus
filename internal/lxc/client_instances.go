@@ -64,7 +64,7 @@ func (c *Client) WaitForLaunchInstance(ctx context.Context, name string, opts *L
 		return nil, err
 	}
 
-	if templates := opts.seedFiles; len(templates) > 0 {
+	if templates := opts.instanceTemplates; len(templates) > 0 {
 		metadata, _, err := c.GetInstanceMetadata(name)
 		if err != nil {
 			return nil, fmt.Errorf("failed to GetInstanceMetadata: %w", err)
@@ -91,12 +91,9 @@ func (c *Client) WaitForLaunchInstance(ctx context.Context, name string, opts *L
 		}
 	}
 
-	for path, target := range opts.symlinks {
-		if err := c.CreateInstanceFile(name, path, incus.InstanceFileArgs{
-			Content: bytes.NewReader([]byte(target)),
-			Type:    "symlink",
-		}); err != nil {
-			return nil, fmt.Errorf("failed to CreateSymbolicLink(%q => %q): %w", path, target, err)
+	for _, file := range opts.createFiles {
+		if err := c.CreateInstanceFile(name, file.path(), file.args()); err != nil {
+			return nil, fmt.Errorf("failed to %s: %w", file.action(), err)
 		}
 	}
 

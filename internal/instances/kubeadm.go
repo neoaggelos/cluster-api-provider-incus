@@ -31,7 +31,7 @@ func KubeadmLaunchOptions(in KubeadmLaunchOptionsInput) *lxc.LaunchOptions {
 			Server:   lxc.DefaultSimplestreamsServer,
 			Alias:    fmt.Sprintf("kubeadm/%s", in.KubernetesVersion),
 		}).
-		WithSeedFiles(map[string]string{
+		WithInstanceTemplates(map[string]string{
 			"/opt/cluster-api/install-kubeadm.sh": static.InstallKubeadmScript(),
 		})
 
