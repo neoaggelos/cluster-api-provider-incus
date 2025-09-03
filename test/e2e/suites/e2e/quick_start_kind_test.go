@@ -25,23 +25,30 @@ func applyDefaultKindCNI(ctx context.Context, input clusterctl.ApplyCustomCluste
 	lxcClient, err := lxc.New(ctx, e2eCtx.Settings.LXCClientOptions)
 	Expect(err).ToNot(HaveOccurred())
 
-	instances, err := lxcClient.ListInstances(ctx, lxc.WithConfig(map[string]string{
-		"user.cluster-name":      input.ClusterName,
-		"user.cluster-namespace": input.Namespace,
-		"user.cluster-role":      "control-plane",
-	}))
-	Expect(err).ToNot(HaveOccurred())
-	Expect(instances).ToNot(BeEmpty())
+	shared.Logf("Waiting for kind CNI manifest in control plane instances")
+	var cniBytes []byte
+	Eventually(func(g Gomega) string {
+		instances, err := lxcClient.ListInstances(ctx, lxc.WithConfig(map[string]string{
+			"user.cluster-name":      input.ClusterName,
+			"user.cluster-namespace": input.Namespace,
+			"user.cluster-role":      "control-plane",
+		}))
+		g.Expect(err).ToNot(HaveOccurred())
+		g.Expect(instances).ToNot(BeEmpty())
 
-	shared.Logf("Reading default kind CNI from instance %s", instances[0].Name)
-	reader, _, err := lxcClient.GetInstanceFile(instances[0].Name, "/kind/manifests/default-cni.yaml")
-	Expect(err).ToNot(HaveOccurred())
-	defer reader.Close()
-	b, err := io.ReadAll(reader)
-	Expect(err).ToNot(HaveOccurred())
+		shared.Logf("Reading default kind CNI from instance %s", instances[0].Name)
+		reader, _, err := lxcClient.GetInstanceFile(instances[0].Name, "/kind/manifests/default-cni.yaml")
+		g.Expect(err).ToNot(HaveOccurred())
+		b, err := io.ReadAll(reader)
+		_ = reader.Close()
+		g.Expect(err).ToNot(HaveOccurred())
+
+		cniBytes = b
+		return string(b)
+	}, e2eCtx.E2EConfig.GetIntervals("", "wait-kind-cni")...).ShouldNot(ContainSubstring("{{ .PodSubnet }}"))
 
 	shared.Logf("Applying default kind CNI")
-	Expect(input.ClusterProxy.GetWorkloadCluster(ctx, input.Namespace, input.ClusterName).CreateOrUpdate(ctx, b)).To(Succeed())
+	Expect(input.ClusterProxy.GetWorkloadCluster(ctx, input.Namespace, input.ClusterName).CreateOrUpdate(ctx, cniBytes)).To(Succeed())
 
 	shared.Logf("Waiting for ControlPlane nodes to become Ready")
 	framework.WaitForControlPlaneAndMachinesReady(ctx, framework.WaitForControlPlaneAndMachinesReadyInput{
