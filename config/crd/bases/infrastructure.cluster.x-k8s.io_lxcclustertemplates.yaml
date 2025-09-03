@@ -110,7 +110,7 @@ spec:
                             description: |-
                               Keepalived will configure keepalived on the control plane instances.
 
-                              When using keepalived, the controller will automatically inject /etc/keepalived/keepalived.conf into all control plane nodes of the cluster. This requires keepalived to be pre-installed on the image (it is included in the default images starting from version "v1.33.0").
+                              When using keepalived, the controller will automatically inject /etc/keepalived/keepalived.conf into all control plane nodes of the cluster. This requires keepalived to be pre-installed on the image (it is included in the default images starting from version "v1.34.0").
 
                               When using the "keepalived" mode, the load balancer address must be set in `.spec.controlPlaneEndpoint.host` on the LXCCluster object.
                             properties:
