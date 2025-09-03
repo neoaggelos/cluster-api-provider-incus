@@ -148,7 +148,7 @@ func (l *managerLXC) Inspect(ctx context.Context) map[string]string {
 	return result
 }
 
-func (l *managerLXC) ControlPlaneSeedFiles() (map[string]string, error) {
+func (l *managerLXC) ControlPlaneInstanceTemplates(controlPlaneInitialized bool) (map[string]string, error) {
 	return nil, nil
 }
 

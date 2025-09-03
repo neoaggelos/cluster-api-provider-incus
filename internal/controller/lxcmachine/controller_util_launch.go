@@ -11,6 +11,7 @@ import (
 	"github.com/lxc/incus/v6/shared/api"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/cluster-api/util"
+	"sigs.k8s.io/cluster-api/util/conditions"
 
 	infrav1 "github.com/lxc/cluster-api-provider-incus/api/v1alpha2"
 	"github.com/lxc/cluster-api-provider-incus/internal/instances"
@@ -103,12 +104,12 @@ func launchInstance(ctx context.Context, cluster *clusterv1.Cluster, lxcCluster 
 		}).
 		MaybeWithImage(image)
 
-	// apply seed files from load balancer manager
+	// apply instance templates from load balancer manager
 	if util.IsControlPlaneMachine(machine) {
-		if files, err := loadbalancer.ManagerForCluster(cluster, lxcCluster, lxcClient).ControlPlaneSeedFiles(); err != nil {
+		if files, err := loadbalancer.ManagerForCluster(cluster, lxcCluster, lxcClient).ControlPlaneInstanceTemplates(conditions.IsTrue(cluster, clusterv1.ControlPlaneInitializedCondition)); err != nil {
 			return nil, fmt.Errorf("failed to generate load balancer configuration files: %w", err)
 		} else {
-			launchOpts = launchOpts.WithSeedFiles(files)
+			launchOpts = launchOpts.WithInstanceTemplates(files)
 		}
 	}
 

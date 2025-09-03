@@ -96,7 +96,7 @@ func (l *managerKeepalived) Inspect(ctx context.Context) map[string]string {
 	return result
 }
 
-func (l *managerKeepalived) ControlPlaneSeedFiles() (map[string]string, error) {
+func (l *managerKeepalived) ControlPlaneInstanceTemplates(controlPlaneInitialized bool) (map[string]string, error) {
 	if b, err := renderKeepalivedConfiguration(keepalivedTemplateInput{
 		Address:         l.address,
 		Interface:       l.interfaceName,

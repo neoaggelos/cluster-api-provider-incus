@@ -165,7 +165,7 @@ func (l *managerOVN) Inspect(ctx context.Context) map[string]string {
 	return result
 }
 
-func (l *managerOVN) ControlPlaneSeedFiles() (map[string]string, error) {
+func (l *managerOVN) ControlPlaneInstanceTemplates(controlPlaneInitialized bool) (map[string]string, error) {
 	return nil, nil
 }
 
