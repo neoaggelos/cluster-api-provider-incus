@@ -50,6 +50,7 @@ func NewCmd() *cobra.Command {
 	cmd.PersistentFlags().AddGoFlagSet(logFlags)
 	cmd.AddCommand(newKiniExampleCmd())
 	cmd.AddCommand(newKiniActivateCmd())
+	cmd.AddCommand(newKiniGenerateSecretCmd())
 
 	return cmd
 }
