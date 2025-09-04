@@ -109,6 +109,10 @@ spec:
                 type: string
                 description: Bind the VIP address on a specific interface
                 example: eth0
+              image:
+                type: string
+                description: Override the kube-vip image
+                example: ghcr.io/kube-vip/kube-vip:v0.6.4
           ovn:
             type: object
             description: Create an OVN network load balancer
@@ -124,18 +128,13 @@ spec:
                 example: 10.100.42.1
         maxProperties: 1
         minProperties: 1
-        # oneOf:
-        #   - required: ["lxc"]
-        #   - required: ["oci"]
-        #   - required: ["kube-vip"]
-        #   - required: ["ovn"]
   - name: instance
     schema:
       openAPIV3Schema:
         type: object
         properties:
           type:
-            description: One of 'container' or 'virtual-machine'.
+            description: One of 'container', 'virtual-machine', 'kind'.
             type: string
             enum:
             - container
@@ -248,102 +247,13 @@ spec:
             {{ end }}
             {{ if hasKey .loadBalancer "kube-vip" }}
             loadBalancer:
-              external: {}
+              kubeVIP:
+                interface: {{ index .loadBalancer "kube-vip" "interface" | default "" | quote }}
+                image: {{ index .loadBalancer "kube-vip" "image" | default "" | quote }}
             controlPlaneEndpoint:
               host: {{ index .loadBalancer "kube-vip" "host" | quote }}
               port: 6443
             {{ end }}
-  - name: controlPlaneKubeVIP
-    description: Kube-VIP static pod manifests
-    enabledIf: |
-      {{ hasKey .loadBalancer "kube-vip" }}
-    definitions:
-    - selector:
-        apiVersion: controlplane.cluster.x-k8s.io/v1beta1
-        kind: KubeadmControlPlaneTemplate
-        matchResources:
-          controlPlane: true
-      jsonPatches:
-      - op: add
-        path: /spec/template/spec/kubeadmConfigSpec/preKubeadmCommands/-
-        # Workaround for https://github.com/kube-vip/kube-vip/issues/684, see https://github.com/kube-vip/kube-vip/issues/684#issuecomment-1883955927
-        value: |
-          if [ -f /run/kubeadm/kubeadm.yaml ]; then
-            sed -i 's#path: /etc/kubernetes/admin.conf#path: /etc/kubernetes/super-admin.conf#' /etc/kubernetes/manifests/kube-vip.yaml
-          fi
-      - op: add
-        path: /spec/template/spec/kubeadmConfigSpec/files/-
-        valueFrom:
-          template: |
-            owner: root:root
-            path: /etc/kubernetes/manifests/kube-vip.yaml
-            permissions: "0644"
-            content: |
-              apiVersion: v1
-              kind: Pod
-              metadata:
-                name: kube-vip
-                namespace: kube-system
-              spec:
-                containers:
-                - args:
-                  - manager
-                  env:
-                  - name: vip_arp
-                    value: "true"
-                  - name: port
-                    value: "6443"
-                  - name: vip_interface
-                    value: {{ if ( index .loadBalancer "kube-vip" "interface" ) }}{{ index .loadBalancer "kube-vip" "interface" | quote }}{{ else }}""{{ end }}
-                  - name: vip_cidr
-                    value: "32"
-                  - name: cp_enable
-                    value: "true"
-                  - name: cp_namespace
-                    value: kube-system
-                  - name: vip_ddns
-                    value: "false"
-                  - name: svc_enable
-                    value: "true"
-                  - name: svc_leasename
-                    value: plndr-svcs-lock
-                  - name: svc_election
-                    value: "true"
-                  - name: vip_leaderelection
-                    value: "true"
-                  - name: vip_leasename
-                    value: plndr-cp-lock
-                  - name: vip_leaseduration
-                    value: "15"
-                  - name: vip_renewdeadline
-                    value: "10"
-                  - name: vip_retryperiod
-                    value: "2"
-                  - name: address
-                    value: {{ index .loadBalancer "kube-vip" "host" | quote }}
-                  - name: prometheus_server
-                    value: :2112
-                  image: ghcr.io/kube-vip/kube-vip:v0.6.4
-                  imagePullPolicy: IfNotPresent
-                  name: kube-vip
-                  resources: {}
-                  securityContext:
-                    capabilities:
-                      add:
-                      - NET_ADMIN
-                      - NET_RAW
-                  volumeMounts:
-                  - mountPath: /etc/kubernetes/admin.conf
-                    name: kubeconfig
-                hostNetwork: true
-                hostAliases:
-                - ip: 127.0.0.1
-                  hostnames: [kubernetes]
-                volumes:
-                - hostPath:
-                    path: /etc/kubernetes/admin.conf
-                  name: kubeconfig
-              status: {}
   - name: controlPlaneInstanceSpec
     description: LXCMachineTemplate configuration for ControlPlane
     definitions:
