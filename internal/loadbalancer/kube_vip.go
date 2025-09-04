@@ -90,8 +90,7 @@ func renderKubeVIPConfiguration(input kubeVIPTemplateInput) ([]byte, error) {
 
 	// execute the template
 	var buff bytes.Buffer
-	err = t.Execute(&buff, input)
-	if err != nil {
+	if err = t.Execute(&buff, input); err != nil {
 		return nil, fmt.Errorf("error executing config template: %w", err)
 	}
 	return buff.Bytes(), nil
