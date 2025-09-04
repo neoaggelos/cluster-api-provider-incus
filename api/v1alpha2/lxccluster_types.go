@@ -115,6 +115,15 @@ type LXCClusterLoadBalancer struct {
 	// +optional
 	OVN *LXCLoadBalancerOVN `json:"ovn,omitempty"`
 
+	// KubeVIP will configure kube-vip on the control plane instances.
+	//
+	// When using kube-vip, the controller will automatically inject /etc/kubernetes/manifests/kube-vip.yaml into all control plane nodes of the cluster.
+	//
+	// When using the "kube-vip" mode, the load balancer address must be set in `.spec.controlPlaneEndpoint.host` on the LXCCluster object.
+	//
+	// +optional
+	KubeVIP *LXCLoadBalancerKubeVIP `json:"kubeVIP,omitempty"`
+
 	// External will not create a load balancer. It must be used alongside something like kube-vip, otherwise the cluster will fail to provision.
 	//
 	// When using the "external" mode, the load balancer address must be set in `.spec.controlPlaneEndpoint.host` on the LXCCluster object.
@@ -136,6 +145,32 @@ type LXCLoadBalancerOVN struct {
 }
 
 type LXCLoadBalancerExternal struct {
+}
+
+type LXCLoadBalancerKubeVIP struct {
+	// Image is the kube-vip image to use. If not set, this is ghcr.io/kube-vip/kube-vip:v0.6.4
+	//
+	// +optional
+	Image string `json:"image,omitempty"`
+
+	// KubeconfigPath is the kubeconfig host path to use for kube-vip. If not set, this is /etc/kubernetes/admin.conf
+	//
+	// KubeconfigPath is useful when not using the kubeadm bootstrap provider.
+	//
+	// +optional
+	KubeconfigPath string `json:"kubeconfigPath,omitempty"`
+
+	// ManifestPath is the path on the host where the kube-vip static pod manifest will be created.
+	//
+	// ManifestPath is useful when not using the kubeadm bootstrap provider.
+	//
+	// +optional
+	ManifestPath string `json:"manifestPath,omitempty"`
+
+	// Interface is the name of the interface where the VIP will be configured. If not set, the default interface is used.
+	//
+	// +optional
+	Interface string `json:"interface,omitempty"`
 }
 
 // LXCLoadBalancerMachineSpec is configuration for the container that will host the cluster load balancer, when using the "lxc" or "oci" load balancer type.

@@ -106,6 +106,36 @@ spec:
 
                               When using the "external" mode, the load balancer address must be set in `.spec.controlPlaneEndpoint.host` on the LXCCluster object.
                             type: object
+                          kubeVIP:
+                            description: |-
+                              KubeVIP will configure kube-vip on the control plane instances.
+
+                              When using kube-vip, the controller will automatically inject /etc/kubernetes/manifests/kube-vip.yaml into all control plane nodes of the cluster.
+
+                              When using the "kube-vip" mode, the load balancer address must be set in `.spec.controlPlaneEndpoint.host` on the LXCCluster object.
+                            properties:
+                              image:
+                                description: Image is the kube-vip image to use. If
+                                  not set, this is ghcr.io/kube-vip/kube-vip:v0.6.4
+                                type: string
+                              interface:
+                                description: Interface is the name of the interface
+                                  where the VIP will be configured. If not set, the
+                                  default interface is used.
+                                type: string
+                              kubeconfigPath:
+                                description: |-
+                                  KubeconfigPath is the kubeconfig host path to use for kube-vip. If not set, this is /etc/kubernetes/admin.conf
+
+                                  KubeconfigPath is useful when not using the kubeadm bootstrap provider.
+                                type: string
+                              manifestPath:
+                                description: |-
+                                  ManifestPath is the path on the host where the kube-vip static pod manifest will be created.
+
+                                  ManifestPath is useful when not using the kubeadm bootstrap provider.
+                                type: string
+                            type: object
                           lxc:
                             description: |-
                               LXC will spin up a plain Ubuntu instance with haproxy installed.
