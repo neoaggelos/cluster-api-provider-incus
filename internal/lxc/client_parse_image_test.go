@@ -20,6 +20,15 @@ func simplestreamsImage(server string, name string) api.InstanceSource {
 	}
 }
 
+func ociImage(server string, name string) api.InstanceSource {
+	return api.InstanceSource{
+		Type:     "image",
+		Protocol: "oci",
+		Server:   server,
+		Alias:    name,
+	}
+}
+
 func TestTryParseImageSource(t *testing.T) {
 	for _, tc := range []struct {
 		server            string
@@ -36,6 +45,7 @@ func TestTryParseImageSource(t *testing.T) {
 		{server: "incus", image: "images:almalinux/9/cloud", expectParsed: true, expectImageSource: simplestreamsImage("https://images.linuxcontainers.org", "almalinux/9/cloud")},
 		{server: "incus", image: "capi:kubeadm/v1.33.0", expectParsed: true, expectImageSource: simplestreamsImage("https://d14dnvi2l3tc5t.cloudfront.net", "kubeadm/v1.33.0")},
 		{server: "incus", image: "capi-stg:kubeadm/v1.33.0", expectParsed: true, expectImageSource: simplestreamsImage("https://djapqxqu5n2qu.cloudfront.net", "kubeadm/v1.33.0")},
+		{server: "incus", image: "kind:v1.33.0", expectParsed: true, expectImageSource: ociImage("https://docker.io", "kindest/node:v1.33.0")},
 		// verify lxd prefixes
 		{server: "lxd", image: "image-name"},
 		{server: "lxd", image: "unknown:image", expectErr: true},
@@ -44,6 +54,7 @@ func TestTryParseImageSource(t *testing.T) {
 		{server: "lxd", image: "images:almalinux/9/cloud", expectParsed: true, expectImageSource: simplestreamsImage("https://images.lxd.canonical.com", "almalinux/9/cloud")},
 		{server: "lxd", image: "capi:kubeadm/v1.33.0", expectParsed: true, expectImageSource: simplestreamsImage("https://d14dnvi2l3tc5t.cloudfront.net", "kubeadm/v1.33.0")},
 		{server: "lxd", image: "capi-stg:kubeadm/v1.33.0", expectParsed: true, expectImageSource: simplestreamsImage("https://djapqxqu5n2qu.cloudfront.net", "kubeadm/v1.33.0")},
+		{server: "lxd", image: "kind:v1.33.0", expectErr: true},
 		// verify prefixes for unknown
 		{server: "unknown", image: "image-name"},
 		{server: "unknown", image: "ubuntu:24.04", expectErr: true},
