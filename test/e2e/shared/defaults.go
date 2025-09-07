@@ -30,8 +30,10 @@ import (
 )
 
 const (
-	KubeContext       = "KUBE_CONTEXT"
-	KubernetesVersion = "KUBERNETES_VERSION"
+	KubeContext                  = "KUBE_CONTEXT"
+	KubernetesVersion            = "KUBERNETES_VERSION"
+	KubernetesVersionUpgradeFrom = "KUBERNETES_VERSION_UPGRADE_FROM"
+	KubernetesVersionUpgradeTo   = "KUBERNETES_VERSION_UPGRADE_TO"
 
 	// Load LXC server credentials from local config file
 	LXCLoadConfigFile = "LXC_LOAD_CONFIG_FILE"
@@ -49,6 +51,9 @@ const (
 	FlavorDefault     = ""
 	FlavorDevelopment = "development"
 	FlavorAutoscaler  = "autoscaler"
+
+	UbuntuImage = "ubuntu:24.04"
+	DebianImage = "debian:13"
 )
 
 // DefaultScheme returns the default scheme to use for testing.

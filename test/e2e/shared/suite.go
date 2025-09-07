@@ -69,6 +69,9 @@ func Node1BeforeSuite(ctx context.Context, e2eCtx *E2EContext) []byte {
 	Logf("Ensuring infrastructure credentials can be used")
 	ensureLXCClientOptions(e2eCtx)
 
+	Logf("Ensuring system images")
+	ensureLXCSystemImages(e2eCtx)
+
 	conf := synchronizedBeforeTestSuiteConfig{
 		E2EConfig:            *e2eCtx.E2EConfig,
 		ArtifactFolder:       e2eCtx.Settings.ArtifactFolder,

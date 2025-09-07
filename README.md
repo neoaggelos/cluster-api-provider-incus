@@ -39,6 +39,9 @@ Rough steps for version v0.8.0:
 
 - [ ] Add `kini` command line tool, re-using building blocks from [kind](https://kind.sigs.k8s.io).
 - [ ] Use `kini` for quick start guide and e2e tests.
+- [ ] Build images for v1.34.0, based on Ubuntu 24.04 and Debian 13.
+- [ ] Support load balancer IPAM (define range of load balancer IPs, CAPN automatically claims/releases load balancer IP).
+- [ ] Add support for built-in [`keepalived`](https://github.com/lxc/cluster-api-provider-incus/pull/119) and `kube-vip` load balancer types.
 - [x] Private initial alpha testing.
 - [x] Cloud provider node patch to link Machines with workload cluster Nodes.
 - [x] Test with both [Incus](https://linuxcontainers.org/incus/introduction/) and [Canonical LXD](https://canonical.com/lxd).
@@ -63,6 +66,7 @@ Rough steps for version v0.8.0:
 
 ### $Future
 
+- [ ] [Migrate to for ClusterAPI v1beta2 contract](https://github.com/lxc/cluster-api-provider-incus/pull/133).
 - [ ] Add to default list of providers supported by ClusterAPI.
 - [ ] Improve API validations and possibly API conformance tests.
 - [x] Add CI to build kubeadm images for the default simplestreams server. Pushing will remain manual for now.
