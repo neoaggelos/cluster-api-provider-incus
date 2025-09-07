@@ -13,6 +13,7 @@ import (
 
 type imageInfo struct {
 	server    string
+	protocol  string
 	transform func(in string) string
 }
 
@@ -22,44 +23,59 @@ var (
 		Incus: {
 			"ubuntu": { // "ubuntu:24.04" -> "ubuntu/24.04/cloud" from "https://images.linuxcontainers.org"
 				server:    DefaultIncusSimplestreamsServer,
+				protocol:  Simplestreams,
 				transform: func(in string) string { return fmt.Sprintf("ubuntu/%s/cloud", in) },
 			},
 			"debian": { // "debian:12" -> "debian/12/cloud" from "https://images.linuxcontainers.org"
 				server:    DefaultIncusSimplestreamsServer,
+				protocol:  Simplestreams,
 				transform: func(in string) string { return fmt.Sprintf("debian/%s/cloud", in) },
 			},
 			"images": { // "images:IMAGE" -> "IMAGE" from "https://images.linuxcontainers.org"
 				server:    DefaultIncusSimplestreamsServer,
+				protocol:  Simplestreams,
 				transform: func(in string) string { return in },
 			},
 			"capi": { // "capi:IMAGE" -> "IMAGE" from "https://d14dnvi2l3tc5t.cloudfront.net"
 				server:    DefaultSimplestreamsServer,
+				protocol:  Simplestreams,
 				transform: func(in string) string { return in },
 			},
 			"capi-stg": { // "capi-stg:IMAGE" -> "IMAGE" from "https://djapqxqu5n2qu.cloudfront.net"
 				server:    DefaultStagingSimplestreamsServer,
+				protocol:  Simplestreams,
 				transform: func(in string) string { return in },
+			},
+			"kind": { // "kind:VERSION" -> "kindest/node:VERSION" from "https://docker.io"
+				server:    DockerHubServer,
+				protocol:  OCI,
+				transform: func(in string) string { return fmt.Sprintf("kindest/node:%s", in) },
 			},
 		},
 		LXD: {
 			"ubuntu": { // "ubuntu:24.04" -> "24.04" from "https://cloud-images.ubuntu.com/releases/"
 				server:    DefaultLXDUbuntuSimplestreamsServer,
+				protocol:  Simplestreams,
 				transform: func(in string) string { return in },
 			},
 			"debian": { // "debian:12" -> "debian/12/cloud" from "https://images.lxd.canonical.com"
 				server:    DefaultLXDSimplestreamsServer,
+				protocol:  Simplestreams,
 				transform: func(in string) string { return fmt.Sprintf("debian/%s/cloud", in) },
 			},
 			"images": { // "images:IMAGE" -> "IMAGE" from "https://images.lxd.canonical.com"
 				server:    DefaultLXDSimplestreamsServer,
+				protocol:  Simplestreams,
 				transform: func(in string) string { return in },
 			},
 			"capi": { // "capi:IMAGE" -> "IMAGE" from "https://d14dnvi2l3tc5t.cloudfront.net"
 				server:    DefaultSimplestreamsServer,
+				protocol:  Simplestreams,
 				transform: func(in string) string { return in },
 			},
 			"capi-stg": { // "capi-stg:IMAGE" -> "IMAGE" from "https://djapqxqu5n2qu.cloudfront.net"
 				server:    DefaultStagingSimplestreamsServer,
+				protocol:  Simplestreams,
 				transform: func(in string) string { return in },
 			},
 		},
@@ -75,7 +91,7 @@ func TryParseImageSource(serverName, imageName string) (api.InstanceSource, bool
 	if info, ok := wellKnownImagePrefixes[serverName][parts[0]]; ok {
 		return api.InstanceSource{
 			Type:     "image",
-			Protocol: "simplestreams",
+			Protocol: info.protocol,
 			Server:   info.server,
 			Alias:    info.transform(parts[1]),
 		}, true, nil
