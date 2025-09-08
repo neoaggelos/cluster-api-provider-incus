@@ -27,7 +27,7 @@ rm -rf \
   /root/.gnupg \
   /root/.ssh \
   /root/.sudo_as_admin_successful \
-  /tmp \
+  /tmp/* \
   /usr/share/doc \
   /usr/share/man \
   /var/cache/apt \
@@ -35,7 +35,7 @@ rm -rf \
   /var/lib/apt/lists \
   /var/lib/swcatalog \
   /var/log \
-  /var/tmp
+  /var/tmp/*
 
 mkdir -p /var/tmp /var/log /tmp
 
