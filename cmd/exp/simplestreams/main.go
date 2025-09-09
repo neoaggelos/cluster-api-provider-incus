@@ -6,6 +6,8 @@ import (
 
 	"k8s.io/klog/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
+
+	"github.com/lxc/cluster-api-provider-incus/cmd/exp/simplestreams/internal/cmd"
 )
 
 var (
@@ -14,7 +16,7 @@ var (
 )
 
 func main() {
-	if err := rootCmd.Execute(); err != nil {
+	if err := cmd.NewCmd().ExecuteContext(ctx); err != nil {
 		os.Exit(1)
 	}
 }

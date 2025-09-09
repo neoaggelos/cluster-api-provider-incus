@@ -1,8 +1,9 @@
-package main
+package index
 
 import (
 	"archive/tar"
 	"compress/gzip"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -14,13 +15,14 @@ import (
 
 	"github.com/lxc/incus/v6/shared/api"
 	"github.com/lxc/incus/v6/shared/simplestreams"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/yaml"
 )
 
-func importContainerImage(index simplestreams.Stream, products simplestreams.Products) error {
-	log.Info("Importing container image", "image", importCfg.imagePath)
+func (i *Index) importContainerUnifiedTarball(ctx context.Context, imagePath string, aliases []string, incus bool, lxd bool) error {
+	log.FromContext(ctx).Info("Importing container image", "image", imagePath)
 
-	f, err := os.Open(importCfg.imagePath)
+	f, err := os.Open(imagePath)
 	if err != nil {
 		return fmt.Errorf("failed to open: %w", err)
 	}
@@ -61,34 +63,33 @@ func importContainerImage(index simplestreams.Stream, products simplestreams.Pro
 		return fmt.Errorf("no metadata.yaml found for image")
 	}
 
-	info, err := getContainerImageInfo(importCfg.imagePath)
+	info, err := getContainerImageInfo(imagePath)
 	if err != nil {
 		return fmt.Errorf("failed to retrieve image information: %w", err)
 	}
 
 	productName := fmt.Sprintf("%s:%s:%s:%s", metadata.Properties["os"], metadata.Properties["release"], metadata.Properties["variant"], metadata.Properties["architecture"])
 	versionName := time.Unix(metadata.CreationDate, 0).Format("200601021504")
-	ftype := containerFTypeByServer[importCfg.serverType]
 	target := filepath.Join("images", metadata.Properties["os"], metadata.Properties["release"], fmt.Sprintf("%s.incus_combined.tar.gz", info.Sha256))
 
-	log.Info("Adding product version item", "product", productName, "version", versionName, "info", info)
+	log.FromContext(ctx).Info("Adding product version item", "product", productName, "version", versionName, "info", info)
 
 	// update index
-	if !slices.Contains(index.Index["images"].Products, productName) {
-		log.Info("Adding product in streams/v1/index.json")
+	if !slices.Contains(i.Index.Index["images"].Products, productName) {
+		log.FromContext(ctx).Info("Adding product in streams/v1/index.json")
 
-		newImages := index.Index["images"]
+		newImages := i.Index.Index["images"]
 		newImages.Products = append(newImages.Products, productName)
 		slices.Sort(newImages.Products)
-		index.Index["images"] = newImages
+		i.Index.Index["images"] = newImages
 	}
 
 	// update product versions
 	var product simplestreams.Product
-	if existingProduct, ok := products.Products[productName]; ok {
+	if existingProduct, ok := i.Products.Products[productName]; ok {
 		product = existingProduct
 	} else {
-		log.Info("Creating product", "product", productName)
+		log.FromContext(ctx).Info("Creating product", "product", productName)
 		product = simplestreams.Product{
 			Architecture:    metadata.Properties["architecture"],
 			OperatingSystem: metadata.Properties["os"],
@@ -101,10 +102,9 @@ func importContainerImage(index simplestreams.Stream, products simplestreams.Pro
 		}
 	}
 
-	if len(importCfg.imageAliases) > 0 {
-		log.Info("Setting product aliases", "product", productName, "aliases", importCfg.imageAliases)
-
-		product.Aliases = strings.Join(importCfg.imageAliases, ",")
+	if len(aliases) > 0 {
+		log.FromContext(ctx).Info("Setting product aliases", "product", productName, "aliases", aliases)
+		product.Aliases = strings.Join(aliases, ",")
 	}
 
 	if product.Versions == nil {
@@ -114,35 +114,47 @@ func importContainerImage(index simplestreams.Stream, products simplestreams.Pro
 	if newProductVersions.Items == nil {
 		newProductVersions.Items = make(map[string]simplestreams.ProductVersionItem)
 	}
-	log.Info("Adding product version item", "ftype", ftype, "path", target)
-	newProductVersions.Items[ftype] = simplestreams.ProductVersionItem{
-		FileType:   ftype,
-		HashSha256: info.Sha256,
-		Size:       info.Size,
-		Path:       target,
+
+	if incus {
+		log.FromContext(ctx).Info("Adding product version item", "ftype", containerFTypeIncus, "path", target)
+		newProductVersions.Items[containerFTypeIncus] = simplestreams.ProductVersionItem{
+			FileType:   containerFTypeIncus,
+			HashSha256: info.Sha256,
+			Size:       info.Size,
+			Path:       target,
+		}
+	}
+	if lxd {
+		log.FromContext(ctx).Info("Adding product version item", "ftype", containerFTypeLXD, "path", target)
+		newProductVersions.Items[containerFTypeLXD] = simplestreams.ProductVersionItem{
+			FileType:   containerFTypeLXD,
+			HashSha256: info.Sha256,
+			Size:       info.Size,
+			Path:       target,
+		}
 	}
 	product.Versions[versionName] = newProductVersions
-	products.Products[productName] = product
+	i.Products.Products[productName] = product
 
 	// copy image
-	log.Info("Copying image file into simplestreams index", "source", importCfg.imagePath, "destination", filepath.Join(cfg.rootDir, target))
-	if err := copyFile(importCfg.imagePath, filepath.Join(cfg.rootDir, target)); err != nil {
+	log.FromContext(ctx).Info("Copying image file into simplestreams index", "source", imagePath, "destination", filepath.Join(i.rootDir, target))
+	if err := copyFile(imagePath, filepath.Join(i.rootDir, target)); err != nil {
 		return fmt.Errorf("failed to copy image file: %w", err)
 	}
 
 	// update simplestreams index
-	log.Info("Updating streams/v1/index.json")
-	if indexJSON, err := json.Marshal(index); err != nil {
+	log.FromContext(ctx).Info("Updating streams/v1/index.json")
+	if indexJSON, err := json.Marshal(i.Index); err != nil {
 		return fmt.Errorf("failed to encode new streams/v1/index.json: %w", err)
-	} else if err := os.WriteFile(filepath.Join(cfg.rootDir, "streams", "v1", "index.json"), indexJSON, 0644); err != nil {
+	} else if err := os.WriteFile(filepath.Join(i.rootDir, "streams", "v1", "index.json"), indexJSON, 0644); err != nil {
 		return fmt.Errorf("failed to write streams/v1/index.json: %w", err)
 	}
 
 	// update products index
-	log.Info("Updating streams/v1/images.json")
-	if productsJSON, err := json.Marshal(products); err != nil {
+	log.FromContext(ctx).Info("Updating streams/v1/images.json")
+	if productsJSON, err := json.Marshal(i.Products); err != nil {
 		return fmt.Errorf("failed to encode new streams/v1/images.json: %w", err)
-	} else if err := os.WriteFile(filepath.Join(cfg.rootDir, "streams", "v1", "images.json"), productsJSON, 0644); err != nil {
+	} else if err := os.WriteFile(filepath.Join(i.rootDir, "streams", "v1", "images.json"), productsJSON, 0644); err != nil {
 		return fmt.Errorf("failed to write streams/v1/images.json: %w", err)
 	}
 
