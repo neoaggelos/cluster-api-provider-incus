@@ -1,11 +1,16 @@
 package index
 
 import (
+	"bytes"
+	"context"
 	"crypto/sha256"
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
+
+	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 type containerImageInfo struct {
@@ -102,4 +107,41 @@ func copyFile(source, destination string) error {
 	}
 
 	return nil
+}
+
+// qemuCompressImage accepts raw bytes of a qcow2 image, compresses with `qemu-img convert -c` and returns the raw bytes of the compressed image
+func qemuCompressImage(ctx context.Context, raw []byte) ([]byte, error) {
+	log.FromContext(ctx).Info("Compressing rootfs.img, this might take a while", "uncompressed", len(raw))
+	tmpDir, err := os.MkdirTemp("", "")
+	if err != nil {
+		return nil, fmt.Errorf("failed to create temporary directory: %w", err)
+	}
+	defer func() {
+		_ = os.RemoveAll(tmpDir)
+	}()
+	if err := os.WriteFile(filepath.Join(tmpDir, "uncompressed.qcow2"), raw, 0644); err != nil {
+		return nil, fmt.Errorf("failed to write uncompressed rootfs to temporary file: %w", err)
+	}
+
+	// attempt to use qemu-img from path, or fallbcak to /opt/incus/bin/qemu-img
+	qemuImg, err := exec.LookPath("qemu-img")
+	if err != nil {
+		qemuImg = "/opt/incus/bin/qemu-img"
+	}
+
+	var stderr bytes.Buffer
+	cmd := exec.CommandContext(ctx, qemuImg, "convert", "-O", "qcow2", "-c", filepath.Join(tmpDir, "uncompressed.qcow2"), filepath.Join(tmpDir, "compressed.qcow2"))
+	cmd.Stderr = &stderr
+
+	if err := cmd.Run(); err != nil {
+		return nil, fmt.Errorf("qemu-img convert -c command failed with stderr=%q: %w", stderr.String(), err)
+	}
+
+	b, err := os.ReadFile(filepath.Join(tmpDir, "compressed.qcow2"))
+	if err != nil {
+		return nil, fmt.Errorf("failed to read rootfs after compression: %w", err)
+	}
+
+	log.FromContext(ctx).Info("Compressed rootfs.img", "uncompressed", len(raw), "compressed", len(b))
+	return b, nil
 }

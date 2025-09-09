@@ -20,7 +20,7 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-func (i *Index) importVirtualMachineUnifiedTarball(ctx context.Context, imagePath string, aliases []string, incus bool, lxd bool) error {
+func (i *Index) importVirtualMachineUnifiedTarball(ctx context.Context, imagePath string, aliases []string, incus bool, lxd bool, compressRootfs bool) error {
 	log.FromContext(ctx).Info("Importing virtual-machine image", "image", imagePath)
 
 	f, err := os.Open(imagePath)
@@ -103,10 +103,18 @@ func (i *Index) importVirtualMachineUnifiedTarball(ctx context.Context, imagePat
 		return fmt.Errorf("no metadata.yaml found in image")
 	}
 
+	// NOTE(neoaggelos): https://github.com/lxc/incus/commit/76804eedd6ac061fb4d974806be65ee78fb62c74
+	// Incus no longer compresses rootfs when exporting a unified tarball, so we have to
+	if compressRootfs && incus {
+		if outRootfs, err = qemuCompressImage(ctx, outRootfs); err != nil {
+			return fmt.Errorf("failed to compress qcow2 rootfs: %w", err)
+		}
+	}
+
 	// we now have:
 	//   * metadata: parsed instance metadata
 	//   * outMetadata: metadata archive for vm image
-	//   * outRootfs: qcow2 rootfs for vm image
+	//   * outRootfs: compressed qcow2 rootfs for vm image
 
 	info, err := getVirtualMachineImageInfo(outMetadata, outRootfs)
 	if err != nil {
