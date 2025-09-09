@@ -5,7 +5,9 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"maps"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	incus "github.com/lxc/incus/v6/client"
@@ -18,25 +20,52 @@ import (
 // If an instance create operation is already underway, it will wait for the existing operation and start the instance.
 //
 // WaitForLaunchInstance will wait for the instance to have a valid host address, and returns a slice of host addresses on success.
-func (c *Client) WaitForLaunchInstance(ctx context.Context, instance api.InstancesPost, opts *LaunchOptions) ([]string, error) {
+func (c *Client) WaitForLaunchInstance(ctx context.Context, name string, opts *LaunchOptions) ([]string, error) {
 	ctx, cancel := context.WithTimeout(ctx, instanceCreateTimeout)
 	defer cancel()
 
-	if _, _, err := c.GetInstanceState(instance.Name); err == nil {
+	if _, _, err := c.GetInstanceState(name); err == nil {
 		log.FromContext(ctx).V(2).Info("Instance already exists")
-		return c.WaitForStartInstance(ctx, instance.Name)
+		return c.WaitForStartInstance(ctx, name)
 	} else if err := c.WaitForOperation(ctx, "CreateInstance", func() (incus.Operation, error) {
-		log.FromContext(ctx).V(2).Info("Creating instance")
-		if op, err := c.tryFindInstanceCreateOperation(ctx, instance.Name); err == nil && op != nil {
+		if op, err := c.tryFindInstanceCreateOperation(ctx, name); err == nil && op != nil {
 			return op, nil
 		}
-		return c.CreateInstance(instance)
+
+		// if OCI image is specified as `IMG[:TAG]@sha256:HASH`, replace with `IMG@sha256:HASH`
+		if opts.image.Protocol == "oci" {
+			if image, hash, ok := strings.Cut(opts.image.Alias, "@"); ok {
+				imageWithoutTag, _, _ := strings.Cut(image, ":")
+				opts.image.Alias = fmt.Sprintf("%s@%s", imageWithoutTag, hash)
+			}
+		}
+
+		log.FromContext(ctx).V(2).WithValues(
+			"lxc.instance.name", name,
+			"lxc.instance.image", opts.image,
+			"lxc.instance.type", opts.instanceType,
+			"lxc.instance.flavor", opts.flavor,
+			"lxc.instance.profiles", opts.profiles,
+			"lxc.instance.devices", slices.Collect(maps.Keys(opts.devices)),
+		).Info("Creating instance")
+
+		return c.CreateInstance(api.InstancesPost{
+			Name:         name,
+			Source:       opts.image,
+			Type:         opts.instanceType,
+			InstanceType: opts.flavor,
+			InstancePut: api.InstancePut{
+				Config:   opts.config,
+				Devices:  opts.devices,
+				Profiles: opts.profiles,
+			},
+		})
 	}); err != nil {
 		return nil, err
 	}
 
-	if templates := opts.GetSeedFiles(); len(templates) > 0 {
-		metadata, _, err := c.GetInstanceMetadata(instance.Name)
+	if templates := opts.instanceTemplates; len(templates) > 0 {
+		metadata, _, err := c.GetInstanceMetadata(name)
 		if err != nil {
 			return nil, fmt.Errorf("failed to GetInstanceMetadata: %w", err)
 		}
@@ -47,7 +76,7 @@ func (c *Client) WaitForLaunchInstance(ctx context.Context, instance api.Instanc
 
 		for path, contents := range templates {
 			templateName := fmt.Sprintf("%s.tpl", filepath.Base(path))
-			if err := c.CreateInstanceTemplateFile(instance.Name, templateName, strings.NewReader(contents)); err != nil {
+			if err := c.CreateInstanceTemplateFile(name, templateName, strings.NewReader(contents)); err != nil {
 				return nil, fmt.Errorf("failed to CreateInstanceTemplateFile(%s): %w", templateName, err)
 			}
 
@@ -57,22 +86,19 @@ func (c *Client) WaitForLaunchInstance(ctx context.Context, instance api.Instanc
 				Template:   templateName,
 			}
 		}
-		if err := c.UpdateInstanceMetadata(instance.Name, *metadata, ""); err != nil {
+		if err := c.UpdateInstanceMetadata(name, *metadata, ""); err != nil {
 			return nil, fmt.Errorf("failed to UpdateInstanceMetadata: %w", err)
 		}
 	}
 
-	for path, target := range opts.GetSymlinks() {
-		if err := c.CreateInstanceFile(instance.Name, path, incus.InstanceFileArgs{
-			Content: bytes.NewReader([]byte(target)),
-			Type:    "symlink",
-		}); err != nil {
-			return nil, fmt.Errorf("failed to CreateSymbolicLink(%q => %q): %w", path, target, err)
+	for _, file := range opts.createFiles {
+		if err := c.CreateInstanceFile(name, file.path(), file.args()); err != nil {
+			return nil, fmt.Errorf("failed to %s: %w", file.action(), err)
 		}
 	}
 
-	for path, replacer := range opts.GetReplacements() {
-		reader, resp, err := c.GetInstanceFile(instance.Name, path)
+	for path, replacer := range opts.replacements {
+		reader, resp, err := c.GetInstanceFile(name, path)
 		if err != nil {
 			return nil, fmt.Errorf("failed to replace text in %q: failed to GetInstanceFile: %w", path, err)
 		}
@@ -88,7 +114,7 @@ func (c *Client) WaitForLaunchInstance(ctx context.Context, instance api.Instanc
 
 		if newContents := replacer.Replace(contents); newContents == contents {
 			continue
-		} else if err := c.CreateInstanceFile(instance.Name, path, incus.InstanceFileArgs{
+		} else if err := c.CreateInstanceFile(name, path, incus.InstanceFileArgs{
 			Content:   bytes.NewReader([]byte(newContents)),
 			Mode:      resp.Mode,
 			UID:       resp.UID,
@@ -100,7 +126,7 @@ func (c *Client) WaitForLaunchInstance(ctx context.Context, instance api.Instanc
 		}
 	}
 
-	return c.WaitForStartInstance(ctx, instance.Name)
+	return c.WaitForStartInstance(ctx, name)
 }
 
 // WaitForStartInstance starts an instance, and waits for at least one valid host address.

@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"strconv"
 
 	incus "github.com/lxc/incus/v6/client"
 	"github.com/lxc/incus/v6/shared/api"
@@ -13,17 +12,9 @@ import (
 	"sigs.k8s.io/yaml"
 
 	infrav1 "github.com/lxc/cluster-api-provider-incus/api/v1alpha2"
+	"github.com/lxc/cluster-api-provider-incus/internal/instances"
 	"github.com/lxc/cluster-api-provider-incus/internal/lxc"
 )
-
-func defaultHaproxyOCIImage() api.InstanceSource {
-	return api.InstanceSource{
-		Type:     "image",
-		Protocol: "oci",
-		Server:   "https://ghcr.io",
-		Alias:    "lxc/cluster-api-provider-incus/haproxy:v20230606-42a2262b",
-	}
-}
 
 // managerOCI is a Manager that spins up a kindest/haproxy OCI container.
 type managerOCI struct {
@@ -44,35 +35,24 @@ func (l *managerOCI) Create(ctx context.Context) ([]string, error) {
 		return nil, fmt.Errorf("server does not support OCI containers: %w", err)
 	}
 
-	// Use default haproxy image if not set
-	var image api.InstanceSource
-	if l.spec.Image.IsZero() {
-		image = defaultHaproxyOCIImage()
-	} else {
-		image = api.InstanceSource{
+	launchOpts := instances.HaproxyOCILaunchOptions().
+		WithProfiles(l.spec.Profiles).
+		WithFlavor(l.spec.Flavor).
+		WithConfig(map[string]string{
+			"user.cluster-name":      l.clusterName,
+			"user.cluster-namespace": l.clusterNamespace,
+			"user.cluster-role":      "loadbalancer",
+		}).
+		MaybeWithImage(api.InstanceSource{
 			Type:        "image",
 			Protocol:    l.spec.Image.Protocol,
 			Server:      l.spec.Image.Server,
 			Alias:       l.spec.Image.Name,
 			Fingerprint: l.spec.Image.Fingerprint,
-		}
-	}
+		})
 
 	log.FromContext(ctx).V(1).Info("Launching load balancer instance")
-	addrs, err := l.lxcClient.WithTarget(l.spec.Target).WaitForLaunchInstance(ctx, api.InstancesPost{
-		Name:         l.name,
-		Type:         api.InstanceTypeContainer,
-		Source:       image,
-		InstanceType: l.spec.Flavor,
-		InstancePut: api.InstancePut{
-			Profiles: l.spec.Profiles,
-			Config: map[string]string{
-				"user.cluster-name":      l.clusterName,
-				"user.cluster-namespace": l.clusterNamespace,
-				"user.cluster-role":      "loadbalancer",
-			},
-		},
-	}, nil)
+	addrs, err := l.lxcClient.WithTarget(l.spec.Target).WaitForLaunchInstance(ctx, l.name, launchOpts)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create load balancer instance: %w", err)
 	}
@@ -80,7 +60,7 @@ func (l *managerOCI) Create(ctx context.Context) ([]string, error) {
 	return addrs, nil
 }
 
-// Delete implements loadBalancerManager.
+// Delete implements Manager.
 func (l *managerOCI) Delete(ctx context.Context) error {
 	ctx = log.IntoContext(ctx, log.FromContext(ctx).WithValues("loadbalancer.instance", l.name))
 
@@ -92,7 +72,7 @@ func (l *managerOCI) Delete(ctx context.Context) error {
 	return nil
 }
 
-// Reconfigure implements loadBalancerManager.
+// Reconfigure implements Manager.
 func (l *managerOCI) Reconfigure(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, loadBalancerReconfigureTimeout)
 	defer cancel()
@@ -121,19 +101,7 @@ func (l *managerOCI) Reconfigure(ctx context.Context) error {
 	}
 
 	log.FromContext(ctx).V(1).Info("Reloading haproxy configuration")
-	var haproxyPids []string
-	if _, response, err := l.lxcClient.GetInstanceFile(l.name, "/proc"); err != nil {
-		return fmt.Errorf("failed to list running processes in load balancer instance: %w", err)
-	} else {
-		for _, entry := range response.Entries {
-			if _, err := strconv.ParseUint(entry, 10, 64); err != nil {
-				continue
-			}
-			haproxyPids = append(haproxyPids, entry)
-		}
-	}
-
-	if err := l.lxcClient.RunCommand(ctx, l.name, append([]string{"kill", "--signal", "SIGUSR2"}, haproxyPids...), nil, nil, nil); err != nil {
+	if err := l.lxcClient.RunCommand(ctx, l.name, append([]string{"kill", "--signal", "SIGUSR2"}, "1"), nil, nil, nil); err != nil {
 		return fmt.Errorf("failed to send SIGUSR2 to haproxy pids: %w", err)
 	}
 
@@ -175,6 +143,10 @@ func (l *managerOCI) Inspect(ctx context.Context) map[string]string {
 	}
 
 	return result
+}
+
+func (l *managerOCI) ControlPlaneInstanceTemplates(controlPlaneInitialized bool) (map[string]string, error) {
+	return nil, nil
 }
 
 var _ Manager = &managerOCI{}

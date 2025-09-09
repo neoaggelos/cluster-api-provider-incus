@@ -6,9 +6,9 @@ Part of the responsibilities of the infrastructure provider is to provision a Lo
 
 ## Load balancer types
 
-In the LXCCluster resource, `spec.loadBalancer.type` can be one of:
+In the LXCCluster resource, `spec.loadBalancer` can be one of:
 
-{{#tabs name:"load-balancer-type" tabs:"lxc,oci,ovn,external" }}
+{{#tabs name:"load-balancer-type" tabs:"lxc,oci,ovn,kube-vip,external" }}
 
 {{#tab lxc }}
 
@@ -199,15 +199,81 @@ spec:
 
 {{#/tab }}
 
+{{#tab kube-vip }}
+
+The `kube-vip` load balancer type will seed a `/etc/kubernetes/manifests/kube-vip.yaml` static pod manifest on all control plane nodes of the cluster.
+
+Consider the following scenario:
+- We have a network `incusbr0` with CIDR `10.217.28.1/24`. We have limited the DHCP ranges to `10.217.28.10-10.217.28.200`, so we are free to use the rest of the IPs without conflicts.
+- We want to use `10.217.28.243` as the control plane VIP.
+
+```bash
+incus network show incusbr0
+```
+
+```yaml,hidelines=#
+config:
+  ipv4.address: 10.217.28.1/24
+  ipv4.dhcp.ranges: 10.217.28.10-10.217.28.200
+  ipv4.nat: "true"
+#description: ""
+name: incusbr0
+type: bridge
+used_by:
+- /1.0/profiles/default
+managed: true
+#status: Created
+#locations:
+#- none
+#project: default
+```
+
+The LXCCluster in that case would be:
+
+```yaml,hidelines=#
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
+kind: LXCCluster
+metadata:
+  name: example-cluster
+spec:
+#  secretRef:
+#    name: example-secret
+  controlPlaneEndpoint:
+    host: 10.217.28.243
+    port: 6443
+  loadBalancer:
+    kubeVIP: {}
+```
+
+If you are not using the kubeadm control plane provider, you might need to adjust the paths of the kubeconfig and where the kube-vip static pod manifest will be created. For example, if using RKE2:
+
+```yaml,hidelines=#
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
+kind: LXCCluster
+metadata:
+  name: example-cluster
+spec:
+#  secretRef:
+#    name: example-secret
+  controlPlaneEndpoint:
+    host: 10.217.28.243
+    port: 6443
+  loadBalancer:
+    kubeVIP:
+      kubeconfigPath: /etc/rancher/rke2/rke2.yaml
+      manifestPath: /var/lib/rancher/rke2/agent/pod-manifests/kube-vip.yaml
+```
+
+{{#/tab }}
+
 {{#tab external }}
 
-The `external` load balancer type will not provision anything for the cluster load balancer. Instead, something else like `kube-vip` should be used to configure a VIP for the control plane endpoint.
-
-The cluster administrator must manually specify the control plane endpoint.
+The `external` load balancer type will not provision anything for the cluster load balancer. The cluster administrator is responsible to manually specify and provision the control plane endpoint of the cluster.
 
 Consider the following scenario:
 - We have a network `incusbr0` with CIDR `10.217.28.1/24`. We have limited the DHCP ranges to `10.217.28.10-10.217.28.200`, so we are free to use the rest of the IPs without conflicts.
 - We want to use `10.217.28.242` as the control plane VIP.
+- An external automation is in place to ensure that `10.217.28.242:6443` is routed towards the active control plane nodes of the cluster.
 
 ```bash
 incus network show incusbr0
@@ -246,8 +312,6 @@ spec:
   loadBalancer:
     external: {}
 ```
-
-> **NOTE**: More configuration is needed to deploy kube-vip. For a full example, see the [kube-vip cluster template](../reference/templates/kube-vip.md)
 
 {{#/tab }}
 

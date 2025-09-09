@@ -153,8 +153,10 @@ func (o IncusLogCollector) CollectInfrastructureLogs(ctx context.Context, manage
 
 	var errs []error
 	for k, v := range loadbalancer.ManagerForCluster(cluster, lxcCluster, lxcClient).Inspect(ctx) {
-		if err := os.WriteFile(filepath.Join(outputPath, k), []byte(v), 0o600); err != nil {
-			errs = append(errs, fmt.Errorf("failed to write inspection file %v: %w", k, err))
+		if err := os.MkdirAll(filepath.Dir(filepath.Join(outputPath, k)), 0700); err != nil {
+			errs = append(errs, fmt.Errorf("failed to create directory for output file %v: %w", k, err))
+		} else if err := os.WriteFile(filepath.Join(outputPath, k), []byte(v), 0o600); err != nil {
+			errs = append(errs, fmt.Errorf("failed to write output file %v: %w", k, err))
 		}
 	}
 

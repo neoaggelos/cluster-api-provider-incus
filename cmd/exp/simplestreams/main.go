@@ -4,19 +4,19 @@ import (
 	"context"
 	"os"
 
-	"k8s.io/component-base/logs"
 	"k8s.io/klog/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
+
+	"github.com/lxc/cluster-api-provider-incus/cmd/exp/simplestreams/internal/cmd"
 )
 
 var (
-	ctx        context.Context
-	log        = ctrl.Log
-	logOptions = logs.NewOptions()
+	ctx context.Context
+	log = ctrl.Log
 )
 
 func main() {
-	if err := rootCmd.Execute(); err != nil {
+	if err := cmd.NewCmd().ExecuteContext(ctx); err != nil {
 		os.Exit(1)
 	}
 }

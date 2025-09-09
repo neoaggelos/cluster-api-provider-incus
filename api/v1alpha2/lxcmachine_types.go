@@ -18,6 +18,7 @@ package v1alpha2
 
 import (
 	"fmt"
+	"strings"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
@@ -40,10 +41,10 @@ type LXCMachineSpec struct {
 	// +optional
 	ProviderID *string `json:"providerID,omitempty"`
 
-	// InstanceType is "container" or "virtual-machine". Empty defaults to "container".
+	// InstanceType is `container` or `virtual-machine`. Empty defaults to `container`.
 	//
-	// InstanceType may also be set to "kind", in which case OCI containers using the kindest/node
-	// images will be created. This requires server extensions: "instance_oci", "instance_oci_entrypoint".
+	// InstanceType may also be set to `kind`, in which case OCI containers using the kindest/node
+	// images will be created. This requires server extensions: `instance_oci`, `instance_oci_entrypoint`.
 	//
 	// +kubebuilder:validation:Enum:=container;virtual-machine;kind;""
 	// +optional
@@ -71,23 +72,23 @@ type LXCMachineSpec struct {
 	// For example, to specify a different network for an instance, you can use:
 	//
 	// ```yaml
-	//   # override device "eth0", to be of type "nic" and use network "my-network"
-	//   devices:
-	//   - eth0,type=nic,network=my-network
+	// # override device "eth0", to be of type "nic" and use network "my-network"
+	// devices:
+	// - eth0,type=nic,network=my-network
 	// ```
 	//
 	// +optional
-	Devices []string `json:"devices,omitempty"`
+	Devices Devices `json:"devices,omitempty"`
 
 	// Config allows overriding instance configuration keys.
 	//
 	// Note that the provider will always set the following configuration keys:
 	//
-	// - "cloud-init.user-data": cloud-init config data
-	// - "user.cluster-name": name of owning cluster
-	// - "user.cluster-namespace": namespace of owning cluster
-	// - "user.cluster-role": instance role (e.g. control-plane, worker)
-	// - "user.machine-name": name of machine (should match instance hostname)
+	// - `cloud-init.user-data`: cloud-init config data
+	// - `user.cluster-name`: name of owning cluster
+	// - `user.cluster-namespace`: namespace of owning cluster
+	// - `user.cluster-role`: instance role (e.g. control-plane, worker)
+	// - `user.machine-name`: name of machine (should match instance hostname)
 	//
 	// See https://linuxcontainers.org/incus/docs/main/reference/instance_options/#instance-options
 	// for details.
@@ -123,6 +124,39 @@ type LXCMachineSpec struct {
 	Target string `json:"target"`
 }
 
+type Devices []string
+
+// ToMap parses a list of "<device>,<key>=<value>,<key2>=<value2>" strings into a map of device configs.
+// ToMap always returns a non-nil map.
+func (d Devices) ToMap() (map[string]map[string]string, error) {
+	if len(d) == 0 {
+		return map[string]map[string]string{}, nil
+	}
+
+	m := make(map[string]map[string]string, len(d))
+	for _, spec := range d {
+		name, args, hasSeparator := strings.Cut(spec, ",")
+		if !hasSeparator {
+			return nil, fmt.Errorf("device spec %q is not using the expected %q format", spec, "<device>,<key>=<value>,<key2>=<value2>")
+		}
+
+		if _, ok := m[name]; !ok {
+			m[name] = map[string]string{}
+		}
+
+		for arg := range strings.SplitSeq(args, ",") {
+			key, value, hasEqual := strings.Cut(arg, "=")
+			if !hasEqual {
+				return nil, fmt.Errorf("device argument %q of device spec %q is not using the expected %q format", arg, spec, "<key>=<value>")
+			}
+
+			m[name][key] = value
+		}
+	}
+
+	return m, nil
+}
+
 type LXCMachineImageSource struct {
 	// Name is the image name or alias.
 	//
@@ -131,21 +165,21 @@ type LXCMachineImageSource struct {
 	//
 	// For Incus:
 	//
-	//   - "ubuntu:VERSION" => "ubuntu/VERSION/cloud" from https://images.linuxcontainers.org
-	//   - "debian:VERSION" => "debian/VERSION/cloud" from https://images.linuxcontainers.org
-	//   - "images:IMAGE" => "IMAGE" from https://images.linuxcontainers.org
-	//   - "capi:IMAGE" => "IMAGE" from https://d14dnvi2l3tc5t.cloudfront.net
-	//   - "capi-stg:IMAGE" => "IMAGE" from https://djapqxqu5n2qu.cloudfront.net
+	//   - `ubuntu:VERSION` => `ubuntu/VERSION/cloud` from https://images.linuxcontainers.org
+	//   - `debian:VERSION` => `debian/VERSION/cloud` from https://images.linuxcontainers.org
+	//   - `images:IMAGE` => `IMAGE` from https://images.linuxcontainers.org
+	//   - `capi:IMAGE` => `IMAGE` from https://d14dnvi2l3tc5t.cloudfront.net
+	//   - `capi-stg:IMAGE` => `IMAGE` from https://djapqxqu5n2qu.cloudfront.net
 	//
 	// For LXD:
 	//
-	//   - "ubuntu:VERSION" => "VERSION" from https://cloud-images.ubuntu.com/releases
-	//   - "debian:VERSION" => "debian/VERSION/cloud" from https://images.lxd.canonical.com
-	//   - "images:IMAGE" => "IMAGE" from https://images.lxd.canonical.com
-	//   - "capi:IMAGE" => "IMAGE" from https://d14dnvi2l3tc5t.cloudfront.net
-	//   - "capi-stg:IMAGE" => "IMAGE" from https://djapqxqu5n2qu.cloudfront.net
+	//   - `ubuntu:VERSION` => `VERSION` from https://cloud-images.ubuntu.com/releases
+	//   - `debian:VERSION` => `debian/VERSION/cloud` from https://images.lxd.canonical.com
+	//   - `images:IMAGE` => `IMAGE` from https://images.lxd.canonical.com
+	//   - `capi:IMAGE` => `IMAGE` from https://d14dnvi2l3tc5t.cloudfront.net
+	//   - `capi-stg:IMAGE` => `IMAGE` from https://djapqxqu5n2qu.cloudfront.net
 	//
-	// Any instances of "VERSION" in the image name will be replaced with the machine version.
+	// Any instances of `VERSION` in the image name will be replaced with the machine version.
 	// For example, to use debian based kubeadm images, you can set image name to "capi:kubeadm/VERSION/debian"
 	//
 	// +optional

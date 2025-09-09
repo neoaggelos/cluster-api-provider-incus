@@ -3,7 +3,6 @@ package lxcmachine
 import (
 	"context"
 	"fmt"
-	"maps"
 	"net/http"
 	"strings"
 	"time"
@@ -12,10 +11,12 @@ import (
 	"github.com/lxc/incus/v6/shared/api"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/cluster-api/util"
+	"sigs.k8s.io/cluster-api/util/conditions"
 
 	infrav1 "github.com/lxc/cluster-api-provider-incus/api/v1alpha2"
+	"github.com/lxc/cluster-api-provider-incus/internal/instances"
+	"github.com/lxc/cluster-api-provider-incus/internal/loadbalancer"
 	"github.com/lxc/cluster-api-provider-incus/internal/lxc"
-	"github.com/lxc/cluster-api-provider-incus/internal/static"
 	"github.com/lxc/cluster-api-provider-incus/internal/utils"
 )
 
@@ -25,37 +26,19 @@ func launchInstance(ctx context.Context, cluster *clusterv1.Cluster, lxcCluster 
 		return launchKindInstance(ctx, cluster, lxcCluster, machine, lxcMachine, lxcClient, cloudInit)
 	}
 
-	name := lxcMachine.GetInstanceName()
-
 	role := "control-plane"
 	if !util.IsControlPlaneMachine(machine) {
 		role = "worker"
 	}
-	instanceType := lxc.Container
+	instanceType := api.InstanceTypeContainer
 	if lxcMachine.Spec.InstanceType != "" {
-		instanceType = lxcMachine.Spec.InstanceType
+		instanceType = api.InstanceType(lxcMachine.Spec.InstanceType)
 	}
 
 	// Parse device configurations
-	devices := map[string]map[string]string{}
-	for _, deviceSpec := range lxcMachine.Spec.Devices {
-		deviceName, deviceArgs, hasSeparator := strings.Cut(deviceSpec, ",")
-		if !hasSeparator {
-			return nil, utils.TerminalError(fmt.Errorf("device spec %q is not using the expected %q format", deviceSpec, "<device>,<key>=<value>,<key2>=<value2>"))
-		}
-
-		if _, ok := devices[deviceName]; !ok {
-			devices[deviceName] = map[string]string{}
-		}
-
-		for _, deviceArg := range strings.Split(deviceArgs, ",") {
-			key, value, hasEqual := strings.Cut(deviceArg, "=")
-			if !hasEqual {
-				return nil, utils.TerminalError(fmt.Errorf("device argument %q of device spec %q is not using the expected %q format", deviceArg, deviceSpec, "<key>=<value>"))
-			}
-
-			devices[deviceName][key] = value
-		}
+	devices, err := lxcMachine.Spec.Devices.ToMap()
+	if err != nil {
+		return nil, utils.TerminalError(fmt.Errorf("invalid .spec.devices on LXCMachine: %w", err))
 	}
 
 	var machineVersion string
@@ -70,7 +53,6 @@ func launchInstance(ctx context.Context, cluster *clusterv1.Cluster, lxcCluster 
 		}
 		imageSpec.Name = strings.ReplaceAll(imageSpec.Name, "VERSION", machineVersion)
 	}
-
 	image := api.InstanceSource{
 		Type:        "image",
 		Protocol:    imageSpec.Protocol,
@@ -78,69 +60,58 @@ func launchInstance(ctx context.Context, cluster *clusterv1.Cluster, lxcCluster 
 		Alias:       imageSpec.Name,
 		Fingerprint: imageSpec.Fingerprint,
 	}
-	switch {
-	case imageSpec.Name != "":
+	if imageSpec.Name != "" {
 		source, parsed, err := lxc.TryParseImageSource(lxcClient.GetServerName(), imageSpec.Name)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to parse image name: %w", err)
 		} else if parsed {
 			// FIXME: add logging to communicate which image is being used
 			image = source
 		}
-	case imageSpec.IsZero():
+	}
+
+	if imageSpec.IsZero() {
 		if machineVersion == "" {
 			return nil, utils.TerminalError(fmt.Errorf("no image source specified on LXCMachineTemplate and Machine %q does not have a Kubernetes version", machine.Name))
-		}
-
-		// test if image for machine version exists on the default simplestreams server, fail otherwise.
-		if ssClient, err := incus.ConnectSimpleStreams(lxc.DefaultSimplestreamsServer, &incus.ConnectionArgs{HTTPClient: &http.Client{Timeout: 10 * time.Second}}); err != nil {
-			return nil, fmt.Errorf("no image source specified and failed to connect to simplestreams server %q: %w", lxc.DefaultSimplestreamsServer, err)
-		} else if _, _, err := ssClient.GetImageAliasType(instanceType, fmt.Sprintf("kubeadm/%s", machineVersion)); err != nil {
-			return nil, utils.TerminalError(fmt.Errorf("no image source specified and simplestreams server %q does not provide images for Kubernetes version %q: %w. Please consider using a different Kubernetes version, or build your own base image and set the image source on the LXCMachineTemplate resource", lxc.DefaultSimplestreamsServer, machineVersion, err))
-		}
-
-		image = api.InstanceSource{
-			Type:     "image",
-			Protocol: "simplestreams",
-			Server:   lxc.DefaultSimplestreamsServer,
-			Alias:    fmt.Sprintf("kubeadm/%s", machineVersion),
+		} else {
+			// test if image for machine version exists on the default simplestreams server, fail otherwise.
+			if ssClient, err := incus.ConnectSimpleStreams(lxc.DefaultSimplestreamsServer, &incus.ConnectionArgs{HTTPClient: &http.Client{Timeout: 10 * time.Second}}); err != nil {
+				return nil, fmt.Errorf("no image source specified and failed to connect to simplestreams server %q: %w", lxc.DefaultSimplestreamsServer, err)
+			} else if _, _, err := ssClient.GetImageAliasType(string(instanceType), fmt.Sprintf("kubeadm/%s", machineVersion)); err != nil {
+				return nil, utils.TerminalError(fmt.Errorf("no image source specified and simplestreams server %q does not provide images for Kubernetes version %q: %w. Please consider using a different Kubernetes version, or build your own base image and set the image source on the LXCMachineTemplate resource", lxc.DefaultSimplestreamsServer, machineVersion, err))
+			}
 		}
 	}
 
-	instance := api.InstancesPost{
-		Name:         name,
-		Type:         api.InstanceType(instanceType),
-		Source:       image,
-		InstanceType: lxcMachine.Spec.Flavor,
-		InstancePut: api.InstancePut{
-			Config:   map[string]string{},
-			Profiles: lxcMachine.Spec.Profiles,
-			Devices:  devices,
-		},
+	launchOpts := instances.KubeadmLaunchOptions(instances.KubeadmLaunchOptionsInput{
+		InstanceType:      instanceType,
+		KubernetesVersion: machineVersion,
+		Privileged:        !lxcCluster.Spec.Unprivileged,
+		SkipProfile:       lxcCluster.Spec.SkipDefaultKubeadmProfile,
+		ServerName:        lxcClient.GetServerName(),
+
+		CloudInit: cloudInit,
+	}).
+		WithFlavor(lxcMachine.Spec.Flavor).
+		WithProfiles(lxcMachine.Spec.Profiles).
+		WithDevices(devices).
+		WithConfig(lxcMachine.Spec.Config).
+		WithConfig(map[string]string{
+			"user.cluster-name":      cluster.Name,
+			"user.cluster-namespace": cluster.Namespace,
+			"user.machine-name":      machine.Name,
+			"user.cluster-role":      role,
+		}).
+		MaybeWithImage(image)
+
+	// apply instance templates from load balancer manager
+	if util.IsControlPlaneMachine(machine) {
+		if files, err := loadbalancer.ManagerForCluster(cluster, lxcCluster, lxcClient).ControlPlaneInstanceTemplates(conditions.IsTrue(cluster, clusterv1.ControlPlaneInitializedCondition)); err != nil {
+			return nil, fmt.Errorf("failed to generate load balancer configuration files: %w", err)
+		} else {
+			launchOpts = launchOpts.WithInstanceTemplates(files)
+		}
 	}
 
-	// apply instance config
-	maps.Copy(instance.Config, lxcMachine.Spec.Config)
-	maps.Copy(instance.Config, map[string]string{
-		"user.cluster-name":      cluster.Name,
-		"user.cluster-namespace": cluster.Namespace,
-		"user.machine-name":      machine.Name,
-		"user.cluster-role":      role,
-		"cloud-init.user-data":   cloudInit,
-	})
-
-	// apply profile for Kubernetes to run in LXC containers
-	if instanceType == lxc.Container && !lxcCluster.Spec.SkipDefaultKubeadmProfile {
-		profile := static.DefaultKubeadmProfile(!lxcCluster.Spec.Unprivileged, lxcClient.GetServerName())
-
-		maps.Copy(instance.Devices, profile.Devices)
-		maps.Copy(instance.Config, profile.Config)
-	}
-
-	return lxcClient.WithTarget(lxcMachine.Spec.Target).WaitForLaunchInstance(ctx, instance, &lxc.LaunchOptions{SeedFiles: defaultSeedFiles})
-}
-
-// defaultSeedFiles that are injected to LXCMachine instances.
-var defaultSeedFiles = map[string]string{
-	"/opt/cluster-api/install-kubeadm.sh": static.InstallKubeadmScript(),
+	return lxcClient.WithTarget(lxcMachine.Spec.Target).WaitForLaunchInstance(ctx, lxcMachine.GetInstanceName(), launchOpts)
 }

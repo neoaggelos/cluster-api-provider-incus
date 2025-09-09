@@ -11,6 +11,7 @@ import (
 	"github.com/lxc/incus/v6/shared/api"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
+	"github.com/lxc/cluster-api-provider-incus/internal/lxc"
 	"github.com/lxc/cluster-api-provider-incus/internal/static"
 )
 
@@ -26,18 +27,13 @@ func (*stageValidateKubeadmImage) run(ctx context.Context) error {
 
 	ctx = log.IntoContext(ctx, log.FromContext(ctx).WithValues("instance.name", instanceName))
 
+	launchOpts := (&lxc.LaunchOptions{}).
+		MaybeWithImage(api.InstanceSource{Type: "image", Alias: cfg.imageAlias}).
+		WithInstanceType(api.InstanceType(cfg.instanceType)).
+		WithProfiles(cfg.instanceProfiles)
+
 	log.FromContext(ctx).V(1).Info("Launching test instance")
-	if _, err := lxcClient.WaitForLaunchInstance(ctx, api.InstancesPost{
-		Name: instanceName,
-		Type: api.InstanceType(cfg.instanceType),
-		Source: api.InstanceSource{
-			Type:  "image",
-			Alias: cfg.imageAlias,
-		},
-		InstancePut: api.InstancePut{
-			Profiles: cfg.instanceProfiles,
-		},
-	}, nil); err != nil {
+	if _, err := lxcClient.WaitForLaunchInstance(ctx, instanceName, launchOpts); err != nil {
 		return fmt.Errorf("failed to launch validation instance: %w", err)
 	}
 

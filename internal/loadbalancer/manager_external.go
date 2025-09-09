@@ -10,7 +10,7 @@ import (
 	"github.com/lxc/cluster-api-provider-incus/internal/utils"
 )
 
-// managerExternal is a no-op LoadBalancerManager when using an external LoadBalancer mechanism for the cluster (e.g. kube-vip).
+// managerExternal is a no-op Manager when using an external LoadBalancer mechanism for the cluster (e.g. kube-vip).
 type managerExternal struct {
 	lxcClient *lxc.Client
 
@@ -20,9 +20,8 @@ type managerExternal struct {
 	address string
 }
 
-// Create implements loadBalancerManager.
+// Create implements Manager.
 func (l *managerExternal) Create(ctx context.Context) ([]string, error) {
-
 	ctx = log.IntoContext(ctx, log.FromContext(ctx).WithValues("address", l.address))
 
 	// TODO: extend to support automatically finding an available VIP from an address range (so that we don't have to statically assign kube-vips).
@@ -38,7 +37,7 @@ func (l *managerExternal) Create(ctx context.Context) ([]string, error) {
 	return []string{l.address}, nil
 }
 
-// Delete implements loadBalancerManager.
+// Delete implements Manager.
 func (l *managerExternal) Delete(ctx context.Context) error {
 	ctx = log.IntoContext(ctx, log.FromContext(ctx).WithValues("address", l.address))
 
@@ -46,7 +45,7 @@ func (l *managerExternal) Delete(ctx context.Context) error {
 	return nil
 }
 
-// Reconfigure implements loadBalancerManager.
+// Reconfigure implements Manager.
 func (l *managerExternal) Reconfigure(ctx context.Context) error {
 	ctx = log.IntoContext(ctx, log.FromContext(ctx).WithValues("address", l.address))
 	log.FromContext(ctx).V(1).Info("Using external load balancer, nothing to reconfigure")
@@ -54,9 +53,14 @@ func (l *managerExternal) Reconfigure(ctx context.Context) error {
 	return nil
 }
 
-// Inspect implements loadBalancerManager.
+// Inspect implements Manager.
 func (l *managerExternal) Inspect(ctx context.Context) map[string]string {
 	return map[string]string{"address": l.address}
+}
+
+// ControlPlaneInstanceTemplates implements Manager.
+func (l *managerExternal) ControlPlaneInstanceTemplates(controlPlaneInitialized bool) (map[string]string, error) {
+	return nil, nil
 }
 
 var _ Manager = &managerExternal{}
