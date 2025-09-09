@@ -40,8 +40,7 @@ Rough steps for version v0.8.0:
 - [ ] Add `kini` command line tool, re-using building blocks from [kind](https://kind.sigs.k8s.io).
 - [ ] Use `kini` for quick start guide and e2e tests.
 - [ ] Build images for v1.34.0, based on Ubuntu 24.04 and Debian 13.
-- [ ] Support load balancer IPAM (define range of load balancer IPs, CAPN automatically claims/releases load balancer IP).
-- [ ] Add support for built-in [`keepalived`](https://github.com/lxc/cluster-api-provider-incus/pull/119) and `kube-vip` load balancer types.
+- [ ] Load balancer IPAM (CAPN automatically claims/releases load balancer IP addresses from the network).
 - [x] Private initial alpha testing.
 - [x] Cloud provider node patch to link Machines with workload cluster Nodes.
 - [x] Test with both [Incus](https://linuxcontainers.org/incus/introduction/) and [Canonical LXD](https://canonical.com/lxd).
