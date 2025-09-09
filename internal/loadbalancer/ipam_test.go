@@ -20,10 +20,10 @@ func TestAllocate(t *testing.T) {
 	lxcClient, err := lxc.New(context.TODO(), opts)
 	g.Expect(err).ToNot(HaveOccurred())
 
-	as := make([]string, 15)
-	errs := make([]error, 15)
+	as := make([]string, 30)
+	errs := make([]error, 30)
 	wg := sync.WaitGroup{}
-	for i := range 15 {
+	for i := range 30 {
 		wg.Add(1)
 		go func(i int) {
 			as[i], errs[i] = (&ipamAllocator{
@@ -42,7 +42,7 @@ func TestAllocate(t *testing.T) {
 
 	wg.Wait()
 
-	for i := range 15 {
+	for i := range 30 {
 		fmt.Println(as[i], errs[i])
 	}
 }

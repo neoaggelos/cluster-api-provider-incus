@@ -26,16 +26,6 @@ func (a *ipamAllocator) Allocate(ctx context.Context) (raddress string, rerr err
 		return "", fmt.Errorf("failed to retrieve network %q: %w", a.networkName, err)
 	}
 
-	rangeString, ok := network.Config[a.rangesKey]
-	if !ok {
-		return "", fmt.Errorf("network %q does not have configuration %q", a.networkName, a.rangesKey)
-	}
-
-	iprange, err := utils.ParseIPRanges(rangeString)
-	if err != nil {
-		return "", fmt.Errorf("network %q has invalid %q configuration: %w", a.networkName, a.rangesKey, err)
-	}
-
 	clusterNamespacedName := fmt.Sprintf("%s/%s", a.clusterNamespace, a.clusterName)
 	volatileClusterKey := a.volatileKey(clusterNamespacedName)
 
@@ -55,6 +45,12 @@ func (a *ipamAllocator) Allocate(ctx context.Context) (raddress string, rerr err
 			if err := a.lxcClient.UpdateNetwork(a.networkName, network.NetworkPut, etag); err != nil {
 				rerr = fmt.Errorf("failed to allocate address %q on network %q: %w", raddress, a.networkName, err)
 				raddress = ""
+			} else if network, _, err := a.lxcClient.GetNetwork(a.networkName); err != nil {
+				rerr = fmt.Errorf("failed to allocate address %q on network %q: failed to check network after update: %w", raddress, a.networkName, err)
+				raddress = ""
+			} else if network.Config[volatileAddrKey] != clusterNamespacedName || network.Config[volatileClusterKey] != raddress {
+				rerr = fmt.Errorf("failed to allocate address %q on network %q: optimistic update failed", raddress, a.networkName)
+				raddress = ""
 			}
 		}
 	}()
@@ -64,6 +60,16 @@ func (a *ipamAllocator) Allocate(ctx context.Context) (raddress string, rerr err
 		if v, ok := network.Config[a.volatileKey(addr)]; !ok || v == clusterNamespacedName { // address is unallocated, or allocated to this cluster
 			return addr, nil
 		}
+	}
+
+	rangeString, ok := network.Config[a.rangesKey]
+	if !ok {
+		return "", fmt.Errorf("network %q does not have configuration %q", a.networkName, a.rangesKey)
+	}
+
+	iprange, err := utils.ParseIPRanges(rangeString)
+	if err != nil {
+		return "", fmt.Errorf("network %q has invalid %q configuration: %w", a.networkName, a.rangesKey, err)
 	}
 
 	// range over ip ranges to find a free IP
