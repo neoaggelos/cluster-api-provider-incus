@@ -15,9 +15,8 @@ func newImportReleaseCmd() *cobra.Command {
 
 		alias []string
 
-		containerImage string
-		vmImageIncus   string
-		vmImageLXD     string
+		containerImage      string
+		virtualMachineImage string
 	}
 
 	cmd := &cobra.Command{
@@ -36,15 +35,9 @@ func newImportReleaseCmd() *cobra.Command {
 				}
 			}
 
-			if flags.vmImageIncus != "" {
-				if err := index.ImportImage(cmd.Context(), lxc.VirtualMachine, flags.vmImageIncus, flags.alias, true, false); err != nil {
+			if flags.virtualMachineImage != "" {
+				if err := index.ImportImage(cmd.Context(), lxc.VirtualMachine, flags.virtualMachineImage, flags.alias, true, true); err != nil {
 					return fmt.Errorf("failed to import Incus VM image: %w", err)
-				}
-			}
-
-			if flags.vmImageLXD != "" {
-				if err := index.ImportImage(cmd.Context(), lxc.VirtualMachine, flags.vmImageLXD, flags.alias, false, true); err != nil {
-					return fmt.Errorf("failed to import LXD VM image: %w", err)
 				}
 			}
 
@@ -58,10 +51,8 @@ func newImportReleaseCmd() *cobra.Command {
 		"alias to add to the images, e.g. 'kubeadm/v1.33.0,kubeadm/v1.33.0/ubuntu'")
 	cmd.Flags().StringVar(&flags.containerImage, "container", "",
 		"Path to kubeadm image for containers")
-	cmd.Flags().StringVar(&flags.vmImageIncus, "vm-incus", "",
-		"Path to kubeadm image for Incus virtual machines")
-	cmd.Flags().StringVar(&flags.vmImageLXD, "vm-lxd", "",
-		"Path to kubeadm image for LXD virtual machines")
+	cmd.Flags().StringVar(&flags.virtualMachineImage, "vm", "",
+		"Path to kubeadm image for virtual machines")
 
 	_ = cmd.MarkPersistentFlagRequired("version")
 
