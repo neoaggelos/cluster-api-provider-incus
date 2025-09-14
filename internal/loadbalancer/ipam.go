@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	"sigs.k8s.io/controller-runtime/pkg/log"
+
 	"github.com/lxc/cluster-api-provider-incus/internal/lxc"
 	"github.com/lxc/cluster-api-provider-incus/internal/utils"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 type ipam struct {
