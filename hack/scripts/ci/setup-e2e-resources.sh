@@ -46,7 +46,8 @@ if ! "${CLI}" network show "${LXC_NETWORK_NAME}" 2> /dev/null; then
     ipv6.address="${LXC_NETWORK_IPV6}" ipv6.nat=true \
     ipv4.dhcp.ranges="${LXC_NETWORK_IPV4_DHCP}" \
     ipv4.ovn.ranges="${LXC_NETWORK_IPV4_OVN}" \
-    user.capn.vip.ranges="${LXC_NETWORK_IPV4_VIP_RANGES}"
+    user.capn.vip.ranges="${LXC_NETWORK_IPV4_VIP_RANGES}" \
+    user.capn.e2e.kube-vip=true
 fi
 
 # configure ovn network. the user.capn.vip.ranges annotation is used by "QuickStart OVN"
@@ -56,6 +57,7 @@ if ! "${CLI}" network show "${LXC_OVN_NETWORK_NAME}" 2> /dev/null; then
     ipv4.address="${LXC_OVN_NETWORK_IPV4}" ipv4.nat=true \
     ipv6.address="${LXC_OVN_NETWORK_IPV6}" ipv6.nat=true \
     user.capn.vip.ranges="${LXC_OVN_NETWORK_IPV4_VIP_RANGES}" \
+    user.capn.e2e.ovn=true
   || echo "Failed to create OVN network, will skip OVN tests"
 fi
 

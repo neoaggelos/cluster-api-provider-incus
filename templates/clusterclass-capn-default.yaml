@@ -246,7 +246,7 @@ spec:
             loadBalancer:
               ovn:
                 networkName: {{ .loadBalancer.ovn.networkName | quote }}
-            {{ if index .loadBalancer "ovn" host }}
+            {{ if hasKey .loadBalancer.ovn "host" }}
             controlPlaneEndpoint:
               host: {{ .loadBalancer.ovn.host | quote }}
               port: 6443
@@ -258,7 +258,7 @@ spec:
                 networkName: {{ index .loadBalancer "kube-vip" "networkName" | default "" | quote }}
                 interface: {{ index .loadBalancer "kube-vip" "interface" | default "" | quote }}
                 image: {{ index .loadBalancer "kube-vip" "image" | default "" | quote }}
-            {{ if index .loadBalancer "kube-vip" host }}
+            {{ if hasKey (index .loadBalancer "kube-vip") "host" }}
             controlPlaneEndpoint:
               host: {{ index .loadBalancer "kube-vip" "host" | quote }}
               port: 6443
