@@ -1,18 +1,25 @@
 package kini
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
+	"k8s.io/klog/v2"
 )
 
 func newKiniActivateCmd() *cobra.Command {
+	logFlags := &flag.FlagSet{}
+
 	cmd := &cobra.Command{
 		Use:           "activate",
 		SilenceErrors: true,
 		SilenceUsage:  true,
+		PreRun: func(cmd *cobra.Command, args []string) {
+			setupLogging(cmd, logFlags)
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			log.V(1).Info("Running kini activate")
 
@@ -25,6 +32,9 @@ func newKiniActivateCmd() *cobra.Command {
 			return nil
 		},
 	}
+
+	klog.InitFlags(logFlags)
+	cmd.Flags().AddGoFlagSet(logFlags)
 
 	return cmd
 }

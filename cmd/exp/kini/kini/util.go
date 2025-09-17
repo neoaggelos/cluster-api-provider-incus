@@ -1,10 +1,25 @@
 package kini
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"github.com/spf13/cobra"
 )
+
+func setupLogging(cmd *cobra.Command, logFlags *flag.FlagSet) {
+	if logFile := os.Getenv("KINI_LOG"); logFile != "" {
+		_ = logFlags.Set("logtostderr", "false")
+		_ = logFlags.Set("log_file", logFile)
+		_ = logFlags.Set("alsologtostderr", "true")
+		_ = logFlags.Set("skip_log_headers", "true")
+	}
+	if v := cmd.Flags().Lookup("v").Value.String(); v != "" {
+		_ = os.Setenv("V", v)
+	}
+}
 
 // TODO: rework this
 func setupSelfAsDocker() (func() error, error) {
