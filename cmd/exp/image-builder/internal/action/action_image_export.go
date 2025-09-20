@@ -47,6 +47,14 @@ func ExportImage(lxcClient *lxc.Client, imageAliasName string, outputFile string
 			return fmt.Errorf("failed to truncate output file: %w", err)
 		}
 
+		// NOTE(neoaggelos): https://github.com/lxc/incus/commit/76804eedd6ac061fb4d974806be65ee78fb62c74
+		// Incus no longer compresses rootfs when exporting a unified tarball, so we have to
+		if lxcClient.GetServerName() == lxc.Incus && image.Type == lxc.VirtualMachine {
+			if err := compressUnifiedImageTarballRootfs(ctx, outputFile); err != nil {
+				return fmt.Errorf("failed to compress rootfs.img in unified tarball: %w", err)
+			}
+		}
+
 		return nil
 	}
 }
