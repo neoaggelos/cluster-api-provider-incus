@@ -8,11 +8,10 @@ on:
         description: Kubernetes version, e.g. "v1.33.0"
         type: string
 
-permissions:
-  contents: write
-
 jobs:
   build:
+    permissions:
+      contents: write   # for release
     strategy:
       fail-fast: false
       matrix:
