@@ -17,7 +17,9 @@ var (
 	defaultInstanceStopGracePeriod = 2 * time.Minute
 
 	defaultPullExtraImages = []string{
-		"docker.io/flannel/flannel-cni-plugin:v1.6.0-flannel1",
-		"docker.io/flannel/flannel:v0.26.3",
+		// images for default flannel CNI
+		// NOTE(neoaggelos): keep up to date with flannel CNI manifest in ./templates/cluster-template.yaml
+		"ghcr.io/flannel-io/flannel-cni-plugin:v1.7.1-flannel1",
+		"ghcr.io/flannel-io/flannel:v0.27.3",
 	}
 )
