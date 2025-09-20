@@ -45,8 +45,8 @@ jobs:
             --base-image=${{ matrix.base }} \
             --kubernetes-version=${{ inputs.version }} \
             --instance-type=${{ matrix.type }} \
+            --manifest=kubeadm-${{ inputs.version }}-${{ matrix.type }}-${{ matrix.base }}-${{ matrix.arch }}.txt \
             --output=kubeadm-${{ inputs.version }}-${{ matrix.type }}-${{ matrix.base }}-${{ matrix.arch }}.tar.gz
-            --manifest=kubeadm-${{ inputs.version }}-${{ matrix.type }}-${{ matrix.base }}-${{ matrix.arch }}.txt
 
       - name: Release image
         uses: softprops/action-gh-release@v2
