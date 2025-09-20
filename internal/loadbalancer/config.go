@@ -94,8 +94,7 @@ func renderHaproxyConfiguration(data *configData, configTemplate string) (config
 	}
 	// execute the template
 	var buff bytes.Buffer
-	err = t.Execute(&buff, data)
-	if err != nil {
+	if err = t.Execute(&buff, data); err != nil {
 		return nil, fmt.Errorf("error executing config template: %w", err)
 	}
 	return buff.Bytes(), nil

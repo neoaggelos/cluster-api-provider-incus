@@ -19,12 +19,14 @@ type Manager interface {
 	Delete(context.Context) error
 	// Reconfigure updates the load balancer configuration based on the currently running control plane instances.
 	Reconfigure(context.Context) error
+	// ControlPlaneInstanceTemplates is a map of files that will be injected as templates to control plane instances.
+	ControlPlaneInstanceTemplates(controlPlaneInitialized bool) (map[string]string, error)
 	// Inspect returns a map[string]string of the current state of the load balancer infrastructure.
 	// It is mainly used by the E2E tests.
 	Inspect(context.Context) map[string]string
 }
 
-// ManagerForCluster returns the proper LoadBalancerManager based on the lxcCluster spec.
+// ManagerForCluster returns the proper Manager based on the lxcCluster spec.
 func ManagerForCluster(cluster *clusterv1.Cluster, lxcCluster *infrav1.LXCCluster, lxcClient *lxc.Client) Manager {
 	switch {
 	case lxcCluster.Spec.LoadBalancer.LXC != nil:
@@ -61,6 +63,19 @@ func ManagerForCluster(cluster *clusterv1.Cluster, lxcCluster *infrav1.LXCCluste
 			clusterNamespace: cluster.Namespace,
 
 			address: lxcCluster.Spec.ControlPlaneEndpoint.Host,
+		}
+	case lxcCluster.Spec.LoadBalancer.KubeVIP != nil:
+		return &managerKubeVIP{
+			lxcClient:        lxcClient,
+			clusterName:      cluster.Name,
+			clusterNamespace: cluster.Namespace,
+
+			address: lxcCluster.Spec.ControlPlaneEndpoint.Host,
+
+			interfaceName:  lxcCluster.Spec.LoadBalancer.KubeVIP.Interface,
+			image:          lxcCluster.Spec.LoadBalancer.KubeVIP.Image,
+			kubeconfigPath: lxcCluster.Spec.LoadBalancer.KubeVIP.KubeconfigPath,
+			manifestPath:   lxcCluster.Spec.LoadBalancer.KubeVIP.ManifestPath,
 		}
 	default:
 		// TODO: handle this more gracefully.

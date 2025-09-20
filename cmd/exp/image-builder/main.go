@@ -6,21 +6,23 @@ import (
 
 	"k8s.io/klog/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
+
+	"github.com/lxc/cluster-api-provider-incus/cmd/exp/image-builder/internal/cmd"
 )
 
 var (
-	gCtx    context.Context
-	gLogger = ctrl.Log
+	ctx context.Context
+	log = ctrl.Log
 )
 
 func main() {
-	if err := rootCmd.Execute(); err != nil {
+	if err := cmd.NewCmd().Execute(); err != nil {
 		os.Exit(1)
 	}
 }
 
 func init() {
-	gCtx = ctrl.SetupSignalHandler()
+	ctx = ctrl.SetupSignalHandler()
 	ctrl.SetLogger(klog.Background())
-	gCtx = ctrl.LoggerInto(gCtx, gLogger)
+	ctx = ctrl.LoggerInto(ctx, log)
 }
