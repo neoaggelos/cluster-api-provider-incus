@@ -76,7 +76,7 @@ func (i *Index) ImportImage(ctx context.Context, imageType string, imagePath str
 	case lxc.Container:
 		return i.importContainerUnifiedTarball(ctx, imagePath, aliases, incus, lxd)
 	case lxc.VirtualMachine:
-		return i.importVirtualMachineUnifiedTarball(ctx, imagePath, aliases, incus, lxd, true)
+		return i.importVirtualMachineUnifiedTarball(ctx, imagePath, aliases, incus, lxd)
 	default:
 		return fmt.Errorf("unknown image type %q", imageType)
 	}

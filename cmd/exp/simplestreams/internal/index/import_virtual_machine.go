@@ -20,7 +20,7 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-func (i *Index) importVirtualMachineUnifiedTarball(ctx context.Context, imagePath string, aliases []string, incus bool, lxd bool, compressRootfs bool) error {
+func (i *Index) importVirtualMachineUnifiedTarball(ctx context.Context, imagePath string, aliases []string, incus bool, lxd bool) error {
 	log.FromContext(ctx).Info("Importing virtual-machine image", "image", imagePath)
 
 	f, err := os.Open(imagePath)
