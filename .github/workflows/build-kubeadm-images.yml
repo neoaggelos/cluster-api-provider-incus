@@ -46,9 +46,14 @@ jobs:
             --kubernetes-version=${{ inputs.version }} \
             --instance-type=${{ matrix.type }} \
             --output=kubeadm-${{ inputs.version }}-${{ matrix.type }}-${{ matrix.base }}-${{ matrix.arch }}.tar.gz
+            --manifest=kubeadm-${{ inputs.version }}-${{ matrix.type }}-${{ matrix.base }}-${{ matrix.arch }}.txt
 
-      - name: Upload image
-        uses: actions/upload-artifact@v4
+      - name: Release image
+        uses: softprops/action-gh-release@v2
         with:
-          name: kubeadm-${{ inputs.version }}-${{ matrix.type }}-${{ matrix.base }}-${{ matrix.arch }}
-          path: kubeadm-${{ inputs.version }}-${{ matrix.type }}-${{ matrix.base }}-${{ matrix.arch }}.tar.gz
+          name: Kubeadm images
+          tag_name: kubeadm-images
+          files: |
+            kubeadm-${{ inputs.version }}-${{ matrix.type }}-${{ matrix.base }}-${{ matrix.arch }}.tar.gz
+            kubeadm-${{ inputs.version }}-${{ matrix.type }}-${{ matrix.base }}-${{ matrix.arch }}.txt
+          make_latest: "false"
