@@ -8,6 +8,9 @@ on:
         description: Kubernetes version, e.g. "v1.33.0"
         type: string
 
+permissions:
+  contents: write
+
 jobs:
   build:
     strategy:
