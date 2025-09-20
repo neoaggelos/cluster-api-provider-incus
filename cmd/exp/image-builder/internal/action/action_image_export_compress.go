@@ -29,13 +29,16 @@ func qemuCompressImage(ctx context.Context, raw []byte) ([]byte, error) {
 	}
 
 	// attempt to use qemu-img from path, or fallbcak to /opt/incus/bin/qemu-img
+	var extraEnv []string
 	qemuImg, err := exec.LookPath("qemu-img")
 	if err != nil {
 		qemuImg = "/opt/incus/bin/qemu-img"
+		extraEnv = append(extraEnv, "LD_LIBRARY_PATH=/opt/incus/lib")
 	}
 
 	var stderr bytes.Buffer
 	cmd := exec.CommandContext(ctx, qemuImg, "convert", "-O", "qcow2", "-c", filepath.Join(tmpDir, "uncompressed.qcow2"), filepath.Join(tmpDir, "compressed.qcow2"))
+	cmd.Env = append(os.Environ(), extraEnv...)
 	cmd.Stderr = &stderr
 
 	if err := cmd.Run(); err != nil {
