@@ -27,16 +27,18 @@ Provided images are built in [GitHub Actions](https://github.com/lxc/cluster-api
 
 The following images are currently provided:
 
-| Image Alias | Base Image | Description | amd64 | arm64 |
-|-|-|-|-|-|
-| haproxy | Ubuntu 24.04 | Haproxy image for development clusters | X | X |
-| kubeadm/v1.31.5 | Ubuntu 24.04 | Kubeadm image for Kubernetes v1.31.5 | X | |
-| kubeadm/v1.32.0 | Ubuntu 24.04 | Kubeadm image for Kubernetes v1.32.0 | X | |
-| kubeadm/v1.32.1 | Ubuntu 24.04 | Kubeadm image for Kubernetes v1.32.1 | X | |
-| kubeadm/v1.32.2 | Ubuntu 24.04 | Kubeadm image for Kubernetes v1.32.2 | X | |
-| kubeadm/v1.32.3 | Ubuntu 24.04 | Kubeadm image for Kubernetes v1.32.3 | X | |
-| kubeadm/v1.32.4 | Ubuntu 24.04 | Kubeadm image for Kubernetes v1.32.4 | X | X |
-| kubeadm/v1.33.0 | Ubuntu 24.04 | Kubeadm image for Kubernetes v1.33.0 | X | X |
+| Image Alias     | Base Image   | Description                            | amd64 | arm64 |
+| --------------- | ------------ | -------------------------------------- | ----- | ----- |
+| haproxy         | Ubuntu 24.04 | Haproxy image for development clusters | X     | X     |
+| kubeadm/v1.31.5 | Ubuntu 24.04 | Kubeadm image for Kubernetes v1.31.5   | X     |       |
+| kubeadm/v1.32.0 | Ubuntu 24.04 | Kubeadm image for Kubernetes v1.32.0   | X     |       |
+| kubeadm/v1.32.1 | Ubuntu 24.04 | Kubeadm image for Kubernetes v1.32.1   | X     |       |
+| kubeadm/v1.32.2 | Ubuntu 24.04 | Kubeadm image for Kubernetes v1.32.2   | X     |       |
+| kubeadm/v1.32.3 | Ubuntu 24.04 | Kubeadm image for Kubernetes v1.32.3   | X     |       |
+| kubeadm/v1.32.4 | Ubuntu 24.04 | Kubeadm image for Kubernetes v1.32.4   | X     | X     |
+| kubeadm/v1.33.0 | Ubuntu 24.04 | Kubeadm image for Kubernetes v1.33.0   | X     | X     |
+| kubeadm/v1.33.5 | Ubuntu 24.04 | Kubeadm image for Kubernetes v1.33.5   | X     | X     |
+| kubeadm/v1.34.0 | Ubuntu 24.04 | Kubeadm image for Kubernetes v1.34.0   | X     | X     |
 
 Note that the table above might be out of date. See [streams/v1/index.json] and [streams/v1/images.json] for the list of versions currently available.
 

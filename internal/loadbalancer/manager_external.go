@@ -10,7 +10,7 @@ import (
 	"github.com/lxc/cluster-api-provider-incus/internal/utils"
 )
 
-// managerExternal is a no-op LoadBalancerManager when using an external LoadBalancer mechanism for the cluster (e.g. kube-vip).
+// managerExternal is a no-op Manager when using an external LoadBalancer mechanism for the cluster (e.g. kube-vip).
 type managerExternal struct {
 	lxcClient *lxc.Client
 
@@ -22,7 +22,6 @@ type managerExternal struct {
 
 // Create implements Manager.
 func (l *managerExternal) Create(ctx context.Context) ([]string, error) {
-
 	ctx = log.IntoContext(ctx, log.FromContext(ctx).WithValues("address", l.address))
 
 	// TODO: extend to support automatically finding an available VIP from an address range (so that we don't have to statically assign kube-vips).
@@ -57,6 +56,11 @@ func (l *managerExternal) Reconfigure(ctx context.Context) error {
 // Inspect implements Manager.
 func (l *managerExternal) Inspect(ctx context.Context) map[string]string {
 	return map[string]string{"address": l.address}
+}
+
+// ControlPlaneInstanceTemplates implements Manager.
+func (l *managerExternal) ControlPlaneInstanceTemplates(controlPlaneInitialized bool) (map[string]string, error) {
+	return nil, nil
 }
 
 var _ Manager = &managerExternal{}

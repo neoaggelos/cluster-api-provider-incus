@@ -18,6 +18,9 @@ const (
 	// DefaultLXDUbuntuSimplestreamsServer is the default simplestreams server for Ubuntu images for Canonical LXD.
 	DefaultLXDUbuntuSimplestreamsServer = "https://cloud-images.ubuntu.com/releases/"
 
+	// DockerHubServer is the server URL for DockerHub images.
+	DockerHubServer = "https://docker.io"
+
 	// Container is the instance type for container instances.
 	Container = "container"
 
@@ -29,6 +32,12 @@ const (
 
 	// LXD is the server name for Canonical LXD servers.
 	LXD = "lxd"
+
+	// OCI is the protocol for OCI images.
+	OCI = "oci"
+
+	// Simplestreams is the protocol for Simplestreams images.
+	Simplestreams = "simplestreams"
 
 	// instanceCreateTimeout is the timeout for creating an instance.
 	instanceCreateTimeout = 180 * time.Second

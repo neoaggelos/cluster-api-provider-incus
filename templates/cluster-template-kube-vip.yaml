@@ -29,7 +29,7 @@ spec:
     host: ${LXC_LOAD_BALANCER_ADDRESS}
     port: 6443
   loadBalancer:
-    external: {}
+    kubeVIP: {}
 ---
 apiVersion: controlplane.cluster.x-k8s.io/v1beta1
 kind: KubeadmControlPlane

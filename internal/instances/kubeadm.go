@@ -27,7 +27,7 @@ func KubeadmLaunchOptions(in KubeadmLaunchOptionsInput) *lxc.LaunchOptions {
 		WithInstanceType(in.InstanceType).
 		MaybeWithImage(api.InstanceSource{
 			Type:     "image",
-			Protocol: "simplestreams",
+			Protocol: lxc.Simplestreams,
 			Server:   lxc.DefaultSimplestreamsServer,
 			Alias:    fmt.Sprintf("kubeadm/%s", in.KubernetesVersion),
 		}).
