@@ -13,14 +13,14 @@ import (
 )
 
 type Configuration struct {
-	// Server URL and certificate.
-	ServerURL          string `yaml:"server"`
+	// Server URL. Can be either `https://` or `unix://`
+	ServerURL string `yaml:"server"`
+
+	// Client certificate and key, only used if ServerURL is not "unix://..."
+	ClientCrt          string `yaml:"client-crt"`
+	ClientKey          string `yaml:"client-key"`
 	ServerCrt          string `yaml:"server-crt"`
 	InsecureSkipVerify bool   `yaml:"insecure-skip-verify"`
-
-	// Client certificate and key.
-	ClientCrt string `yaml:"client-crt"`
-	ClientKey string `yaml:"client-key"`
 
 	// Project name
 	Project string `yaml:"project"`
@@ -30,13 +30,13 @@ type Configuration struct {
 //
 // The secret can be created like this:
 //
-// ```bash
+//	```bash
 //
 //	# create a client certificate and key trusted by incus
 //	$ incus remote generate-certificate
 //	$ sudo incus config trust add-certificate ~/.config/incus/client.crt
 //
-//	# generate kubernetes secret
+//	# [manually] generate kubernetes secret
 //	$ kubectl create secret generic incus-secret \
 //		--from-literal=server="https://10.0.0.49:8443" \
 //		--from-literal=server-crt="$(sudo cat /var/lib/incus/cluster.crt)" \
@@ -44,7 +44,7 @@ type Configuration struct {
 //		--from-literal=client-key="$(cat ~/.config/incus/client.key)" \
 //		--from-literal=project="default"
 //
-//	# or with insecure skip verify
+//	# [manually] generate kubernetes secret with insecure skip verify
 //	$ kubectl create secret generic lxd-secret \
 //		--from-literal=server=https://10.0.1.2:8901 \
 //		--from-literal=insecure-skip-verify=true \
@@ -52,7 +52,7 @@ type Configuration struct {
 //		--from-literal=client-key="$(cat ~/.config/incus/client.key)" \
 //		--from-literal=project="default"
 //
-// ```
+//	```
 func ConfigurationFromKubernetesSecret(secret *corev1.Secret) Configuration {
 	insecureSkipVerify, _ := strconv.ParseBool(string(secret.Data["insecure-skip-verify"]))
 	return Configuration{
@@ -122,6 +122,13 @@ func ConfigurationFromLocal(configFile string, forceRemoteName string, requireHT
 		if requireHTTPS && !strings.HasPrefix(remote.Addr, "https://") {
 			errs = append(errs, fmt.Errorf("failed to load credentials from %q: remote address %q must use HTTPS", configFile, remote.Addr))
 			continue
+		}
+
+		if strings.HasPrefix(remote.Addr, "unix://") {
+			return Configuration{
+				ServerURL: remote.Addr,
+				Project:   remote.Project,
+			}, nil
 		}
 
 		serverCrt, err := os.ReadFile(config.ServerCertPath(remoteName))
