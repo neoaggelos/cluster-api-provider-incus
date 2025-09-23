@@ -2,6 +2,7 @@ package docker
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/lxc/incus/v6/shared/api"
@@ -46,9 +47,6 @@ func newDockerRunCmd(env Environment) *cobra.Command {
 		Network      string
 		Restart      string
 		SecurityOpts map[string]string
-		Volumes      []string
-		Devices      []string
-		Tmpfs        []string
 
 		// configuration we care about
 		Name         string
@@ -56,6 +54,9 @@ func newDockerRunCmd(env Environment) *cobra.Command {
 		Environment  []string
 		Labels       map[string]string
 		PublishPorts []string
+		Volumes      []string
+		Devices      []string
+		Tmpfs        []string
 	}
 
 	cmd := &cobra.Command{
@@ -107,11 +108,76 @@ func newDockerRunCmd(env Environment) *cobra.Command {
 					return fmt.Errorf("publish port %q does not specify listen and connect", publishPort)
 				}
 
-				proxyDevices[fmt.Sprintf("proxy-%d", idx)] = map[string]string{
+				proxyDevices[fmt.Sprintf("docker-proxy-%d", idx)] = map[string]string{
 					"type":    "proxy",
 					"bind":    "host",
 					"listen":  listen,
 					"connect": connect,
+				}
+			}
+
+			// tmpfs mounts
+			var tmpfsDevices map[string]map[string]string
+			if lxcClient.SupportsContainerDiskTmpfs() == nil {
+				tmpfsDevices = make(map[string]map[string]string, len(flags.Tmpfs))
+				for idx, path := range flags.Tmpfs {
+					tmpfsDevices[fmt.Sprintf("docker-tmpfs-%d", idx)] = map[string]string{
+						"type":   "disk",
+						"path":   path,
+						"source": "tmpfs:",
+					}
+				}
+			}
+
+			// unix devices
+			unixDevices := make(map[string]map[string]string, len(flags.Devices))
+			for idx, device := range flags.Devices {
+				unixDevices[fmt.Sprintf("docker-device-%d", idx)] = map[string]string{
+					"type":   "unix-char",
+					"source": device,
+					"path":   device,
+				}
+			}
+
+			// volumes
+			volumeDevices := make(map[string]map[string]string, len(flags.Volumes))
+			for idx, volume := range flags.Volumes {
+				if volume == "/var" || volume == "/lib/modules:/lib/modules:ro" {
+					// these are handled out of band
+					continue
+				}
+
+				var (
+					hostPath      string
+					containerPath string
+					readOnly      bool
+					propagation   string
+				)
+				parts := strings.Split(volume, ":")
+				switch len(parts) {
+				case 1: // "/test"
+					hostPath = volume
+					containerPath = volume
+				case 2: // "/test:/test"
+					hostPath = parts[0]
+					containerPath = parts[1]
+				case 3: // "/test:/test:{ro,rshared,rprivate}"
+					hostPath = parts[0]
+					containerPath = parts[1]
+					readOnly = strings.Contains(parts[2], "ro")
+					if strings.Contains(parts[2], "rslave") {
+						propagation = "rslave"
+					} else if strings.Contains(parts[2], "rshared") {
+						propagation = "rshared"
+					}
+				}
+
+				volumeDevices[fmt.Sprintf("docker-volume-%d", idx)] = map[string]string{
+					"type":        "disk",
+					"source":      hostPath,
+					"path":        containerPath,
+					"readonly":    strconv.FormatBool(readOnly),
+					"propagation": propagation,
 				}
 			}
 
@@ -129,6 +195,9 @@ func newDockerRunCmd(env Environment) *cobra.Command {
 				}).
 				WithConfig(labels).
 				WithDevices(proxyDevices).
+				WithDevices(volumeDevices).
+				WithDevices(tmpfsDevices).
+				WithDevices(unixDevices).
 				WithReplacements(map[string]*strings.Replacer{
 					"/etc/environment": strings.NewReplacer("", environment),
 				})
@@ -148,15 +217,15 @@ func newDockerRunCmd(env Environment) *cobra.Command {
 	cmd.Flags().StringVar(&flags.Network, "net", "kind", "network")
 	cmd.Flags().StringVar(&flags.Restart, "restart", "on-failure:1", "restart")
 	cmd.Flags().StringToStringVar(&flags.SecurityOpts, "security-opt", nil, "security opt")
-	cmd.Flags().StringSliceVar(&flags.Volumes, "volume", nil, "volumes")
-	cmd.Flags().StringSliceVar(&flags.Devices, "device", nil, "devices")
-	cmd.Flags().StringSliceVar(&flags.Tmpfs, "tmpfs", nil, "tmpfs mounts")
+	cmd.Flags().StringArrayVar(&flags.Volumes, "volume", nil, "volumes")
+	cmd.Flags().StringArrayVar(&flags.Devices, "device", nil, "devices")
+	cmd.Flags().StringArrayVar(&flags.Tmpfs, "tmpfs", nil, "tmpfs mounts")
 
 	cmd.Flags().StringVar(&flags.Name, "name", "", "container name")
 	cmd.Flags().StringVar(&flags.Hostname, "hostname", "", "container host name")
-	cmd.Flags().StringSliceVarP(&flags.Environment, "environment", "e", nil, "environment")
+	cmd.Flags().StringArrayVarP(&flags.Environment, "environment", "e", nil, "environment")
 	cmd.Flags().StringToStringVar(&flags.Labels, "label", nil, "labels")
-	cmd.Flags().StringSliceVar(&flags.PublishPorts, "publish", nil, "publish ports")
+	cmd.Flags().StringArrayVar(&flags.PublishPorts, "publish", nil, "publish ports")
 
 	return cmd
 }
