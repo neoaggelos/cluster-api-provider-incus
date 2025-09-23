@@ -57,6 +57,7 @@ func newDockerRunCmd(env Environment) *cobra.Command {
 		Volumes      []string
 		Devices      []string
 		Tmpfs        []string
+		Sysctl       map[string]string
 	}
 
 	cmd := &cobra.Command{
@@ -181,6 +182,12 @@ func newDockerRunCmd(env Environment) *cobra.Command {
 				}
 			}
 
+			// sysctl configs
+			sysctl := make(map[string]string, len(flags.Sysctl))
+			for key, value := range flags.Sysctl {
+				sysctl[fmt.Sprintf("linux.sysctl.%s", key)] = value
+			}
+
 			launchOpts, err := launchOptionsForImage(args[0], env)
 			if err != nil {
 				return fmt.Errorf("failed to generate launch options: %w", err)
@@ -194,6 +201,7 @@ func newDockerRunCmd(env Environment) *cobra.Command {
 					Protocol: "oci",
 				}).
 				WithConfig(labels).
+				WithConfig(sysctl).
 				WithDevices(proxyDevices).
 				WithDevices(volumeDevices).
 				WithDevices(tmpfsDevices).
@@ -217,15 +225,16 @@ func newDockerRunCmd(env Environment) *cobra.Command {
 	cmd.Flags().StringVar(&flags.Network, "net", "kind", "network")
 	cmd.Flags().StringVar(&flags.Restart, "restart", "on-failure:1", "restart")
 	cmd.Flags().StringToStringVar(&flags.SecurityOpts, "security-opt", nil, "security opt")
-	cmd.Flags().StringArrayVar(&flags.Volumes, "volume", nil, "volumes")
-	cmd.Flags().StringArrayVar(&flags.Devices, "device", nil, "devices")
-	cmd.Flags().StringArrayVar(&flags.Tmpfs, "tmpfs", nil, "tmpfs mounts")
 
 	cmd.Flags().StringVar(&flags.Name, "name", "", "container name")
 	cmd.Flags().StringVar(&flags.Hostname, "hostname", "", "container host name")
 	cmd.Flags().StringArrayVarP(&flags.Environment, "environment", "e", nil, "environment")
 	cmd.Flags().StringToStringVar(&flags.Labels, "label", nil, "labels")
 	cmd.Flags().StringArrayVar(&flags.PublishPorts, "publish", nil, "publish ports")
+	cmd.Flags().StringArrayVar(&flags.Volumes, "volume", nil, "volumes")
+	cmd.Flags().StringArrayVar(&flags.Devices, "device", nil, "devices")
+	cmd.Flags().StringToStringVar(&flags.Sysctl, "sysctl", nil, "sysctl")
+	cmd.Flags().StringArrayVar(&flags.Tmpfs, "tmpfs", nil, "tmpfs")
 
 	return cmd
 }

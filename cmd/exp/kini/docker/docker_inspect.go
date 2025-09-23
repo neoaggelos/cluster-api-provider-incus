@@ -51,6 +51,8 @@ func newDockerInspectCmd(env Environment) *cobra.Command {
 				fmt.Println(instance.Config["user.io.x-k8s.kind.role"])
 				return nil
 			case `{{ index .Config.Labels "desktop.docker.io/ports/6443/tcp" }}`:
+				// TODO: if we are in environment where we have to (e.g: remote server, etc)
+				// print the apiserver address e.g. "10.0.1.7:6443"
 				return nil
 			case "{{ with (index (index .NetworkSettings.Ports \"6443/tcp\") 0) }}{{ printf \"%s\t%s\" .HostIp .HostPort }}{{ end }}", `test`:
 				for _, device := range instance.Devices {
