@@ -49,3 +49,17 @@ func (f *createSymlink) action() string {
 func (f *createSymlink) args() incus.InstanceFileArgs {
 	return incus.InstanceFileArgs{Type: "symlink", Content: bytes.NewReader([]byte(f.Target)), Mode: 0644}
 }
+
+// appendTextToFile is an instanceFileCreator that appends text to an existing regular file.
+type appendTextToFile struct {
+	Path     string
+	Contents string
+}
+
+func (f *appendTextToFile) path() string { return f.Path }
+func (f *appendTextToFile) action() string {
+	return fmt.Sprintf("AppendToFile(%q)", f.Path)
+}
+func (f *appendTextToFile) args() incus.InstanceFileArgs {
+	return incus.InstanceFileArgs{Type: "file", Content: bytes.NewReader([]byte(f.Contents)), WriteMode: "append"}
+}

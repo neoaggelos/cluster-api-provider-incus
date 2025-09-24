@@ -70,7 +70,7 @@ func (i *Index) importContainerUnifiedTarball(ctx context.Context, imagePath str
 
 	productName := fmt.Sprintf("%s:%s:%s:%s", metadata.Properties["os"], metadata.Properties["release"], metadata.Properties["variant"], metadata.Properties["architecture"])
 	versionName := time.Unix(metadata.CreationDate, 0).Format("200601021504")
-	target := filepath.Join("images", metadata.Properties["os"], metadata.Properties["release"], fmt.Sprintf("%s.incus_combined.tar.gz", info.Sha256))
+	target := filepath.Join("images", metadata.Properties["os"], metadata.Properties["release"], metadata.Properties["architecture"], fmt.Sprintf("%s.incus_combined.tar.gz", info.Sha256))
 
 	log.FromContext(ctx).Info("Adding product version item", "product", productName, "version", versionName, "info", info)
 

@@ -115,8 +115,8 @@ func (i *Index) importVirtualMachineUnifiedTarball(ctx context.Context, imagePat
 
 	productName := fmt.Sprintf("%s:%s:%s:%s", metadata.Properties["os"], metadata.Properties["release"], metadata.Properties["variant"], metadata.Properties["architecture"])
 	versionName := time.Unix(metadata.CreationDate, 0).Format("200601021504")
-	metadataTarget := filepath.Join("images", metadata.Properties["os"], metadata.Properties["release"], fmt.Sprintf("%s.incus.tar.xz", info.MetaSha256))
-	rootfsTarget := filepath.Join("images", metadata.Properties["os"], metadata.Properties["release"], fmt.Sprintf("%s.disk-kvm.img", info.MetaSha256))
+	metadataTarget := filepath.Join("images", metadata.Properties["os"], metadata.Properties["release"], metadata.Properties["architecture"], fmt.Sprintf("%s.incus.tar.xz", info.MetaSha256))
+	rootfsTarget := filepath.Join("images", metadata.Properties["os"], metadata.Properties["release"], metadata.Properties["architecture"], fmt.Sprintf("%s.disk-kvm.img", info.MetaSha256))
 
 	if err := os.MkdirAll(filepath.Join(i.rootDir, filepath.Dir(rootfsTarget)), 0755); err != nil {
 		return fmt.Errorf("failed to create images directory: %w", err)

@@ -25,7 +25,7 @@ func (c *Client) tryFindInstanceCreateOperation(ctx context.Context, instanceNam
 	instancePath := fmt.Sprintf("/1.0/instances/%s", instanceName)
 
 	for _, op := range ops {
-		if op.Class != "task" && op.Description != "Creating instance" {
+		if op.Class != "task" || op.Description != "Creating instance" {
 			continue
 		}
 		if instances := op.Resources["instances"]; len(instances) != 1 || instances[0] != instancePath {
