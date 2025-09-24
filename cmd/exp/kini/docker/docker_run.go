@@ -1,6 +1,7 @@
 package docker
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"strings"
@@ -10,12 +11,16 @@ import (
 
 	"github.com/lxc/cluster-api-provider-incus/internal/instances"
 	"github.com/lxc/cluster-api-provider-incus/internal/lxc"
+	"github.com/lxc/cluster-api-provider-incus/internal/static"
 )
 
 // launchOptionsForImage initializes LaunchOptions for node or haproxy instances.
-func launchOptionsForImage(image string, env Environment) (*lxc.LaunchOptions, error) {
+func launchOptionsForImage(ctx context.Context, image string, env Environment, serverName string) (*lxc.LaunchOptions, error) {
 	// handle haproxy instances
 	if strings.Contains(image, "kindest/haproxy") {
+		if !env.KindInstances(ctx) {
+			return nil, fmt.Errorf("haproxy instances (%q) not supported in LXC mode", image)
+		}
 		log.V(3).Info("Launching haproxy instance", "image", image)
 		return instances.HaproxyOCILaunchOptions().MaybeWithImage(api.InstanceSource{
 			Type:     "image",
@@ -25,11 +30,39 @@ func launchOptionsForImage(image string, env Environment) (*lxc.LaunchOptions, e
 		}), nil
 	}
 
-	// handle node instances
-	log.V(3).Info("Launching node instance", "image", image)
-	return instances.KindLaunchOptions(instances.KindLaunchOptionsInput{
-		Privileged: env.Privileged(),
-	})
+	// handle node instances (kind instances)
+	if env.KindInstances(ctx) {
+		log.V(3).Info("Launching node instance", "image", image, "type", "kind")
+		if opts, err := instances.KindLaunchOptions(instances.KindLaunchOptionsInput{
+			Privileged: env.Privileged(),
+		}); err != nil {
+			return nil, err
+		} else {
+			return opts.
+				MaybeWithImage(api.InstanceSource{
+					Type:     "image",
+					Server:   "https://docker.io",
+					Alias:    strings.TrimPrefix(image, "docker.io/"),
+					Protocol: "oci",
+				}), nil
+		}
+	}
+
+	// handle node instances (lxc instances)
+	log.V(3).Info("Launching node instance", "image", image, "type", "lxc")
+	return instances.KubeadmLaunchOptions(instances.KubeadmLaunchOptionsInput{
+		KubernetesVersion: "v1.34.0", // TODO: parse from image
+		InstanceType:      api.InstanceTypeContainer,
+		Privileged:        env.Privileged(),
+		ServerName:        serverName,
+	}).WithInstanceTemplates(map[string]string{
+		"/etc/sysconfig/kubelet":               "KUBELET_EXTRA_ARGS='--cgroup-root='",
+		"/kind/product_name":                   "kind",
+		"/kind/product_uuid":                   "kind",
+		"/kind/version":                        "v1.34.0",
+		"/kind/manifests/default-storage.yaml": static.KindDefaultStorageManifestYAML(),
+		"/kind/manifests/default-cni.yaml":     static.KubeFlannelManifestYAML(),
+	}), nil
 }
 
 // docker run --name c1-control-plane --hostname c1-control-plane --label io.x-k8s.kind.role=control-plane --privileged --security-opt seccomp=unconfined --security-opt apparmor=unconfined --tmpfs /tmp --tmpfs /run --volume /var --volume /lib/modules:/lib/modules:ro -e KIND_EXPERIMENTAL_CONTAINERD_SNAPSHOTTER --detach --tty --label io.x-k8s.kind.cluster=c1 --net kind --restart=on-failure:1 --init=false --cgroupns=private --publish=127.0.0.1:41435:6443/TCP -e KUBECONFIG=/etc/kubernetes/admin.conf kindest/node:v1.31.2@sha256:18fbefc20a7113353c7b75b5c869d7145a6abd6269154825872dc59c1329912e
@@ -188,26 +221,20 @@ func newDockerRunCmd(env Environment) *cobra.Command {
 				sysctl[fmt.Sprintf("linux.sysctl.%s", key)] = value
 			}
 
-			launchOpts, err := launchOptionsForImage(args[0], env)
+			launchOpts, err := launchOptionsForImage(cmd.Context(), args[0], env, lxcClient.GetServerName())
 			if err != nil {
 				return fmt.Errorf("failed to generate launch options: %w", err)
 			}
 
 			launchOpts = launchOpts.
-				MaybeWithImage(api.InstanceSource{
-					Type:     "image",
-					Server:   "https://docker.io",
-					Alias:    strings.TrimPrefix(args[0], "docker.io/"),
-					Protocol: "oci",
-				}).
 				WithConfig(labels).
 				WithConfig(sysctl).
 				WithDevices(proxyDevices).
 				WithDevices(volumeDevices).
 				WithDevices(tmpfsDevices).
 				WithDevices(unixDevices).
-				WithReplacements(map[string]*strings.Replacer{
-					"/etc/environment": strings.NewReplacer("", environment),
+				WithAppendToFiles(map[string]string{
+					"/etc/environment": "\n# added by kini\n" + environment,
 				})
 
 			log.V(4).Info("Launching instance", "opts", strings.ReplaceAll(fmt.Sprintf("%#v", launchOpts), "\"", "'"))
