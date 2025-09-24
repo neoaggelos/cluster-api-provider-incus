@@ -54,6 +54,17 @@ func (o *LaunchOptions) WithCreateFiles(new map[string]string) *LaunchOptions {
 	return o
 }
 
+// WithAppendToFiles appends text to existing files on the instance.
+func (o *LaunchOptions) WithAppendToFiles(new map[string]string) *LaunchOptions {
+	for path, content := range new {
+		o.createFiles = append(o.createFiles, &appendTextToFile{
+			Path:     path,
+			Contents: content,
+		})
+	}
+	return o
+}
+
 // WithSymlinks creates symlinks on the instance.
 func (o *LaunchOptions) WithSymlinks(new map[string]string) *LaunchOptions {
 	for path, target := range new {
