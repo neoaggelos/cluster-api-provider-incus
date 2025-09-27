@@ -29,12 +29,7 @@ type KindLaunchOptionsInput struct {
 func KindLaunchOptions(in KindLaunchOptionsInput) (*lxc.LaunchOptions, error) {
 	opts := (&lxc.LaunchOptions{}).
 		WithInstanceType(api.InstanceTypeContainer).
-		MaybeWithImage(api.InstanceSource{
-			Type:     "image",
-			Protocol: "oci",
-			Server:   "https://docker.io",
-			Alias:    fmt.Sprintf("kindest/node:%s", in.KubernetesVersion),
-		}).
+		WithImage(lxc.KindestNodeImage(in.KubernetesVersion)).
 		WithReplacements(map[string]*strings.Replacer{
 			// Incus unprivileged containers cannot edit /etc/resolv.conf, so do not let the entrypoint attempt it.
 			"/usr/local/bin/entrypoint": strings.NewReplacer(">/etc/resolv.conf", ">/etc/local-resolv.conf"),
