@@ -7,7 +7,6 @@ import (
 	"io"
 
 	incus "github.com/lxc/incus/v6/client"
-	"github.com/lxc/incus/v6/shared/api"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/yaml"
 
@@ -43,8 +42,7 @@ func (l *managerOCI) Create(ctx context.Context) ([]string, error) {
 			"user.cluster-namespace": l.clusterNamespace,
 			"user.cluster-role":      "loadbalancer",
 		}).
-		MaybeWithImage(api.InstanceSource{
-			Type:        "image",
+		WithImage(lxc.Image{
 			Protocol:    l.spec.Image.Protocol,
 			Server:      l.spec.Image.Server,
 			Alias:       l.spec.Image.Name,

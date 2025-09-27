@@ -92,16 +92,16 @@ func newKubeadmCmd() *cobra.Command {
 				return fmt.Errorf("failed to create incus client: %w", err)
 			}
 
-			image, _, err := lxc.TryParseImageSource(lxcClient.GetServerName(), flags.baseImage)
+			image, _, err := lxc.ParseImage(flags.baseImage)
 			if err != nil {
 				return fmt.Errorf("failed to parse base image: %w", err)
 			}
 
 			stages := []stage.Stage{
 				{Name: "create-instance", Action: action.LaunchInstance(lxcClient, flags.instanceName, (&lxc.LaunchOptions{}).
+					WithInstanceType(api.InstanceType(flags.instanceType)).
 					WithProfiles(flags.instanceProfiles).
-					MaybeWithImage(image).
-					WithInstanceType(api.InstanceType(flags.instanceType)),
+					WithImage(image),
 				)},
 				// {Name: "pre-run-commands", Action: action.ExecInstance(lxcClient, flags.instanceName, <TODO>, <TODO>)},
 				{Name: "install-kubeadm", Action: action.ExecInstance(lxcClient, flags.instanceName, static.InstallKubeadmScript(), flags.kubernetesVersion)},
@@ -123,9 +123,9 @@ func newKubeadmCmd() *cobra.Command {
 				{Name: "delete-instance", Action: action.DeleteInstance(lxcClient, flags.instanceName)},
 				{Name: "validate-image", Action: action.Chain(
 					action.LaunchInstance(lxcClient, flags.validationInstanceName, (&lxc.LaunchOptions{}).
-						MaybeWithImage(api.InstanceSource{Type: "image", Alias: flags.imageAlias}).
 						WithInstanceType(api.InstanceType(flags.instanceType)).
-						WithProfiles(flags.instanceProfiles),
+						WithProfiles(flags.instanceProfiles).
+						WithImage(lxc.Image{Alias: flags.imageAlias}),
 					),
 					action.ExecInstance(lxcClient, flags.validationInstanceName, static.ValidateKubeadmImageScript()),
 					action.DeleteInstance(lxcClient, flags.validationInstanceName),
