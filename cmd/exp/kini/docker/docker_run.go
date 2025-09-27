@@ -12,46 +12,55 @@ import (
 	"github.com/lxc/cluster-api-provider-incus/internal/instances"
 	"github.com/lxc/cluster-api-provider-incus/internal/lxc"
 	"github.com/lxc/cluster-api-provider-incus/internal/static"
+	"github.com/lxc/cluster-api-provider-incus/internal/utils"
 )
 
 // launchOptionsForImage initializes LaunchOptions for node or haproxy instances.
-func launchOptionsForImage(ctx context.Context, image string, env Environment, serverName string) (*lxc.LaunchOptions, error) {
+func launchOptionsForImage(ctx context.Context, rawImage string, env Environment, serverName string) (*lxc.LaunchOptions, error) {
+	image, err := utils.ParseOCIImage(rawImage)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse %q: %w", rawImage, err)
+	}
+
 	// handle haproxy instances
-	if strings.Contains(image, "kindest/haproxy") {
+	if strings.Contains(image.Alias(), "kindest/haproxy") {
 		if !env.KindInstances(ctx) {
-			return nil, fmt.Errorf("haproxy instances (%q) not supported in LXC mode", image)
+			return nil, fmt.Errorf("haproxy instances (%q) not supported in LXC mode", rawImage)
 		}
-		log.V(3).Info("Launching haproxy instance", "image", image)
-		return instances.HaproxyOCILaunchOptions().MaybeWithImage(api.InstanceSource{
-			Type:     "image",
-			Server:   "https://docker.io",
-			Alias:    strings.TrimPrefix(image, "docker.io/"),
-			Protocol: "oci",
+		log.V(3).Info("Launching haproxy instance", "image", rawImage)
+		return instances.HaproxyOCILaunchOptions().WithImage(lxc.Image{
+			Protocol: lxc.OCI,
+			Server:   image.Server(),
+			Alias:    image.Alias(),
 		}), nil
 	}
 
 	// handle node instances (kind instances)
 	if env.KindInstances(ctx) {
-		log.V(3).Info("Launching node instance", "image", image, "type", "kind")
-		if opts, err := instances.KindLaunchOptions(instances.KindLaunchOptionsInput{
+		log.V(3).Info("Launching node instance", "image", rawImage, "type", "kind")
+		opts, err := instances.KindLaunchOptions(instances.KindLaunchOptionsInput{
 			Privileged: env.Privileged(),
-		}); err != nil {
+		})
+		if err != nil {
 			return nil, err
-		} else {
-			return opts.
-				MaybeWithImage(api.InstanceSource{
-					Type:     "image",
-					Server:   "https://docker.io",
-					Alias:    strings.TrimPrefix(image, "docker.io/"),
-					Protocol: "oci",
-				}), nil
 		}
+
+		return opts.WithImage(lxc.Image{
+			Protocol: lxc.OCI,
+			Server:   image.Server(),
+			Alias:    image.Alias(),
+		}), nil
 	}
 
 	// handle node instances (lxc instances)
-	log.V(3).Info("Launching node instance", "image", image, "type", "lxc")
+	log.V(3).Info("Launching node instance", "image", rawImage, "type", "lxc")
+
+	if digest := image.Digest(); digest != "" {
+		log.Info("WARNING: Running in LXC mode, ignoring image digest", "digest", digest)
+	}
+
 	return instances.KubeadmLaunchOptions(instances.KubeadmLaunchOptionsInput{
-		KubernetesVersion: "v1.34.0", // TODO: parse from image
+		KubernetesVersion: image.Tag(),
 		InstanceType:      api.InstanceTypeContainer,
 		Privileged:        env.Privileged(),
 		ServerName:        serverName,
@@ -59,7 +68,7 @@ func launchOptionsForImage(ctx context.Context, image string, env Environment, s
 		"/etc/sysconfig/kubelet":               "KUBELET_EXTRA_ARGS='--cgroup-root='",
 		"/kind/product_name":                   "kind",
 		"/kind/product_uuid":                   "kind",
-		"/kind/version":                        "v1.34.0",
+		"/kind/version":                        image.Tag(),
 		"/kind/manifests/default-storage.yaml": static.KindDefaultStorageManifestYAML(),
 		"/kind/manifests/default-cni.yaml":     static.KubeFlannelManifestYAML(),
 	}), nil
