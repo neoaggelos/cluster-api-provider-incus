@@ -31,6 +31,9 @@ func newDockerExecCmd(env Environment) *cobra.Command {
 
 			// ignore --privileged and -i flags
 			for args[0] == "--privileged" || args[0] == "-i" {
+				if len(args) == 1 {
+					return fmt.Errorf("instance name not specified")
+				}
 				args = args[1:]
 			}
 
