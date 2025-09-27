@@ -7,9 +7,10 @@ import (
 	"time"
 
 	"github.com/google/go-containerregistry/pkg/crane"
-	"github.com/lxc/cluster-api-provider-incus/internal/utils"
 	incus "github.com/lxc/incus/v6/client"
 	"github.com/lxc/incus/v6/shared/api"
+
+	"github.com/lxc/cluster-api-provider-incus/internal/utils"
 )
 
 // ImageFamily is a well-known image for multiple servers (e.g. Incus, Canonical LXD).

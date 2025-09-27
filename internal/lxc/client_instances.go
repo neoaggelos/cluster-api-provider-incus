@@ -10,10 +10,11 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/lxc/cluster-api-provider-incus/internal/utils"
 	incus "github.com/lxc/incus/v6/client"
 	"github.com/lxc/incus/v6/shared/api"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+
+	"github.com/lxc/cluster-api-provider-incus/internal/utils"
 )
 
 // WaitForLaunchInstance attempts to launch and start the specified instance.
