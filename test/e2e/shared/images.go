@@ -6,8 +6,6 @@ import (
 	"context"
 	"fmt"
 
-	incus "github.com/lxc/incus/v6/client"
-	"github.com/lxc/incus/v6/shared/api"
 	"sigs.k8s.io/cluster-api/test/e2e"
 
 	"github.com/lxc/cluster-api-provider-incus/internal/lxc"
@@ -37,21 +35,10 @@ func ensureLXCSystemImages(e2eCtx *E2EContext) {
 	for _, imageName := range defaultImages(e2eCtx, lxcClient.GetServerName()) {
 		e2e.Byf("Fetching image %s", imageName)
 
-		image, parsed, err := lxc.TryParseImageSource(lxcClient.GetServerName(), imageName)
-		Expect(err).ToNot(HaveOccurred(), "Image must be recognized")
+		image, parsed, err := lxc.ParseImage(imageName)
+		Expect(err).ToNot(HaveOccurred(), "Image %s not recognized", imageName)
 		Expect(parsed).To(BeTrue(), "Image prefix not recognized")
 
-		Expect(lxcClient.WaitForOperation(context.TODO(), fmt.Sprintf("CreateImage(%s)", imageName), func() (incus.Operation, error) {
-			return lxcClient.CreateImage(api.ImagesPost{
-				Source: &api.ImagesPostSource{
-					Type: "image",
-					ImageSource: api.ImageSource{
-						Alias:    image.Alias,
-						Protocol: image.Protocol,
-						Server:   image.Server,
-					},
-				},
-			}, nil)
-		})).ToNot(HaveOccurred(), "Image pull failed")
+		Expect(lxcClient.PullImage(context.TODO(), image)).ToNot(HaveOccurred(), "Failed to pull image %s", imageName)
 	}
 }
