@@ -13,6 +13,8 @@ import (
 	incus "github.com/lxc/incus/v6/client"
 	"github.com/lxc/incus/v6/shared/api"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+
+	"github.com/lxc/cluster-api-provider-incus/internal/utils"
 )
 
 // WaitForLaunchInstance attempts to launch and start the specified instance.
@@ -32,17 +34,25 @@ func (c *Client) WaitForLaunchInstance(ctx context.Context, name string, opts *L
 			return op, nil
 		}
 
+		if opts.image == nil {
+			return nil, utils.TerminalError(fmt.Errorf("cannot launch instance without image"))
+		}
+		image, err := opts.image.For(c.GetServerName())
+		if err != nil {
+			return nil, fmt.Errorf("unsupported instance image: %w", err)
+		}
+
 		// if OCI image is specified as `IMG[:TAG]@sha256:HASH`, replace with `IMG@sha256:HASH`
-		if opts.image.Protocol == "oci" {
-			if image, hash, ok := strings.Cut(opts.image.Alias, "@"); ok {
-				imageWithoutTag, _, _ := strings.Cut(image, ":")
-				opts.image.Alias = fmt.Sprintf("%s@%s", imageWithoutTag, hash)
+		if image.Protocol == OCI {
+			if imageWithoutHash, hash, ok := strings.Cut(image.Alias, "@"); ok {
+				imageWithoutTag, _, _ := strings.Cut(imageWithoutHash, ":")
+				image.Alias = fmt.Sprintf("%s@%s", imageWithoutTag, hash)
 			}
 		}
 
 		log.FromContext(ctx).V(2).WithValues(
 			"lxc.instance.name", name,
-			"lxc.instance.image", opts.image,
+			"lxc.instance.image", image,
 			"lxc.instance.type", opts.instanceType,
 			"lxc.instance.flavor", opts.flavor,
 			"lxc.instance.profiles", opts.profiles,
@@ -51,7 +61,7 @@ func (c *Client) WaitForLaunchInstance(ctx context.Context, name string, opts *L
 
 		return c.CreateInstance(api.InstancesPost{
 			Name:         name,
-			Source:       opts.image,
+			Source:       image.InstanceSource(),
 			Type:         opts.instanceType,
 			InstanceType: opts.flavor,
 			InstancePut: api.InstancePut{

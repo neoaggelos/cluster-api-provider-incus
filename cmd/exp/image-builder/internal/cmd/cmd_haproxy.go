@@ -73,7 +73,7 @@ func newHaproxyCmd() *cobra.Command {
 				return fmt.Errorf("failed to create incus client: %w", err)
 			}
 
-			image, _, err := lxc.TryParseImageSource(lxcClient.GetServerName(), flags.baseImage)
+			image, _, err := lxc.ParseImage(flags.baseImage)
 			if err != nil {
 				return fmt.Errorf("failed to parse base image: %w", err)
 			}
@@ -82,7 +82,7 @@ func newHaproxyCmd() *cobra.Command {
 				{Name: "create-instance", Action: action.LaunchInstance(lxcClient, flags.instanceName, (&lxc.LaunchOptions{}).
 					WithInstanceType(api.InstanceTypeContainer).
 					WithProfiles(flags.instanceProfiles).
-					MaybeWithImage(image),
+					WithImage(image),
 				)},
 				// {Name: "pre-run-commands", Action: action.ExecInstance(lxcClient, flags.instanceName, <TODO>, <TODO>)},
 				{Name: "install-haproxy", Action: action.ExecInstance(lxcClient, flags.instanceName, static.InstallHaproxyScript())},

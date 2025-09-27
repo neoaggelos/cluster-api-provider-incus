@@ -26,7 +26,7 @@ type LaunchOptions struct {
 	// profiles is instance profiles.
 	profiles []string
 	// image is the instance source.
-	image api.InstanceSource
+	image ImageFamily
 	// flavor is the instance flavor.
 	flavor string
 	// instanceType is the instance type.
@@ -120,10 +120,10 @@ func (o *LaunchOptions) WithProfiles(new []string) *LaunchOptions {
 	return o
 }
 
-// MaybeWithImage sets the instance image.
-// MaybeWithImage is a no-op if no alias or fingerprint are specified on the image.
-func (o *LaunchOptions) MaybeWithImage(image api.InstanceSource) *LaunchOptions {
-	if len(image.Alias) != 0 || len(image.Fingerprint) != 0 {
+// WithImage sets the instance image.
+// WithImage is a no-op if an Image without an Alias or Fingerprint is passed.
+func (o *LaunchOptions) WithImage(image ImageFamily) *LaunchOptions {
+	if i, ok := image.(Image); !ok || len(i.Alias) > 0 || len(i.Fingerprint) > 0 {
 		o.image = image
 	}
 	return o

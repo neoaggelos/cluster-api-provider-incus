@@ -25,12 +25,7 @@ type KubeadmLaunchOptionsInput struct {
 func KubeadmLaunchOptions(in KubeadmLaunchOptionsInput) *lxc.LaunchOptions {
 	opts := (&lxc.LaunchOptions{}).
 		WithInstanceType(in.InstanceType).
-		MaybeWithImage(api.InstanceSource{
-			Type:     "image",
-			Protocol: lxc.Simplestreams,
-			Server:   lxc.DefaultSimplestreamsServer,
-			Alias:    fmt.Sprintf("kubeadm/%s", in.KubernetesVersion),
-		}).
+		WithImage(lxc.CapnImage(fmt.Sprintf("kubeadm/%s", in.KubernetesVersion))).
 		WithInstanceTemplates(map[string]string{
 			"/opt/cluster-api/install-kubeadm.sh": static.InstallKubeadmScript(),
 		})

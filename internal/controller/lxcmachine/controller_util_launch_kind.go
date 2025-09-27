@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/google/go-containerregistry/pkg/crane"
+	"github.com/lxc/incus/v6/shared/api"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/cluster-api/util"
 	"sigs.k8s.io/cluster-api/util/conditions"
@@ -48,23 +48,31 @@ func launchKindInstance(ctx context.Context, cluster *clusterv1.Cluster, lxcClus
 		}
 		imageSpec.Name = strings.ReplaceAll(imageSpec.Name, "VERSION", machineVersion)
 	}
-	if imageSpec.IsZero() {
+	var image lxc.ImageFamily = lxc.Image{
+		Protocol:    imageSpec.Protocol,
+		Server:      imageSpec.Server,
+		Fingerprint: imageSpec.Fingerprint,
+		Alias:       imageSpec.Name,
+	}
+	if imageSpec.Name != "" {
+		parsed, isParsed, err := lxc.ParseImage(imageSpec.Name)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse image %q: %w", imageSpec.Name, err)
+		} else if isParsed {
+			image = parsed
+		}
+	} else if imageSpec.IsZero() {
 		if machineVersion == "" {
 			return nil, utils.TerminalError(fmt.Errorf("no image source specified on LXCMachineTemplate and Machine %q does not have a Kubernetes version", machine.Name))
-		} else {
-			// test if kindest/node image for this version exists on DockerHub, fail otherwise.
-			if _, err := crane.Head(fmt.Sprintf("docker.io/kindest/node:%s", machineVersion)); err != nil {
-				// example errors:
-				// HEAD https://index.docker.io/v2/kindest/node/manifests/v1.34.0-not-exist: unexpected status code 404 Not Found (HEAD responses have no body, use GET for details)
-				// HEAD https://index.docker.io/v2/kindest/node13131/manifests/v1.33.0: unexpected status code 401 Unauthorized (HEAD responses have no body, use GET for details)
-				// HEAD http://w00:5050/v2/kindest/node13131/manifests/v1.33.0: unexpected status code 404 Not Found (HEAD responses have no body, use GET for details)
-				if strings.Contains(err.Error(), "unexpected status code 4") {
-					return nil, utils.TerminalError(fmt.Errorf("no image source specified and could not find kindest/node:%s image on DockerHub: %w. Please consider using a different Kubernetes version, or build your own base image and set the image source on the LXCMachineTemplate resource", machineVersion, err))
-				} else {
-					return nil, fmt.Errorf("no image source specified and failed to connect to DockerHub: %w", err)
-				}
-			}
 		}
+		kindImage := lxc.KindestNodeImage(machineVersion)
+		if err := kindImage.Check(api.InstanceTypeContainer); err != nil {
+			if utils.IsTerminalError(err) {
+				err = fmt.Errorf("image not specified and could not find kindest/node:%s image on DockerHub. The error was: %w. Please consider using a different Kubernetes version, or build your own base image and set the image source on the LXCMachineTemplate resource", machineVersion, err)
+			}
+			return nil, err
+		}
+		image = kindImage
 	}
 
 	// avoid apt install cloud-init (and run cloud-init manually) unless requested
@@ -101,7 +109,8 @@ func launchKindInstance(ctx context.Context, cluster *clusterv1.Cluster, lxcClus
 			"user.cluster-namespace": cluster.Namespace,
 			"user.machine-name":      machine.Name,
 			"user.cluster-role":      role,
-		})
+		}).
+		WithImage(image)
 
 	// apply instance templates from load balancer manager
 	if util.IsControlPlaneMachine(machine) {

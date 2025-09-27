@@ -10,8 +10,7 @@ import (
 func HaproxyLXCLaunchOptions() *lxc.LaunchOptions {
 	return (&lxc.LaunchOptions{}).
 		WithInstanceType(api.InstanceTypeContainer).
-		MaybeWithImage(api.InstanceSource{
-			Type:     "image",
+		WithImage(lxc.Image{
 			Protocol: lxc.Simplestreams,
 			Server:   lxc.DefaultSimplestreamsServer,
 			Alias:    "haproxy",
@@ -22,8 +21,7 @@ func HaproxyLXCLaunchOptions() *lxc.LaunchOptions {
 func HaproxyOCILaunchOptions() *lxc.LaunchOptions {
 	return (&lxc.LaunchOptions{}).
 		WithInstanceType(api.InstanceTypeContainer).
-		MaybeWithImage(api.InstanceSource{
-			Type:     "image",
+		WithImage(lxc.Image{
 			Protocol: lxc.OCI,
 			Server:   "https://ghcr.io",
 			Alias:    "lxc/cluster-api-provider-incus/haproxy:v20230606-42a2262b",
