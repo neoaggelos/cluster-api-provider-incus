@@ -60,10 +60,11 @@ func launchOptionsForImage(ctx context.Context, rawImage string, env Environment
 	}
 
 	return instances.KubeadmLaunchOptions(instances.KubeadmLaunchOptionsInput{
-		KubernetesVersion: image.Tag(),
-		InstanceType:      api.InstanceTypeContainer,
-		Privileged:        env.Privileged(),
-		ServerName:        serverName,
+		KubernetesVersion:        image.Tag(),
+		InstanceType:             api.InstanceTypeContainer,
+		Privileged:               env.Privileged(),
+		ServerName:               serverName,
+		SkipInstallKubeadmScript: true,
 	}).WithInstanceTemplates(map[string]string{
 		"/etc/sysconfig/kubelet":               "KUBELET_EXTRA_ARGS='--cgroup-root='",
 		"/kind/product_name":                   "kind",
