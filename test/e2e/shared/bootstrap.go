@@ -38,7 +38,7 @@ func CreateKindBootstrapClusterAndLoadImages(ctx context.Context, input bootstra
 
 // LoadImagesToKindCluster is bootstrap.LoadImagesToKindCluster, but uses the kind CLI.
 func LoadImagesToKindCluster(ctx context.Context, input bootstrap.LoadImagesToKindClusterInput) error {
-	kindLoadImagesCommand := []string{"kind", "load", "docker-image", "--name", input.Name}
+	kindLoadImagesCommand := []string{"kind", "load", "docker-image", "-v=5", "--name", input.Name}
 
 	for _, image := range input.Images {
 		kindLoadImagesCommand = append(kindLoadImagesCommand, image.Name)
@@ -47,7 +47,6 @@ func LoadImagesToKindCluster(ctx context.Context, input bootstrap.LoadImagesToKi
 	Logf("Loading images to cluster: %s", strings.Join(kindLoadImagesCommand, " "))
 
 	cmd := exec.CommandContext(ctx, kindLoadImagesCommand[0], kindLoadImagesCommand[1:]...)
-	cmd.Env = append(os.Environ(), "V=5")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
