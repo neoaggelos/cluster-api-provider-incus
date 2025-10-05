@@ -4,11 +4,12 @@ package shared
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/exec"
-	"strings"
 
 	"sigs.k8s.io/cluster-api/test/framework/bootstrap"
+	"sigs.k8s.io/cluster-api/test/framework/clusterctl"
 
 	. "github.com/onsi/gomega"
 )
@@ -38,15 +39,24 @@ func CreateKindBootstrapClusterAndLoadImages(ctx context.Context, input bootstra
 
 // LoadImagesToKindCluster is bootstrap.LoadImagesToKindCluster, but uses the kind CLI.
 func LoadImagesToKindCluster(ctx context.Context, input bootstrap.LoadImagesToKindClusterInput) error {
-	kindLoadImagesCommand := []string{"kind", "load", "docker-image", "--name", input.Name}
-
 	for _, image := range input.Images {
-		kindLoadImagesCommand = append(kindLoadImagesCommand, image.Name)
+		if err := loadImage(ctx, input.Name, image.Name); err != nil {
+			switch image.LoadBehavior {
+			case clusterctl.MustLoadImage:
+				return fmt.Errorf("failed to load image %q into the kind cluster %q: %w", image.Name, input.Name, err)
+			case clusterctl.TryLoadImage:
+				Logf("[WARNING] Unable to load image %q into the kind cluster %q: %v", image.Name, input.Name, err)
+			}
+		}
 	}
 
-	Logf("Loading images to cluster: %s", strings.Join(kindLoadImagesCommand, " "))
+	return nil
+}
 
-	cmd := exec.CommandContext(ctx, kindLoadImagesCommand[0], kindLoadImagesCommand[1:]...)
+func loadImage(ctx context.Context, clusterName string, image string) error {
+	Logf("Loading image %s into the cluster", image)
+
+	cmd := exec.CommandContext(ctx, "kind", "load", "docker-image", "--name", clusterName, image)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
