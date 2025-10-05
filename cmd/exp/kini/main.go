@@ -28,15 +28,9 @@ var (
 func main() {
 	defer klog.Flush()
 	run, ok := cmds[filepath.Base(os.Args[0])]
-	if cmdName := os.Getenv("KINI_CMD"); cmdName != "" {
-		run, ok = cmds[cmdName]
-	}
 	if !ok {
 		run = cmds["kini"]
 	}
-
-	// NOTE(neoaggelos): do not let the KINI_CMD trickle down to other invocations
-	_ = os.Setenv("KINI_CMD", "")
 
 	if err := run(ctx); err != nil {
 		log.Error(err, "command failed")
