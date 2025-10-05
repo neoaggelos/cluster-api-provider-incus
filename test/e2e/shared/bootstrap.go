@@ -30,7 +30,7 @@ func CreateKindBootstrapClusterAndLoadImages(ctx context.Context, input bootstra
 		Images: input.Images,
 	}); err != nil {
 		clusterProvider.Dispose(ctx)
-		Expect(err).ToNot(HaveOccurred()) // re-surface the error to fail the test
+		Expect(err).ToNot(HaveOccurred(), "Could not load images") // re-surface the error to fail the test
 	}
 
 	return clusterProvider
@@ -47,6 +47,7 @@ func LoadImagesToKindCluster(ctx context.Context, input bootstrap.LoadImagesToKi
 	Logf("Loading images to cluster: %s", strings.Join(kindLoadImagesCommand, " "))
 
 	cmd := exec.CommandContext(ctx, kindLoadImagesCommand[0], kindLoadImagesCommand[1:]...)
+	cmd.Env = append(cmd.Env, "V=5")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
