@@ -3,10 +3,12 @@ package kini
 import (
 	"fmt"
 
-	"github.com/lxc/cluster-api-provider-incus/cmd/exp/kini/kind"
 	"github.com/spf13/cobra"
 	cliflag "k8s.io/component-base/cli/flag"
 	ctrl "sigs.k8s.io/controller-runtime"
+
+	"github.com/lxc/cluster-api-provider-incus/cmd/exp/kini/docker"
+	"github.com/lxc/cluster-api-provider-incus/cmd/exp/kini/kind"
 )
 
 var (
@@ -36,6 +38,7 @@ func NewCmd() *cobra.Command {
 	cmd.AddCommand(newKiniActivateCmd())
 	cmd.AddCommand(newKiniGenerateSecretCmd())
 	cmd.AddCommand(kind.NewCmd())
+	cmd.AddCommand(docker.NewCmd())
 
 	return cmd
 }
