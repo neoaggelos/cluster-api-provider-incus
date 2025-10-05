@@ -74,10 +74,9 @@ func setupBootstrapCluster(config *clusterctl.E2EConfig, scheme *runtime.Scheme,
 
 	// If useExistingCluster was false or we couldn't find an existing cluster in the default kubeconfig with the configured kubeContext, let's create a new one
 	if kubeconfigPath == "" {
-		clusterProvider = bootstrap.CreateKindBootstrapClusterAndLoadImages(context.TODO(), bootstrap.CreateKindBootstrapClusterAndLoadImagesInput{
-			Name:               config.ManagementClusterName,
-			RequiresDockerSock: config.HasDockerProvider(),
-			Images:             config.Images,
+		clusterProvider = CreateKindBootstrapClusterAndLoadImages(context.TODO(), bootstrap.CreateKindBootstrapClusterAndLoadImagesInput{
+			Name:   config.ManagementClusterName,
+			Images: config.Images,
 		})
 		Expect(clusterProvider).ToNot(BeNil(), "Failed to create a bootstrap cluster")
 
