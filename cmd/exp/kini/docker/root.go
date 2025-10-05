@@ -43,13 +43,14 @@ func NewCmd() *cobra.Command {
 			logFlags := &flag.FlagSet{}
 			klog.InitFlags(logFlags)
 
-			if logFile := os.Getenv("KINI_LOG"); logFile != "" {
+			if logFile := os.Getenv("KINI_DOCKER_LOG"); logFile != "" {
 				_ = logFlags.Set("logtostderr", "false")
 				_ = logFlags.Set("log_file", logFile)
 				_ = logFlags.Set("alsologtostderr", "true")
 				_ = logFlags.Set("skip_log_headers", "true")
+				_ = logFlags.Set("v", "5")
 			}
-			if verbosity := os.Getenv("V"); verbosity != "" {
+			if verbosity := os.Getenv("KINI_DOCKER_LOGV"); verbosity != "" {
 				_ = logFlags.Set("v", verbosity)
 			}
 

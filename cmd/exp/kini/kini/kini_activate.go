@@ -17,9 +17,6 @@ func newKiniActivateCmd() *cobra.Command {
 		Use:           "activate",
 		SilenceErrors: true,
 		SilenceUsage:  true,
-		PreRun: func(cmd *cobra.Command, args []string) {
-			setupLogging(cmd, logFlags)
-		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			log.V(1).Info("Running kini activate")
 

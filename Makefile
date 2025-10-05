@@ -120,7 +120,7 @@ E2E_GINKGO_ARGS ?=
 test-e2e: ginkgo kustomize kini ## Run e2e tests
 	env \
 		PATH=$(LOCALBIN):$(PATH) \
-		KINI_LOG=$(ARTIFACTS)/kini.log \
+		KINI_DOCKER_LOG=$(ARTIFACTS)/kini-docker.log \
 		time $(GINKGO) \
 			-tags=e2e \
 			-fail-fast -timeout=3h \

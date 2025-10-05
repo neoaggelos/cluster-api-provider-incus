@@ -33,7 +33,6 @@ func NewCmd() *cobra.Command {
 		klog.InitFlags(logFlags)
 		if verbosity := cmd.Flags().Lookup("verbosity").Value.String(); verbosity != "" {
 			_ = logFlags.Set("v", verbosity)
-			_ = os.Setenv("V", verbosity)
 		}
 
 		// configure self for docker commands
