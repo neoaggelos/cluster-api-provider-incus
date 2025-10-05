@@ -2,13 +2,15 @@ package docker
 
 import (
 	"fmt"
+	"path/filepath"
+	"strings"
 
 	"github.com/google/go-containerregistry/pkg/crane"
 	"github.com/spf13/cobra"
 )
 
 // docker image inspect -f '{{ .Id }}' registry.k8s.io/cluster-api/cluster-api-controller:v1.9.3
-func newDockerImageInspectCmd(_ Environment) *cobra.Command {
+func newDockerImageInspectCmd(env Environment) *cobra.Command {
 	var flags struct {
 		Format string
 	}
@@ -24,8 +26,20 @@ func newDockerImageInspectCmd(_ Environment) *cobra.Command {
 			if flags.Format != "{{ .Id }}" {
 				return fmt.Errorf("invalid format %q", flags.Format)
 			}
-			if img, err := crane.Head(args[0]); err != nil {
-				return fmt.Errorf("could not fetch image %q: %w", args[0], err)
+
+			image := args[0]
+
+			// if image has been `docker load`ed, use the local tarball
+			loadedFileName := filepath.Join(env.CacheDir(), "loaded--"+strings.ReplaceAll(image, "/", "--")+".tar")
+			if img, err := crane.Load(loadedFileName); err == nil {
+				log.V(4).Info("Using local image", "tag", image, "path", loadedFileName)
+				if digest, err := img.Digest(); err != nil {
+					return fmt.Errorf("could not get digest of local image: %w", err)
+				} else {
+					fmt.Println(digest)
+				}
+			} else if img, err := crane.Head(image); err != nil {
+				return fmt.Errorf("could not fetch image %q: %w", image, err)
 			} else {
 				// NOTE(neoaggelos): the image ID printed by docker is not the image digest, but that
 				// is fine for us, since the image digest is still an identifier we can rely on
