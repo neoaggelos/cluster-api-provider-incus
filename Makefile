@@ -179,7 +179,7 @@ ko-build: ko $(LOCALBIN) ## Build manager image and load to local docker instanc
 
 .PHONY: ko-load-kini
 ko-load-kini: ko-build kini ## Import manager image to kini cache.
-	V=5 $(KINI) docker load -i $(TARBALL)
+	KINI_DOCKER_LOGV=5 $(KINI) docker load -i $(TARBALL)
 
 .PHONY: ko-login
 ko-login: ko ## Configure credentials for pushing images (needs USERNAME and PASSWORD).
