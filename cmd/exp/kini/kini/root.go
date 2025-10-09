@@ -15,6 +15,16 @@ var (
 	log = ctrl.Log
 )
 
+func addCommands(root *cobra.Command, group *cobra.Group, commands ...*cobra.Command) {
+	root.AddGroup(group)
+
+	for _, cmd := range commands {
+		cmd.GroupID = group.ID
+	}
+
+	root.AddCommand(commands...)
+}
+
 func NewCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:           "kini",
@@ -34,11 +44,17 @@ func NewCmd() *cobra.Command {
 	}
 
 	cmd.SetGlobalNormalizationFunc(cliflag.WordSepNormalizeFunc)
-	cmd.AddCommand(newKiniExampleCmd())
-	cmd.AddCommand(newKiniActivateCmd())
-	cmd.AddCommand(newKiniGenerateSecretCmd())
-	cmd.AddCommand(kind.NewCmd())
-	cmd.AddCommand(docker.NewCmd())
+
+	addCommands(cmd,
+		&cobra.Group{ID: "helper", Title: "Helper commands:"},
+		newKiniActivateCmd(),
+		newKiniGenerateSecretCmd(),
+	)
+	addCommands(cmd,
+		&cobra.Group{ID: "commands", Title: "Shim commands:"},
+		kind.NewCmd(),
+		docker.NewCmd(),
+	)
 
 	return cmd
 }

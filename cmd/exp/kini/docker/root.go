@@ -37,6 +37,7 @@ func NewCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:           "docker",
+		Short:         "docker commands for kini",
 		SilenceErrors: true,
 		SilenceUsage:  true,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {

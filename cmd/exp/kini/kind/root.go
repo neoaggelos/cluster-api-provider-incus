@@ -21,6 +21,7 @@ func NewCmd() *cobra.Command {
 	cmd := kind.NewCommand(cmd.NewLogger(), cmd.StandardIOStreams())
 	cmd.SilenceErrors = true
 	cmd.SilenceUsage = true
+	cmd.Short = "kind commands for kini"
 
 	kindPreRunE := cmd.PersistentPreRunE
 	cmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {

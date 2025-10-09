@@ -15,6 +15,7 @@ func newKiniActivateCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:           "activate",
+		Short:         "Shadow kind and docker commands with kini",
 		SilenceErrors: true,
 		SilenceUsage:  true,
 		RunE: func(cmd *cobra.Command, args []string) error {
