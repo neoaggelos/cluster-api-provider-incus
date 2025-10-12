@@ -49,6 +49,7 @@ func NewCmd() *cobra.Command {
 		&cobra.Group{ID: "helper", Title: "Helper commands:"},
 		newKiniActivateCmd(),
 		newKiniGenerateSecretCmd(),
+		newKiniSetupCmd(),
 	)
 	addCommands(cmd,
 		&cobra.Group{ID: "commands", Title: "Shim commands:"},
