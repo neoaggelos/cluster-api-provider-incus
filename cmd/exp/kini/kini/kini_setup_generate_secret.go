@@ -1,7 +1,6 @@
 package kini
 
 import (
-	"flag"
 	"fmt"
 	"io"
 	"os"
@@ -11,7 +10,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes/scheme"
-	"k8s.io/klog/v2"
 
 	"github.com/lxc/cluster-api-provider-incus/internal/lxc"
 )
@@ -25,7 +23,7 @@ func serializeRuntimeObject(out io.Writer, gv schema.GroupVersion, obj runtime.O
 	return scheme.Codecs.EncoderForVersion(info.Serializer, gv).Encode(obj, out)
 }
 
-func newKiniGenerateSecretCmd() *cobra.Command {
+func newKiniSetupGenerateSecretCmd() *cobra.Command {
 	var flags struct {
 		configFile string
 		remoteName string
@@ -35,7 +33,7 @@ func newKiniGenerateSecretCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:           "generate-secret NAME",
-		Short:         "Generate a Kubernetes secret with CAPN credentials from local configuration files",
+		Short:         "Generate a Kubernetes secret with CAPN credentials from local configuration",
 		Args:          cobra.ExactArgs(1),
 		SilenceErrors: true,
 		SilenceUsage:  true,
@@ -51,13 +49,6 @@ func newKiniGenerateSecretCmd() *cobra.Command {
 			return nil
 		},
 	}
-
-	klogFlags := &flag.FlagSet{}
-	klog.InitFlags(klogFlags)
-	klogFlags.VisitAll(func(f *flag.Flag) {
-		f.Usage = "[logging] " + f.Usage
-	})
-	cmd.Flags().AddGoFlagSet(klogFlags)
 
 	cmd.Flags().StringVar(&flags.namespace, "namespace", "",
 		"Set namespace on the generated secret")

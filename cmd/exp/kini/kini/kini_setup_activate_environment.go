@@ -1,24 +1,20 @@
 package kini
 
 import (
-	"flag"
 	"fmt"
 	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
-	"k8s.io/klog/v2"
 )
 
-func newKiniActivateCmd() *cobra.Command {
+func newKiniSetupActivateEnvironmentCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:           "activate",
+		Use:           "activate-environment",
 		Short:         "Shadow kind and docker commands with kini",
 		SilenceErrors: true,
 		SilenceUsage:  true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			log.V(1).Info("Running kini activate")
-
 			if _, err := setupSelfAsDocker(); err != nil {
 				return fmt.Errorf("failed to configure symlinks: %w", err)
 			}
@@ -28,13 +24,6 @@ func newKiniActivateCmd() *cobra.Command {
 			return nil
 		},
 	}
-
-	klogFlags := &flag.FlagSet{}
-	klog.InitFlags(klogFlags)
-	klogFlags.VisitAll(func(f *flag.Flag) {
-		f.Usage = "[logging] " + f.Usage
-	})
-	cmd.Flags().AddGoFlagSet(klogFlags)
 
 	return cmd
 }

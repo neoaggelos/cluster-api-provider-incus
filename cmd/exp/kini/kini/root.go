@@ -43,7 +43,7 @@ cluster on a local machine (where Incus is already installed), you can use:
 
 kini can also be used with an existing kind binary. You can do this as follows:
 
-	$ . <(kini activate --docker)   # create a temporary directory with a docker CLI (symlink to kini)
+	$ . <(kini setup activate-environment --docker)
 	$ docker --version              # should print "docker version kini"
 	$ kind create cluster           # run kind commands, it should use kini as a docker CLI shim
 `,
@@ -65,9 +65,7 @@ kini can also be used with an existing kind binary. You can do this as follows:
 	cmd.SetGlobalNormalizationFunc(cliflag.WordSepNormalizeFunc)
 
 	addCommands(cmd,
-		&cobra.Group{ID: "helper", Title: "Helper commands:"},
-		newKiniActivateCmd(),
-		newKiniGenerateSecretCmd(),
+		&cobra.Group{ID: "setup", Title: "Setup commands:"},
 		newKiniSetupCmd(),
 	)
 	addCommands(cmd,

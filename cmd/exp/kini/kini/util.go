@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 )
 
-// TODO: rework this
+// TODO: rework this, docker bool, kind bool, return path so that callers can print path or setenv
 func setupSelfAsDocker() (func() error, error) {
 	dir, err := os.MkdirTemp("", "")
 	if err != nil {
