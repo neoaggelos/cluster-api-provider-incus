@@ -1,6 +1,7 @@
 package kini
 
 import (
+	"flag"
 	"fmt"
 	"io"
 	"os"
@@ -10,6 +11,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/klog/v2"
 
 	"github.com/lxc/cluster-api-provider-incus/internal/lxc"
 )
@@ -38,7 +40,7 @@ func newKiniGenerateSecretCmd() *cobra.Command {
 		SilenceErrors: true,
 		SilenceUsage:  true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			opts, err := lxc.ConfigurationFromLocal(flags.configFile, flags.remoteName, true)
+			opts, _, err := lxc.ConfigurationFromLocal(flags.configFile, flags.remoteName, true)
 			if err != nil {
 				return fmt.Errorf("failed to read local configuration: %w", err)
 			}
@@ -49,6 +51,10 @@ func newKiniGenerateSecretCmd() *cobra.Command {
 			return nil
 		},
 	}
+
+	klogFlags := &flag.FlagSet{}
+	klog.InitFlags(klogFlags)
+	cmd.Flags().AddGoFlagSet(klogFlags)
 
 	cmd.Flags().StringVar(&flags.namespace, "namespace", "",
 		"Set namespace on the generated secret")

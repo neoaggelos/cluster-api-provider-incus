@@ -11,8 +11,6 @@ import (
 )
 
 func newKiniActivateCmd() *cobra.Command {
-	logFlags := &flag.FlagSet{}
-
 	cmd := &cobra.Command{
 		Use:           "activate",
 		Short:         "Shadow kind and docker commands with kini",
@@ -31,8 +29,9 @@ func newKiniActivateCmd() *cobra.Command {
 		},
 	}
 
-	klog.InitFlags(logFlags)
-	cmd.Flags().AddGoFlagSet(logFlags)
+	klogFlags := &flag.FlagSet{}
+	klog.InitFlags(klogFlags)
+	cmd.Flags().AddGoFlagSet(klogFlags)
 
 	return cmd
 }
