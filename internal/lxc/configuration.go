@@ -86,11 +86,13 @@ func (o Configuration) ToSecret(name string, namespace string) *corev1.Secret {
 	}
 }
 
-// ConfigurationFromLocal attempts to load client options from the local node configuration.
-func ConfigurationFromLocal(configFile string, forceRemoteName string, requireHTTPS bool) (Configuration, error) {
+// ConfigurationFromLocal attempts to load client options from the local node configuration file.
+// ConfigurationFromLocal will attempt to use well-known locations.
+// ConfigurationFromLocal returns the loaded Configuration, as well as the path of the config file.
+func ConfigurationFromLocal(configFile string, forceRemoteName string, requireHTTPS bool) (Configuration, string, error) {
 	var tryConfigFiles []string
 	if configFile == "" {
-		tryConfigFiles = []string{"", os.ExpandEnv("${HOME}/.config/incus/config.yml"), os.ExpandEnv("${HOME}/snap/lxd/common/config/config.yml")}
+		tryConfigFiles = getDefaultConfigFiles()
 	} else {
 		tryConfigFiles = []string{configFile}
 	}
@@ -108,11 +110,6 @@ func ConfigurationFromLocal(configFile string, forceRemoteName string, requireHT
 			remoteName = config.DefaultRemote
 		}
 
-		if !config.HasClientCertificate() {
-			errs = append(errs, fmt.Errorf("failed to load credentials from %q: no client certificate", configFile))
-			continue
-		}
-
 		remote, ok := config.Remotes[remoteName]
 		if !ok {
 			errs = append(errs, fmt.Errorf("failed to load credentials from %q: remote %q not found", configFile, remoteName))
@@ -124,11 +121,16 @@ func ConfigurationFromLocal(configFile string, forceRemoteName string, requireHT
 			continue
 		}
 
-		if strings.HasPrefix(remote.Addr, "unix://") {
+		if strings.HasPrefix(remote.Addr, "unix://") || strings.HasPrefix(remote.Addr, "http://") {
 			return Configuration{
 				ServerURL: remote.Addr,
 				Project:   remote.Project,
-			}, nil
+			}, configFile, nil
+		}
+
+		if !config.HasClientCertificate() {
+			errs = append(errs, fmt.Errorf("failed to load credentials from %q: no client certificate", configFile))
+			continue
 		}
 
 		serverCrt, err := os.ReadFile(config.ServerCertPath(remoteName))
@@ -155,8 +157,8 @@ func ConfigurationFromLocal(configFile string, forceRemoteName string, requireHT
 			ClientCrt: string(clientCrt),
 			ClientKey: string(clientKey),
 			Project:   remote.Project,
-		}, nil
+		}, configFile, nil
 	}
 
-	return Configuration{}, errors.Join(errs...)
+	return Configuration{}, "", errors.Join(errs...)
 }
