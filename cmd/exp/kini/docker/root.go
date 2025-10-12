@@ -23,7 +23,7 @@ func NewCmd() *cobra.Command {
 		Stdin: os.Stdin,
 
 		Client: func(ctx context.Context) (*lxc.Client, error) {
-			opts, err := lxc.ConfigurationFromLocal(os.Getenv("KINI_CONFIG"), os.Getenv("KINI_REMOTE"), false)
+			opts, _, err := lxc.ConfigurationFromLocal(os.Getenv("KINI_CONFIG"), os.Getenv("KINI_REMOTE"), false)
 			if err != nil {
 				return nil, fmt.Errorf("failed to retrieve local configuration: %w", err)
 			}
