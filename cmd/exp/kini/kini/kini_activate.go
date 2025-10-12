@@ -31,6 +31,9 @@ func newKiniActivateCmd() *cobra.Command {
 
 	klogFlags := &flag.FlagSet{}
 	klog.InitFlags(klogFlags)
+	klogFlags.VisitAll(func(f *flag.Flag) {
+		f.Usage = "[logging] " + f.Usage
+	})
 	cmd.Flags().AddGoFlagSet(klogFlags)
 
 	return cmd
