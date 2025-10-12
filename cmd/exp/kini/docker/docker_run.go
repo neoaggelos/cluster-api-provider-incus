@@ -35,6 +35,24 @@ func launchOptionsForImage(ctx context.Context, rawImage string, env Environment
 		}), nil
 	}
 
+	// handle kindest/base images (kind build node-image)
+	if strings.Contains(image.Alias(), "kindest/base") {
+		if !env.KindInstances(ctx) {
+			return nil, fmt.Errorf("kindest/base instances (%q) not supported in LXC mode", rawImage)
+		}
+
+		log.V(3).Info("Launching base instance", "image", rawImage)
+		return (&lxc.LaunchOptions{}).
+			WithConfig(map[string]string{
+				"oci.entrypoint": "sleep infinity",
+			}).
+			WithImage(lxc.Image{
+				Protocol: lxc.OCI,
+				Server:   image.Server(),
+				Alias:    image.Alias(),
+			}), nil
+	}
+
 	// handle node instances (kind instances)
 	if env.KindInstances(ctx) {
 		log.V(3).Info("Launching node instance", "image", rawImage, "type", "kind")
@@ -78,6 +96,7 @@ func launchOptionsForImage(ctx context.Context, rawImage string, env Environment
 // docker run --name c1-control-plane --hostname c1-control-plane --label io.x-k8s.kind.role=control-plane --privileged --security-opt seccomp=unconfined --security-opt apparmor=unconfined --tmpfs /tmp --tmpfs /run --volume /var --volume /lib/modules:/lib/modules:ro -e KIND_EXPERIMENTAL_CONTAINERD_SNAPSHOTTER --detach --tty --label io.x-k8s.kind.cluster=c1 --net kind --restart=on-failure:1 --init=false --cgroupns=private --publish=127.0.0.1:41435:6443/TCP -e KUBECONFIG=/etc/kubernetes/admin.conf kindest/node:v1.31.2@sha256:18fbefc20a7113353c7b75b5c869d7145a6abd6269154825872dc59c1329912e
 // docker run --name t1-control-plane --hostname t1-control-plane --label io.x-k8s.kind.role=control-plane --privileged --security-opt seccomp=unconfined --security-opt apparmor=unconfined --tmpfs /tmp --tmpfs /run --volume /var --volume /lib/modules:/lib/modules:ro -e KIND_EXPERIMENTAL_CONTAINERD_SNAPSHOTTER --detach --tty --label io.x-k8s.kind.cluster=t1 --net kind --restart=on-failure:1 --init=false --cgroupns=private --userns=host --device /dev/fuse --publish=127.0.0.1:45295:6443/TCP -e KUBECONFIG=/etc/kubernetes/admin.conf kindest/node:v1.33.0@sha256:18fbefc20a7113353c7b75b5c869d7145a6abd6269154825872dc59c1329912e
 // docker run --name test-external-load-balancer --hostname test-external-load-balancer --label io.x-k8s.kind.role=external-load-balancer --detach --tty --label io.x-k8s.kind.cluster=test --net kind --restart=on-failure:1 --init=false --cgroupns=private --publish=127.0.0.1:37715:6443/TCP docker.io/kindest/haproxy:v20230606-42a2262b
+// docker run -d --entrypoint=sleep --name=kind-build-1760303841-1682602141 --platform=linux/amd64 --security-opt seccomp=unconfined docker.io/kindest/base:v20250214-acbabc1a infinity
 func newDockerRunCmd(env Environment) *cobra.Command {
 	var flags struct {
 		// passed in command line, but will be ignored
@@ -90,6 +109,8 @@ func newDockerRunCmd(env Environment) *cobra.Command {
 		Network      string
 		Restart      string
 		SecurityOpts map[string]string
+		Platform     string
+		Entrypoint   string
 
 		// configuration we care about
 		Name         string
@@ -105,7 +126,7 @@ func newDockerRunCmd(env Environment) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:           "run IMAGE",
-		Args:          cobra.ExactArgs(1),
+		Args:          cobra.MinimumNArgs(1),
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -256,12 +277,14 @@ func newDockerRunCmd(env Environment) *cobra.Command {
 	cmd.Flags().BoolVar(&flags.Init, "init", false, "use entrypoint")
 	cmd.Flags().BoolVar(&flags.TTY, "tty", true, "tty")
 	cmd.Flags().BoolVar(&flags.Privileged, "privileged", true, "privileged")
-	cmd.Flags().BoolVar(&flags.Detach, "detach", true, "detach")
+	cmd.Flags().BoolVarP(&flags.Detach, "detach", "d", true, "detach")
 	cmd.Flags().StringVar(&flags.CgroupNS, "cgroupns", "private", "cgroup namespace")
 	cmd.Flags().StringVar(&flags.UserNS, "userns", "", "user namespace")
 	cmd.Flags().StringVar(&flags.Network, "net", "kind", "network")
 	cmd.Flags().StringVar(&flags.Restart, "restart", "on-failure:1", "restart")
 	cmd.Flags().StringToStringVar(&flags.SecurityOpts, "security-opt", nil, "security opt")
+	cmd.Flags().StringVar(&flags.Platform, "platform", "", "platform")
+	cmd.Flags().StringVar(&flags.Entrypoint, "entrypoint", "", "entrypoint")
 
 	cmd.Flags().StringVar(&flags.Name, "name", "", "container name")
 	cmd.Flags().StringVar(&flags.Hostname, "hostname", "", "container host name")

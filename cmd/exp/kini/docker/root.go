@@ -62,6 +62,7 @@ func NewCmd() *cobra.Command {
 		Version: "kini",
 	}
 
+	cmd.AddCommand(newDockerCpCmd(env))
 	cmd.AddCommand(newDockerExecCmd(env))
 	cmd.AddCommand(newDockerImageCmd(env))
 	cmd.AddCommand(newDockerImageLoadCmd(env)) // "docker load" same as "docker image load"
