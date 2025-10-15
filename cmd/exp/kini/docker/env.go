@@ -45,6 +45,14 @@ func (e *Environment) KindInstances(ctx context.Context) bool {
 	}
 }
 
+// WithUnixSocket returns true if we must pass the Incus unix socket into the instance under /run-unix.socket
+func (e *Environment) WithUnixSocket() bool {
+	if v, err := strconv.ParseBool(e.Getenv("KINI_MOUNT_UNIX_SOCKET")); err == nil {
+		return v
+	}
+	return false
+}
+
 // CacheDir is a local directory for caching image tarballs
 func (e *Environment) CacheDir() string {
 	cache := e.Getenv("KINI_CACHE")
