@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/google/go-containerregistry/pkg/crane"
+	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/spf13/cobra"
 )
 
@@ -27,24 +28,24 @@ func newDockerImageInspectCmd(env Environment) *cobra.Command {
 				return fmt.Errorf("invalid format %q", flags.Format)
 			}
 
-			image := args[0]
+			var (
+				tag = args[0]
+				img v1.Image
+				err error
+			)
 
 			// if image has been `docker load`ed, use the local tarball
-			loadedFileName := filepath.Join(env.CacheDir(), "loaded--"+strings.ReplaceAll(image, "/", "--")+".tar")
-			if img, err := crane.Load(loadedFileName); err == nil {
-				log.V(4).Info("Using local image", "tag", image, "path", loadedFileName)
-				if digest, err := img.Digest(); err != nil {
-					return fmt.Errorf("could not get digest of local image: %w", err)
-				} else {
-					fmt.Println(digest)
-				}
-			} else if img, err := crane.Head(image); err != nil {
-				return fmt.Errorf("could not fetch image %q: %w", image, err)
+			loadedFileName := filepath.Join(env.CacheDir(), "loaded--"+strings.ReplaceAll(tag, "/", "--")+".tar")
+			if img, err = crane.Load(loadedFileName); err == nil {
+				log.V(4).Info("Using local image", "tag", tag, "path", loadedFileName)
+			} else if img, err = crane.Pull(tag); err != nil {
+				return fmt.Errorf("could not pull image %q: %w", tag, err)
+			}
+
+			if manifest, err := img.Manifest(); err != nil {
+				return fmt.Errorf("could not get manifest of image: %w", err)
 			} else {
-				// NOTE(neoaggelos): the image ID printed by docker is not the image digest, but that
-				// is fine for us, since the image digest is still an identifier we can rely on
-				// NOTE(neoaggelos): docker only returns successful responses for pulled images
-				fmt.Println(img.Digest)
+				fmt.Println(manifest.Config.Digest.String())
 			}
 			return nil
 		},
