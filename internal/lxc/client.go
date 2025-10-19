@@ -107,15 +107,3 @@ func (c *Client) WithTarget(target string) *Client {
 		progressHandler: c.progressHandler,
 	}
 }
-
-// WithProject returns a copy of the client and a set target project.
-func (c *Client) WithProject(project string) *Client {
-	if project == "" {
-		return c
-	}
-	return &Client{
-		InstanceServer:  c.UseProject(project),
-		serverInfo:      c.serverInfo,
-		progressHandler: c.progressHandler,
-	}
-}
