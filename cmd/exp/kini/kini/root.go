@@ -9,6 +9,7 @@ import (
 
 	"github.com/lxc/cluster-api-provider-incus/cmd/exp/kini/docker"
 	"github.com/lxc/cluster-api-provider-incus/cmd/exp/kini/kind"
+	"github.com/lxc/cluster-api-provider-incus/internal/exp/kini"
 )
 
 var (
@@ -50,9 +51,9 @@ kini can also be used with an existing kind binary. You can do this as follows:
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			cleanup, err := setupSelfAsDocker()
+			_, cleanup, err := kini.SetupEnvironment(cmd.Context(), true, false)
 			if err != nil {
-				return fmt.Errorf("failed to setup docker: %w", err)
+				return fmt.Errorf("failed to setup environment: %w", err)
 			}
 			cmd.PersistentPostRunE = func(cmd *cobra.Command, args []string) error {
 				return cleanup()

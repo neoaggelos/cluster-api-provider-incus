@@ -11,6 +11,8 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/kind/pkg/cmd"
 	"sigs.k8s.io/kind/pkg/cmd/kind"
+
+	"github.com/lxc/cluster-api-provider-incus/internal/exp/kini"
 )
 
 var (
@@ -37,7 +39,7 @@ func NewCmd() *cobra.Command {
 		}
 
 		// configure self for docker commands
-		cleanup, err := setupSelfAsDocker()
+		_, cleanup, err := kini.SetupEnvironment(cmd.Context(), true, false)
 		if err != nil {
 			return fmt.Errorf("failed to configure self as docker: %w", err)
 		}
