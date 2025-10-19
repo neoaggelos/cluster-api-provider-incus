@@ -17,7 +17,9 @@ func parseImageTag(path string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to open file: %w", err)
 	}
-	defer f.Close()
+	defer func() {
+		_ = f.Close()
+	}()
 	var manifestJSON []struct {
 		RepoTags []string
 	}
@@ -66,7 +68,9 @@ func newDockerImageLoadCmd(env Environment) *cobra.Command {
 				if err != nil {
 					return fmt.Errorf("failed to create a temporary file: %w", err)
 				}
-				defer os.Remove(f.Name())
+				defer func() {
+					_ = os.Remove(f.Name())
+				}()
 				if _, err := io.Copy(f, env.Stdin); err != nil {
 					return fmt.Errorf("failed to write stdin to temporary file: %w", err)
 				} else if err := f.Sync(); err != nil {

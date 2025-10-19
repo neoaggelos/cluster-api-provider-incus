@@ -62,7 +62,7 @@ func (m *Manager) Commit(ctx context.Context) error {
 		return nil
 	}
 
-	log.FromContext(ctx).V(1).Info("Commiting changes to config file", "path", m.path)
+	log.FromContext(ctx).V(1).Info("Committing changes to config file", "path", m.path)
 	if err := m.config.SaveConfig(m.path); err != nil {
 		return fmt.Errorf("failed to update config file on disk: %w", err)
 	}
