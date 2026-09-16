@@ -1,16 +1,13 @@
 package instances
 
 import (
-	"encoding/json"
 	"fmt"
-	"strings"
 
 	"github.com/lxc/incus/v7/shared/api"
 
-	"github.com/lxc/cluster-api-provider-incus/internal/cloudinit"
+	cloudinit_launch "github.com/lxc/cluster-api-provider-incus/internal/cloudinit/launch"
 	"github.com/lxc/cluster-api-provider-incus/internal/lxc"
 	"github.com/lxc/cluster-api-provider-incus/internal/static"
-	"github.com/lxc/cluster-api-provider-incus/internal/utils"
 )
 
 type KindLaunchOptionsInput struct {
@@ -43,47 +40,30 @@ func KindLaunchOptions(in KindLaunchOptionsInput) (*lxc.LaunchOptions, error) {
 			"/init": "/usr/local/bin/entrypoint",
 		})
 
-	// add cloud-init configuration as nocloud-net datasource in the instance
+	// seed cloud-init configuration as nocloud-net datasource in the instance
 	if len(in.CloudInit) > 0 {
+		cloudInitLaunch, err := cloudinit_launch.ScriptForKindInstance(in.CloudInitAptInstall, in.CloudInit)
+		if err != nil {
+			return nil, fmt.Errorf("failed to prepare cloud-init script for instance: %w", err)
+		}
+
 		opts = opts.
 			WithConfig(map[string]string{
-				"cloud-init.user-data": in.CloudInit,
+				"cloud-init.user-data":           in.CloudInit,
+				"user.kind.cloud-init-launch.sh": cloudInitLaunch,
 			}).
 			WithInstanceTemplates(map[string]string{
 				// inject cloud-init into instance.
 				"/var/lib/cloud/seed/nocloud-net/meta-data": static.CloudInitMetaDataTemplate(),
 				"/var/lib/cloud/seed/nocloud-net/user-data": static.CloudInitUserDataTemplate(),
 				// cloud-init-launch.service is used to start the cloud-init scripts.
-				"/etc/systemd/system/cloud-init-launch.service": static.CloudInitLaunchSystemdServiceTemplate(),
-				"/hack/cloud-init.py":                           static.KindCloudInitScript(),
+				"/etc/systemd/system/cloud-init-launch.service": static.KindCloudInitLaunchSystemdServiceTemplate(),
+				"/hack/cloud-init-launch.sh":                    static.KindCloudInitLaunchScriptTemplate(),
 			}).
 			WithSymlinks(map[string]string{
 				// enable the cloud-init-launch service.
 				"/etc/systemd/system/multi-user.target.wants/cloud-init-launch.service": "/etc/systemd/system/cloud-init-launch.service",
 			})
-
-		if !in.CloudInitAptInstall {
-			// manual cloud-init mode:
-			// - parse YAML (ensure no unknown fields are present), and replace "{{ v1.local_hostname }}" with "{{ container.name }}", which is a pango template that will resolve to the instance hostname upon launch
-			// - marshal to JSON
-			// - embed to instance at /hack/cloud-init.json
-			// - instance will run using the kind-cloud-init.py script (see internal/embed/kind-cloud-init.py)
-			cloudConfig, err := cloudinit.Parse(in.CloudInit, strings.NewReplacer(
-				"{{ v1.local_hostname }}", "{{ container.name }}",
-			))
-			if err != nil {
-				return nil, utils.TerminalError(fmt.Errorf("failed to parse instance cloud-config, please report this bug to https://github.com/lxc/cluster-api-provider-incus/issues: %w", err))
-			}
-
-			b, err := json.Marshal(cloudConfig)
-			if err != nil {
-				return nil, utils.TerminalError(fmt.Errorf("failed to generate JSON cloud-config for instance, please report this bug to github.com/lxc/cluster-api-provider-incus/issues: %w", err))
-			}
-
-			opts = opts.WithInstanceTemplates(map[string]string{
-				"/hack/cloud-init.json": string(b),
-			})
-		}
 	}
 
 	// pod network CIDR
