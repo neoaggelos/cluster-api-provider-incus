@@ -52,11 +52,13 @@ ClusterAPI uses cloud-init configuration for cluster instances to bootstrap or j
 
 The ClusterAPI docker provider, which also uses the `kindest/node` images, addresses this by manually parsing the cloud-init configuration on the provider, then executing the cloud-init commands on the node. This was not deemed as a useful approach for CAPN.
 
-Instead, CAPN will inject a `cloud-init-launch.service` on the nodes, and enable it by default (so it starts when the systemd entrypoint takes over). There are two ways that the cloud-init configuration can be applied:
+Instead, CAPN will inject a `/hack/cloud-init-launch.sh` script on the nodes, and configure and enable a systemd service `cloud-init-launch.service` by default (so cloud-init runs automatically when the systemd entrypoint takes over). There are two ways that the cloud-init configuration can be applied:
 
-1.  `/hack/cloud-init.py /hack/cloud-init.json` [**default**]
+1.  `manually create, chown, chmod files. then execute runcmd` [**default**]
 
-    In this (default) mode, CAPN will parse the YAML cloud-init config that the bootstrap provider has generated for the instance, and render it in JSON format as `/hack/cloud-init.json` inside the instance. A python script `/hack/cloud-init.py` is also injected, which applies these configs on the instance.
+    In this (default) mode, CAPN parses the YAML cloud-init config that the bootstrap provider has generated for the instance, and injects a bash script that applies these configs manually:
+    - **for each `write_files` entry**: create the parent directory with `mkdir -p`, write the file on disk using `echo $contents > $path`, set owner using `chown`, set permissions using `chmod`. File path and contents are escaped using base64 encoding and are decoded on the instance.
+    - **for each `runcmd` entry**: execute commands one by one.
 
     Currently, only `write_files` and `runcmd` configuration is supported in this mode. This should cover kubeadm and most other bootstrap providers (e.g. RKE2, K3s, etc). However, it will not work if other cloud-init configuration is required (e.g. `users`). If you are affected by this, you are kindly requested to create an issue in [GitHub](https://github.com/lxc/cluster-api-provider-incus/issues) with more details, and support may be added.
 

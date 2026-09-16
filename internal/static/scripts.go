@@ -21,17 +21,17 @@ var (
 	//go:embed embed/validate-kubeadm-image.sh
 	validateKubeadmImageScript string
 
-	//go:embed embed/kind-cloud-init.py
-	kindCloudInitScript string
-
 	//go:embed embed/meta-data
 	cloudInitMetaDataTemplate string
 
 	//go:embed embed/user-data
 	cloudInitUserDataTemplate string
 
-	//go:embed embed/cloud-init-launch.service
-	cloudInitLaunchSystemdServiceTemplate string
+	//go:embed embed/kind-cloud-init-launch.service
+	kindCloudInitLaunchSystemdServiceTemplate string
+
+	//go:embed embed/kind-cloud-init-launch.sh
+	kindCloudInitLaunchScriptTemplate string
 
 	//go:embed embed/kind-default-storage.yaml
 	kindDefaultStorageManifestYAML string
@@ -64,8 +64,8 @@ func CleanupInstanceScript() string {
 	return cleanupInstanceScript
 }
 
-func KindCloudInitScript() string {
-	return kindCloudInitScript
+func KindCloudInitLaunchScriptTemplate() string {
+	return kindCloudInitLaunchScriptTemplate
 }
 
 func CloudInitMetaDataTemplate() string {
@@ -76,8 +76,8 @@ func CloudInitUserDataTemplate() string {
 	return cloudInitUserDataTemplate
 }
 
-func CloudInitLaunchSystemdServiceTemplate() string {
-	return cloudInitLaunchSystemdServiceTemplate
+func KindCloudInitLaunchSystemdServiceTemplate() string {
+	return kindCloudInitLaunchSystemdServiceTemplate
 }
 
 func KindDefaultStorageManifestYAML() string {

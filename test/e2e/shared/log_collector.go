@@ -59,6 +59,20 @@ func (o IncusLogCollector) CollectMachineLog(ctx context.Context, managementClus
 		}
 	}
 
+	// instance metadata
+	{
+		metadata, _, err := lxcClient.GetInstanceMetadata(instanceName)
+		if err != nil {
+			return fmt.Errorf("failed to GetInstanceMetadata: %w", err)
+		}
+
+		if b, err := yaml.Marshal(metadata); err != nil {
+			return fmt.Errorf("failed to marshal instance metadata: %w", err)
+		} else if err := os.WriteFile(filepath.Join(outputPath, "metadata.yaml"), b, 0o600); err != nil {
+			return fmt.Errorf("failed to write instance.yaml: %w", err)
+		}
+	}
+
 	type logitem struct {
 		name    string
 		command []string
@@ -96,6 +110,11 @@ func (o IncusLogCollector) CollectMachineLog(ctx context.Context, managementClus
 	// kernel logs (for virtual machines only)
 	if lxcMachine.Spec.InstanceType == lxc.VirtualMachine {
 		items = append(items, logitem{name: "kern.log", command: []string{"journalctl", "--no-pager", "--output=short-precise", "-k"}})
+	}
+	// cloud-init-launch logs (for kind instances only)
+	if lxcMachine.Spec.InstanceType == "kind" {
+		items = append(items, logitem{name: "hack-cloud-init.tar.gz", command: []string{"bash", "-c", "tar cv /hack | gzip"}})
+		items = append(items, logitem{name: "hack-cloud-init-launch.log", command: []string{"journalctl", "--no-pager", "-u", "cloud-init-launch"}})
 	}
 
 	var errs []error
